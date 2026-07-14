@@ -135,22 +135,35 @@ class MMDataset(Dataset):
         return sample
 
 def MMDataLoader(args, num_workers):
+    mode = args['mode'] if 'mode' in args else 'train'
 
+    # Strict test-once protocol:
+    # training never constructs or reads the test split.
+    split_names = ('test',) if mode == 'test' else ('train', 'valid')
     datasets = {
-        'train': MMDataset(args, mode='train'),
-        'valid': MMDataset(args, mode='valid'),
-        'test': MMDataset(args, mode='test')
+        split: MMDataset(args, mode=split)
+        for split in split_names
     }
 
     if 'seq_lens' in args:
-        args['seq_lens'] = datasets['train'].get_seq_len() 
+        reference_split = 'train' if 'train' in datasets else 'test'
+        args['seq_lens'] = datasets[reference_split].get_seq_len()
+
+    # Keep training order reproducible and independent from model RNG.
+    train_generator = torch.Generator()
+    seed = int(args['seed']) if 'seed' in args else 1111
+    train_generator.manual_seed(seed)
 
     dataLoader = {
-        ds: DataLoader(datasets[ds],
-                       batch_size=args['batch_size'],
-                       num_workers=num_workers,
-                       shuffle=True)
-        for ds in datasets.keys()
+        split: DataLoader(
+            datasets[split],
+            batch_size=args['batch_size'],
+            num_workers=num_workers,
+            shuffle=(split == 'train'),
+            generator=train_generator if split == 'train' else None,
+            drop_last=False
+        )
+        for split in split_names
     }
-    
+
     return dataLoader

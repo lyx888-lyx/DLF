@@ -42,11 +42,11 @@ class DLF():
         if return_epoch_results:
             epoch_results = {
                 'train': [],
-                'valid': [],
-                'test': []
+                'valid': []
             }
         min_or_max = 'min' if self.args.KeyEval in ['Loss'] else 'max'
         best_valid = 1e8 if min_or_max == 'min' else 0
+        best_valid_results = None
 
         net = []
         net_DLF = model[0]
@@ -162,7 +162,6 @@ class DLF():
             )
             # validation
             val_results = self.do_test(model[0], dataloader['valid'], mode="VAL")
-            test_results = self.do_test(model[0], dataloader['test'], mode="TEST")
             cur_valid = val_results[self.args.KeyEval]
             scheduler.step(val_results['Loss'])
             # save each epoch model
@@ -171,19 +170,24 @@ class DLF():
             isBetter = cur_valid <= (best_valid - 1e-6) if min_or_max == 'min' else cur_valid >= (best_valid + 1e-6)
             if isBetter:
                 best_valid, best_epoch = cur_valid, epochs
+                best_valid_results = dict(val_results)
                 # save model
-                model_save_path = './pt/DLF' + str(self.args.dataset_name)+'.pth'
+                model_save_path = self.args.model_save_path
                 torch.save(model[0].state_dict(), model_save_path)
 
             if return_epoch_results:
                 train_results["Loss"] = train_loss
                 epoch_results['train'].append(train_results)
                 epoch_results['valid'].append(val_results)
-                test_results = self.do_test(model, dataloader['test'], mode="TEST")
-                epoch_results['test'].append(test_results)
             # early stop
             if epochs - best_epoch >= self.args.early_stop:
-                return epoch_results if return_epoch_results else None
+                if return_epoch_results:
+                    return epoch_results
+                if best_valid_results is None:
+                    raise RuntimeError(
+                        'No validation-best checkpoint was saved.'
+                    )
+                return best_valid_results
 
     def do_test(self, model, dataloader, mode="VAL", return_sample_results=False):
 

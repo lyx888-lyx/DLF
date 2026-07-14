@@ -92,15 +92,20 @@ def DLF_run(
         args.update(config)
 
 
-    res_save_dir = Path(res_save_dir) / "normal"
+    res_save_dir = Path(res_save_dir) / "clean" / args.mode
     res_save_dir.mkdir(parents=True, exist_ok=True)
     model_results = []
     for i, seed in enumerate(seeds):
         setup_seed(seed)
         args['cur_seed'] = i + 1
+        args['seed'] = seed
+        args['model_save_path'] = (
+            Path(model_save_dir)
+            / f"DLF_{dataset_name}_seed{seed}_best.pth"
+        )
         result = _run(args, num_workers, is_tune)
         model_results.append(result)
-    if args.is_training:
+    if model_results:
         criterions = list(model_results[0].keys())
         # save result to csv
         csv_file = res_save_dir / f"{dataset_name}.csv"
@@ -181,21 +186,43 @@ def _run(args, num_workers=4, is_tune=False, from_sena=False):
     trainer = ATIO().getTrain(args)
 
 
-    #test
     if args.mode == 'test':
-        model.load_state_dict(torch.load('./pt/DLF'+str(args.dataset_name)+'.pth'),strict=False) 
-        results = trainer.do_test(model, dataloader['test'], mode="TEST")
-        sys.stdout.flush()
-        input('[Press Any Key to start another run]')
-    #train
+        checkpoint_path = Path(args.model_save_path)
+
+        if not checkpoint_path.is_file():
+            raise FileNotFoundError(
+                f"Checkpoint not found: {checkpoint_path}"
+            )
+
+        state_dict = torch.load(
+            checkpoint_path,
+            map_location=args.device
+        )
+        model.load_state_dict(state_dict, strict=True)
+
+        logger.info(
+            f"Testing validation-best checkpoint: "
+            f"{checkpoint_path}"
+        )
+
+        results = trainer.do_test(
+            model,
+            dataloader['test'],
+            mode="TEST"
+        )
+
     else:
-        epoch_results = trainer.do_train(model, dataloader, return_epoch_results=from_sena)
-        model[0].load_state_dict(torch.load('./pt/DLF'+str(args.dataset_name)+'.pth'))
+        # Strict Gate 3:
+        # only train and validation are accessible here.
+        results = trainer.do_train(
+            model,
+            dataloader,
+            return_epoch_results=from_sena
+        )
 
-        results = trainer.do_test(model[0], dataloader['test'], mode="TEST")
+    del model
+    torch.cuda.empty_cache()
+    gc.collect()
+    time.sleep(1)
 
-        del model
-        torch.cuda.empty_cache()
-        gc.collect()
-        time.sleep(1)
     return results
