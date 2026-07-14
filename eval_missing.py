@@ -11,6 +11,7 @@ import torch
 import torch.nn as nn
 
 from config import get_config_regression
+from trains.singleTask.fixed_kd_utils import fixed_kd_checkpoint_path
 from trains.singleTask.missing_utils import (
     MissingModalityWrapper,
     build_single_split_loader,
@@ -28,7 +29,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Evaluate a Stage 1 missing-modality baseline.")
     parser.add_argument("--dataset", choices=("mosi",), default="mosi")
     parser.add_argument("--seeds", nargs="+", type=int, default=[1111])
-    parser.add_argument("--method", choices=("directmask", "moddrop"), required=True)
+    parser.add_argument("--method", choices=("directmask", "moddrop", "fixedkd"), required=True)
     parser.add_argument("--split", choices=("valid", "test"), default="valid")
     parser.add_argument("--confirm-test-once", action="store_true")
     parser.add_argument("--num-workers", type=int, default=1)
@@ -57,18 +58,24 @@ def build_config(cli_args, seed):
 
 
 def load_model(cli_args, args, seed):
-    clean_checkpoint = clean_checkpoint_path(cli_args.model_save_dir, args.dataset_name, seed)
-    if not clean_checkpoint.is_file():
-        raise FileNotFoundError("Gate 3 validation-best checkpoint not found: {}".format(clean_checkpoint))
-    backbone = DLF(args).to(args.device)
-    backbone.load_state_dict(torch.load(clean_checkpoint, map_location=args.device), strict=True)
-
     if cli_args.method == "directmask":
-        return backbone, clean_checkpoint
+        checkpoint = clean_checkpoint_path(cli_args.model_save_dir, args.dataset_name, seed)
+        if not checkpoint.is_file():
+            raise FileNotFoundError("Gate 3 validation-best checkpoint not found: {}".format(checkpoint))
+        model = DLF(args).to(args.device)
+        model.load_state_dict(torch.load(checkpoint, map_location=args.device), strict=True)
+        return model, checkpoint
 
-    checkpoint = missing_checkpoint_path(cli_args.model_save_dir, args.dataset_name, seed)
+    if cli_args.method == "moddrop":
+        checkpoint = missing_checkpoint_path(cli_args.model_save_dir, args.dataset_name, seed)
+    elif cli_args.method == "fixedkd":
+        checkpoint = fixed_kd_checkpoint_path(cli_args.model_save_dir, args.dataset_name, seed)
+    else:
+        raise ValueError("Unsupported student-only evaluation method: {}".format(cli_args.method))
     if not checkpoint.is_file():
-        raise FileNotFoundError("ModDrop validation-best checkpoint not found: {}".format(checkpoint))
+        raise FileNotFoundError("{} student checkpoint not found: {}".format(cli_args.method, checkpoint))
+
+    backbone = DLF(args).to(args.device)
     model = MissingModalityWrapper(backbone, args.feature_dims[1], args.feature_dims[2]).to(args.device)
     model.load_state_dict(torch.load(checkpoint, map_location=args.device), strict=True)
     return model, checkpoint
@@ -82,7 +89,7 @@ def main():
         args = build_config(cli_args, seed)
         dataloader = build_single_split_loader(args, cli_args.split, cli_args.num_workers)
         model, checkpoint = load_model(cli_args, args, seed)
-        metrics = evaluate_all_modes(model, dataloader, args.device, cli_args.method, nn.L1Loss())
+        metrics = evaluate_all_modes(model, dataloader, args.device, "moddrop" if cli_args.method == "fixedkd" else cli_args.method, nn.L1Loss())
         row = {"Seed": int(seed), "Checkpoint": str(checkpoint)}
         row.update(flatten_mode_metrics(metrics))
         rows.append(row)
