@@ -287,9 +287,13 @@ def train_one_seed(cli_args, seed, logger):
             if last_regular_grad_norm <= 0.0:
                 raise RuntimeError("Student regular parameters did not receive gradients.")
             if student.missing_audio_token.grad is not None:
-                last_token_gradients["audio"] = float(student.missing_audio_token.grad.norm().item())
+                last_token_gradients["audio"] = max(
+                    last_token_gradients["audio"], float(student.missing_audio_token.grad.norm().item())
+                )
             if student.missing_vision_token.grad is not None:
-                last_token_gradients["vision"] = float(student.missing_vision_token.grad.norm().item())
+                last_token_gradients["vision"] = max(
+                    last_token_gradients["vision"], float(student.missing_vision_token.grad.norm().item())
+                )
 
             if step % args.update_epochs == 0 or step == len(dataloader["train"]):
                 if args.grad_clip != -1.0:
