@@ -154,7 +154,7 @@ class DLF(nn.Module):
                                   attn_mask=self.attn_mask)
 
 
-    def forward(self, text, audio, video):
+    def forward(self, text, audio, video, fusion_residual=None):
         #extraction
         if self.use_bert:
             text = self.text_model(text)
@@ -310,6 +310,10 @@ class DLF(nn.Module):
         
         last_hs = torch.cat([last_h_l, last_h_v, last_h_a, c_fusion], dim=1)   
 
+
+        # This optional residual leaves the original DLF path unchanged by default.
+        if fusion_residual is not None:
+            last_hs = last_hs + fusion_residual
         #prediction
         last_hs_proj = self.proj2(
             F.dropout(F.relu(self.proj1(last_hs), inplace=True), p=self.output_dropout, training=self.training))
