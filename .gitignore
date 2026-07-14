@@ -4,3 +4,20 @@ __pycache__/
 
 /dataset
 /bert-base-uncased
+
+# Model checkpoints
+/pt
+pt/*.pth
+pt/*.pt
+pt/*.ckpt
+*.pth
+*.ckpt
+
+# Logs and generated results
+/log
+log/
+logs/
+result/
+results/
+outputs/
+runs/
