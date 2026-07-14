@@ -1,3 +1,6 @@
 log/*.log
 pt/*.pth
 __pycache__/
+
+/dataset
+/bert-base-uncased

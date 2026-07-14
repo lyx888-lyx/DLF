@@ -1,6 +1,6 @@
 {
   "datasetCommonParams": {
-    "dataset_root_dir": "../dataset",
+    "dataset_root_dir": "./dataset",
     "mosi": {
       "aligned": {
         "featurePath": "MOSI/Processed/aligned_50.pkl",
