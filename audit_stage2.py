@@ -475,7 +475,7 @@ def write_json_atomically(path, payload):
     os.replace(temporary, path)
 
 
-def write_audit_outputs(output_dir, collected, checkpoint_info, label_frame, reference):
+def write_audit_outputs(output_dir, split, collected, checkpoint_info, label_frame, reference):
     output_dir = Path(output_dir)
     dataframe_to_csv(prediction_frame(collected), output_dir / "mosi_seed1111_predictions.csv")
     dataframe_to_csv(overall_metric_frame(collected["metrics"]), output_dir / "overall_metrics.csv")
@@ -493,7 +493,7 @@ def write_audit_outputs(output_dir, collected, checkpoint_info, label_frame, ref
         "audit_name": "stage2_counterfactual_and_milestone_audit",
         "dataset": "mosi",
         "seed": 1111,
-        "split": str(output_dir.name),
+        "split": str(split),
         "sample_count": int(len(collected["label"])),
         "checkpoint_metadata": checkpoint_info,
         "identity_max_errors": identity_maxima,
@@ -530,7 +530,7 @@ def run_audit(cli_args, output_dir):
     collected = collect_predictions(models, loader, args.device)
     reference = validation_reference_audit(collected["metrics"], cli_args) if cli_args.split == "valid" else {}
     labels_frame, _ = label_distribution_frame(args, cli_args, collected["label"])
-    summary = write_audit_outputs(output_dir, collected, metadata, labels_frame, reference)
+    summary = write_audit_outputs(output_dir, cli_args.split, collected, metadata, labels_frame, reference)
     del models
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
