@@ -18,6 +18,8 @@ from .fixed_kd_utils import (
 from .missing_utils import MISSING_MODES, MissingModalityWrapper, mode_to_mask
 
 CACHE_VERSION = "cf_compat_v1"
+MULTISEED_CACHE_VERSION = "cf_compat_v1_multiseed"
+MULTISEED_SMOKE_CACHE_VERSION = "cf_compat_v1_multiseed_smoke"
 RANK_TRANSFORM = "(rank-0.5)/N"
 CACHE_COLUMNS = (
     "sample_index", "sample_id", "label",
@@ -29,8 +31,10 @@ CACHE_COLUMNS = (
 )
 
 
-def cache_paths(root, dataset):
-    directory = Path(root) / "counterfactual_compatibility" / CACHE_VERSION / dataset
+def cache_paths(root, dataset, version=CACHE_VERSION, seed=None):
+    directory = Path(root) / "counterfactual_compatibility" / version / dataset
+    if seed is not None:
+        directory = directory / "seed{}".format(int(seed))
     return {
         "directory": directory,
         "csv": directory / "train_counterfactual_compatibility.csv",
@@ -187,19 +191,29 @@ def cache_bin_rows(frame):
     return rows
 
 
-def locate_stage1_evaluator(result_root, dataset, seed):
+def locate_stage1_evaluator(result_root, dataset, seed, multiseed=False, smoke=False):
     """Read the Stage 1 CSV recorded checkpoint and best epoch; never infer paths."""
-    source = Path(result_root) / "missing_baseline" / "moddrop" / "train" / "{}_per_seed.csv".format(dataset)
+    if multiseed:
+        source = Path(result_root) / "missing_baseline" / "moddrop_benchmark_multiseed_v1"
+        if smoke:
+            source = source / "smoke"
+        source = source / "seed{}".format(int(seed)) / "{}_per_seed.csv".format(dataset)
+        checkpoint_field, epoch_field = "MainCheckpoint", "BestValidEpoch"
+    else:
+        source = Path(result_root) / "missing_baseline" / "moddrop" / "train" / "{}_per_seed.csv".format(dataset)
+        checkpoint_field, epoch_field = "Checkpoint", "BestEpoch"
     if not source.is_file():
         raise FileNotFoundError("Required Stage 1 result CSV absent: {}".format(source))
     rows = pd.read_csv(source)
     selected = rows.loc[rows.Seed.astype(int) == int(seed)]
-    if len(selected) != 1 or "Checkpoint" not in selected:
+    if len(selected) != 1 or checkpoint_field not in selected:
         raise ValueError("Stage 1 CSV has no unique checkpoint for seed {}.".format(seed))
-    checkpoint = Path(str(selected.iloc[0].Checkpoint))
+    checkpoint = Path(str(selected.iloc[0][checkpoint_field]))
+    if multiseed and ("diagnostic" in str(checkpoint) or "best_test" in str(checkpoint)):
+        raise ValueError("Counterfactual evaluator must be the validation-best ModDrop checkpoint.")
     if not checkpoint.is_file():
         raise FileNotFoundError("Stage 1 CSV checkpoint is absent: {}".format(checkpoint))
-    return checkpoint, int(selected.iloc[0].BestEpoch), source
+    return checkpoint, int(selected.iloc[0][epoch_field]), source
 
 
 def build_frozen_evaluator(model_factory, args, checkpoint):
@@ -265,34 +279,48 @@ def build_counterfactual_cache(evaluator, train_loader, device, missing_generato
     return frame.loc[:, CACHE_COLUMNS]
 
 
-def write_counterfactual_cache(frame, root, dataset, checkpoint, best_epoch):
+def write_counterfactual_cache(frame, root, dataset, checkpoint, best_epoch,
+                               version=CACHE_VERSION, seed=None, rng_state_preserved=True):
     if list(frame.columns) != list(CACHE_COLUMNS):
         raise ValueError("Cache columns do not match the pre-registered schema.")
-    paths = cache_paths(root, dataset)
+    paths = cache_paths(root, dataset, version=version, seed=seed)
     paths["directory"].mkdir(parents=True, exist_ok=True)
     config = {
         "method": "Stage 3B Counterfactual Compatibility-Gated Prediction KD",
-        "version": CACHE_VERSION, "dataset": dataset, "train_sample_count": int(len(frame)),
+        "version": version, "dataset": dataset, "seed": None if seed is None else int(seed),
+        "train_sample_count": int(len(frame)),
         "rank_method": "average", "sort_kind": "mergesort", "transform": RANK_TRANSFORM,
         "compatibility": "1-q", "source": "train_only", "evaluator_checkpoint": str(checkpoint),
         "evaluator_sha256": checkpoint_sha256(checkpoint), "evaluator_size_bytes": int(Path(checkpoint).stat().st_size),
         "evaluator_key_count": int(len(torch.load(checkpoint, map_location="cpu"))),
         "evaluator_best_epoch": int(best_epoch),
+        "created_from_train_only": True,
+        "rng_state_preserved": bool(rng_state_preserved),
     }
     canonical = json.dumps(config, sort_keys=True, separators=(",", ":"))
     config["config_sha256"] = hashlib.sha256(canonical.encode()).hexdigest()
     frame.to_csv(paths["csv"], index=False)
+    config["cache_sha256"] = checkpoint_sha256(paths["csv"])
     paths["config"].write_text(json.dumps(config, indent=2, sort_keys=True) + "\n")
     paths["summary"].write_text(json.dumps(cache_summary(frame), indent=2, sort_keys=True) + "\n")
     pd.DataFrame(cache_bin_rows(frame)).to_csv(paths["bins"], index=False)
     return paths, config
 
 
-def load_counterfactual_cache(root, dataset):
-    paths = cache_paths(root, dataset)
+def load_counterfactual_cache(root, dataset, version=CACHE_VERSION, seed=None,
+                              expected_evaluator_sha=None):
+    paths = cache_paths(root, dataset, version=version, seed=seed)
     if not paths["csv"].is_file() or not paths["config"].is_file():
         raise FileNotFoundError("Counterfactual cache has not been built.")
     frame = pd.read_csv(paths["csv"])
+    config = json.loads(paths["config"].read_text())
+    expected_seed = None if seed is None else int(seed)
+    if config.get("version") != version or config.get("seed") != expected_seed:
+        raise ValueError("Counterfactual cache version/seed binding is invalid.")
+    if expected_evaluator_sha is not None and config.get("evaluator_sha256") != expected_evaluator_sha:
+        raise ValueError("Counterfactual cache evaluator SHA binding is invalid.")
+    if config.get("source") != "train_only" or not config.get("created_from_train_only", False):
+        raise ValueError("Counterfactual cache is not train-only.")
     if list(frame.columns) != list(CACHE_COLUMNS) or frame.sample_index.duplicated().any():
         raise ValueError("Counterfactual cache is malformed.")
     for mode in MISSING_MODES:

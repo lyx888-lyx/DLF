@@ -17,6 +17,9 @@ from config import get_config_regression
 from data_loader import MMDataLoader
 from trains.singleTask.HingeLoss import HingeLoss
 from trains.singleTask.cf_compat_kd_utils import (
+    CACHE_VERSION,
+    MULTISEED_CACHE_VERSION,
+    MULTISEED_SMOKE_CACHE_VERSION,
     build_counterfactual_cache,
     build_frozen_evaluator,
     cache_paths,
@@ -80,6 +83,7 @@ def parse_args():
     parser.add_argument("--result-root", default="result")
     parser.add_argument("--log-dir", default="log/missing_baseline")
     parser.add_argument("--config-file", default="config/config.json")
+    parser.add_argument("--multiseed-replication", action="store_true")
     args = parser.parse_args()
     if args.eta != 1.0 or args.lambda_kd != 1.0:
         parser.error("Stage 3B fixes --eta and --lambda-kd at 1.0.")
@@ -87,6 +91,11 @@ def parse_args():
         parser.error("--max-epochs must be positive.")
     if args.smoke_test:
         args.max_epochs = 2 if args.max_epochs is None else min(2, args.max_epochs)
+    if args.multiseed_replication:
+        if args.gate_mode != "compat":
+            parser.error("Stage 3B-M permits only --gate-mode compat.")
+        if len(args.seeds) != 1 or args.seeds[0] not in (1112, 1113, 1114, 1115):
+            parser.error("Stage 3B-M runs exactly one new seed (1112-1115) per process.")
     return args
 
 
@@ -110,14 +119,26 @@ def batch_to_device(batch, device):
     )
 
 
-def method_paths(cli, dataset):
+def method_paths(cli, dataset, seed=None):
     _, version, _ = METHODS[cli.gate_mode]
-    result = Path(cli.result_root) / "missing_baseline" / version / "benchmark_train"
-    if cli.smoke_test:
-        result = result / "smoke"
-    main = Path(cli.model_save_dir) / "missing_baseline" / version / "DLF_{}_seed{{}}_best_valid.pth".format(dataset)
-    if cli.smoke_test:
-        main = main.parent / "smoke" / main.name
+    if getattr(cli, "multiseed_replication", False):
+        if seed is None:
+            if len(cli.seeds) != 1:
+                raise ValueError("Stage 3B-M path resolution requires one seed.")
+            seed = cli.seeds[0]
+        result = Path(cli.result_root) / "missing_baseline" / version / "benchmark_multiseed"
+        main_root = Path(cli.model_save_dir) / "missing_baseline" / version / "benchmark_multiseed"
+        if cli.smoke_test:
+            result, main_root = result / "smoke", main_root / "smoke"
+        result = result / "seed{}".format(int(seed))
+        main = main_root / "seed{}".format(int(seed)) / "DLF_{}_seed{{}}_best_valid.pth".format(dataset)
+    else:
+        result = Path(cli.result_root) / "missing_baseline" / version / "benchmark_train"
+        if cli.smoke_test:
+            result = result / "smoke"
+        main = Path(cli.model_save_dir) / "missing_baseline" / version / "DLF_{}_seed{{}}_best_valid.pth".format(dataset)
+        if cli.smoke_test:
+            main = main.parent / "smoke" / main.name
     diagnostic = main.parent / "diagnostic" / main.name.replace("_best_valid.pth", "_best_test_diagnostic.pth")
     return result, main, diagnostic
 
@@ -127,7 +148,11 @@ def create_logger(cli):
     directory = Path(cli.log_dir)
     directory.mkdir(parents=True, exist_ok=True)
     kind = "smoke" if cli.smoke_test else "train"
-    path = directory / "DLF-{}-{}-{}-{}.log".format(cli.dataset, tag, kind, datetime.now().strftime("%Y%m%d-%H%M%S"))
+    if getattr(cli, "multiseed_replication", False):
+        path = directory / "DLF-{}-{}-multiseed-seed{}-{}-{}.log".format(
+            cli.dataset, tag, cli.seeds[0], kind, datetime.now().strftime("%Y%m%d-%H%M%S"))
+    else:
+        path = directory / "DLF-{}-{}-{}-{}.log".format(cli.dataset, tag, kind, datetime.now().strftime("%Y%m%d-%H%M%S"))
     logger = logging.getLogger("cf_compat_kd")
     logger.handlers.clear()
     logger.setLevel(logging.INFO)
@@ -231,12 +256,17 @@ def build_gate_cache_only(cli, seed, logger):
     """This path constructs one non-shuffled train loader and no valid/test loader."""
     setup_seed(seed)
     args = build_config(cli, seed)
-    evaluator_checkpoint, best_epoch, source_csv = locate_stage1_evaluator(cli.result_root, cli.dataset, seed)
+    multiseed = getattr(cli, "multiseed_replication", False)
+    evaluator_checkpoint, best_epoch, source_csv = locate_stage1_evaluator(
+        cli.result_root, cli.dataset, seed, multiseed=multiseed, smoke=cli.smoke_test)
     missing_generator = torch.Generator().manual_seed(int(seed) + 104729)
     train_loader = build_single_split_loader(args, "train", cli.num_workers)
     evaluator = build_frozen_evaluator(DLF, args, evaluator_checkpoint)
     frame = build_counterfactual_cache(evaluator, train_loader, args.device, missing_generator)
-    paths, config = write_counterfactual_cache(frame, cli.result_root, cli.dataset, evaluator_checkpoint, best_epoch)
+    cache_version = (MULTISEED_SMOKE_CACHE_VERSION if cli.smoke_test else MULTISEED_CACHE_VERSION) if multiseed else CACHE_VERSION
+    paths, config = write_counterfactual_cache(
+        frame, cli.result_root, cli.dataset, evaluator_checkpoint, best_epoch,
+        version=cache_version, seed=seed if multiseed else None, rng_state_preserved=True)
     if len(frame) != 1284 or frame.sample_index.nunique() != 1284:
         raise RuntimeError("MOSI cache audit expected exactly 1284 unique train samples.")
     logger.info("train-only cache built samples=%s evaluator=%s source_csv=%s sha=%s",
@@ -250,7 +280,14 @@ def build_gate_cache_only(cli, seed, logger):
 def train_one_seed(cli, seed, logger):
     setup_seed(seed)
     args = build_config(cli, seed)
-    cache_frame, cache_by_index = load_counterfactual_cache(cli.result_root, cli.dataset)
+    multiseed = getattr(cli, "multiseed_replication", False)
+    evaluator_checkpoint, evaluator_best_epoch, evaluator_source = locate_stage1_evaluator(
+        cli.result_root, cli.dataset, seed, multiseed=multiseed, smoke=cli.smoke_test)
+    evaluator_sha = checkpoint_sha256(evaluator_checkpoint)
+    cache_version = (MULTISEED_SMOKE_CACHE_VERSION if cli.smoke_test else MULTISEED_CACHE_VERSION) if multiseed else CACHE_VERSION
+    cache_frame, cache_by_index = load_counterfactual_cache(
+        cli.result_root, cli.dataset, version=cache_version,
+        seed=seed if multiseed else None, expected_evaluator_sha=evaluator_sha)
     if len(cache_frame) != 1284:
         raise RuntimeError("Stage 3B requires the audited 1284-sample MOSI train cache.")
     loaders = MMDataLoader(args, cli.num_workers)
@@ -258,14 +295,12 @@ def train_one_seed(cli, seed, logger):
         raise RuntimeError("Benchmark training must construct train/valid loaders.")
     test_loader = build_single_split_loader(args, "test", cli.num_workers)
     teacher, student, teacher_checkpoint, teacher_sha = initialize_teacher_student(args, cli, seed, loaders)
-    evaluator_checkpoint, evaluator_best_epoch, evaluator_source = locate_stage1_evaluator(cli.result_root, cli.dataset, seed)
-    evaluator_sha = checkpoint_sha256(evaluator_checkpoint)
     optimizer = optim.Adam(student.parameters(), lr=args.learning_rate)
     assert_teacher_not_in_optimizer(teacher, optimizer)
     scheduler = ReduceLROnPlateau(optimizer, mode="min", factor=.5, patience=args.patience)
     criterion, cosine, hinge = nn.L1Loss(), nn.CosineEmbeddingLoss(), HingeLoss()
     missing_generator = torch.Generator().manual_seed(int(seed) + 104729)
-    result_dir, main_template, diagnostic_template = method_paths(cli, cli.dataset)
+    result_dir, main_template, diagnostic_template = method_paths(cli, cli.dataset, seed)
     main_checkpoint = Path(str(main_template).format(seed))
     diagnostic_checkpoint = Path(str(diagnostic_template).format(seed))
     main_checkpoint.parent.mkdir(parents=True, exist_ok=True)
@@ -327,7 +362,7 @@ def train_one_seed(cli, seed, logger):
                     "teacher_error": float(teacher_error[offset]),
                     "teacher_student_abs_gap": float(teacher_student_gap[offset]),
                 })
-        if epoch == 1 and counts != Counter({"LA": 435, "LV": 430, "L": 419}):
+        if epoch == 1 and int(seed) == 1111 and counts != Counter({"LA": 435, "LV": 430, "L": 419}):
             raise RuntimeError("First epoch missing-mask counts must be LA=435 LV=430 L=419.")
         valid = evaluate_all_modes(student, loaders["valid"], args.device, "moddrop", criterion)
         test = evaluate_all_modes(student, test_loader, args.device, "moddrop", criterion)
@@ -408,7 +443,7 @@ def main():
         row, per_epoch, gate_summary, gate_quartiles, valid, diagnostic = train_one_seed(cli, seed, logger)
         rows.append(row); epochs.extend(per_epoch); summaries.extend(gate_summary); quartiles.extend(gate_quartiles)
         valid_predictions.append(valid); diagnostic_predictions.append(diagnostic)
-    result_dir, _, _ = method_paths(cli, cli.dataset)
+    result_dir, _, _ = method_paths(cli, cli.dataset, cli.seeds[0] if cli.seeds else None)
     write_result_csvs(rows, result_dir, cli.dataset)
     pd.DataFrame(epochs).to_csv(result_dir / "{}_epoch_metrics.csv".format(cli.dataset), index=False)
     pd.DataFrame(summaries).to_csv(result_dir / "{}_gate_summary.csv".format(cli.dataset), index=False)
