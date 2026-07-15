@@ -4,7 +4,7 @@ from unittest import mock
 import torch
 import torch.nn as nn
 import train_reliability_kd
-from trains.singleTask.reliability_kd_utils import reliability_weights,reliability_kd_loss,reliability_checkpoint_path
+from trains.singleTask.reliability_kd_utils import reliability_weights,reliability_kd_loss,reliability_checkpoint_path,reliability_static_summary,reliability_quartile_rows
 from trains.singleTask.fixed_kd_utils import freeze_teacher,assert_teacher_not_in_optimizer,teacher_grad_count
 from trains.singleTask.missing_utils import MissingModalityWrapper
 class Tiny(nn.Module):
@@ -29,6 +29,10 @@ class T(unittest.TestCase):
    with self.assertRaises(SystemExit):train_reliability_kd.parse_args()
   with mock.patch.object(sys,'argv',['x','--lambda-kd','.5']):
    with self.assertRaises(SystemExit):train_reliability_kd.parse_args()
+ def test_static_summary_is_not_epoch_metrics_copy(self):
+  summary=reliability_static_summary([{"Seed":1111,"Epoch":1,"J_valid":.7,"J_test":.8,"KD_loss":.1},{"Seed":1111,"Epoch":2,"J_valid":.6,"J_test":.75,"KD_loss":.2}]);self.assertEqual(list(summary.EpochCount),[2]);self.assertEqual(list(summary.BestValidEpoch),[2]);self.assertIn("provenance",summary);self.assertNotIn("Epoch",summary.columns)
+ def test_reliability_quartiles_are_genuine_raw_aggregates(self):
+  rows=reliability_quartile_rows([{"sample_index":i,"reliability":float(i+1),"teacher_error":float(4-i),"kd":.1*i,"student_missing_abs_label_error":.2*i} for i in range(8)],1111,1);self.assertEqual(len(rows),4);self.assertEqual(sum(r["count"] for r in rows),8)
  def test_benchmark_protocol_and_no_temperature(self):
   src=Path('train_reliability_kd.py').read_text();self.assertIn("test_loader",src);self.assertIn("J_valid",src);self.assertNotIn('--temperature',src);self.assertNotIn('--tau',src);self.assertIn("torch.inference_mode",inspect.getsource(__import__('trains.singleTask.fixed_kd_utils',fromlist=['teacher_lav_prediction']).teacher_lav_prediction))
 if __name__=='__main__':unittest.main()
