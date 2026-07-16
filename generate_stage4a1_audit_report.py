@@ -39,8 +39,7 @@ def table(columns, rows):
     return "\n".join(result)
 
 
-def metric_map(row, new=True):
-    prefix = "corrected_test_at_valid_best" if new else "test_at_valid_best"
+def metric_map(row, prefix):
     return {mode: {metric: float(row["{}_{}_{}".format(prefix, mode, metric)]) for metric in METRICS} for mode in MODES}
 
 
@@ -103,9 +102,10 @@ def main():
                        for name, jt, jv, epoch, regret, sha in comparison]
     metric_maps = {
         "ModDrop": audit2["metrics"]["moddrop"]["modes"],
-        "CFCompatKD": metric_map(cf, False), "CFRR-only": metric_map(cfrr, False),
-        "Old CFCompatKD-CFRR": metric_map(old, False),
-        **{name: metric_map(row, True) for name, row in rows.items()},
+        "CFCompatKD": metric_map(cf, "test_at_valid_best"),
+        "CFRR-only": metric_map(cfrr, "corrected_test_at_valid_best"),
+        "Old CFCompatKD-CFRR": metric_map(old, "corrected_test_at_valid_best"),
+        **{name: metric_map(row, "corrected_test_at_valid_best") for name, row in rows.items()},
     }
     mode_rows = [(name, mode, *[values[mode][metric] for metric in METRICS])
                  for name, values in metric_maps.items() for mode in MODES]

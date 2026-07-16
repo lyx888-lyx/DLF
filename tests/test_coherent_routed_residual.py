@@ -244,6 +244,8 @@ class CoherentRoutingTests(unittest.TestCase):
         for name in ("ModDrop","CFCompatKD","CFRR-only","Old CFCompatKD-CFRR","Base-Shared","Corrected-Joint-Shared","Corrected-StopResidual-Shared"):
             self.assertIn(name,source)
         self.assertIn("Awaiting human audit",source)
+        self.assertIn('metric_map(cf, "test_at_valid_best")', source)
+        self.assertIn('metric_map(cfrr, "corrected_test_at_valid_best")', source)
 
 
 if __name__ == "__main__":
