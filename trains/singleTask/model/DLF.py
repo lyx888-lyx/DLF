@@ -344,6 +344,9 @@ class DLF(nn.Module):
             'logits_v_hetero': logits_v_high, 
             'logits_a_hetero': logits_a_high,
             'logits_c': logits_c,
+            # The exact final fused representation consumed by ``out_layer``.
+            # Adding this diagnostic key does not alter any existing output or parameter.
+            'fusion_feature': last_hs_proj,
             'output_logit': output
         }
         return res
