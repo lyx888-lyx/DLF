@@ -61,6 +61,12 @@ METHODS = {
     "cfrr_only": ("DLF-CFRR-only-v1", "cfrr_only_v1", "cfrr-only"),
     "cfcompat_cfrr": ("DLF-CFCompatKD-CFRR-v1", "cf_compat_cfr_v1", "cfcompat-cfrr"),
 }
+RESULT_FILES = (
+    "mosi_per_seed.csv", "mosi_summary.csv", "mosi_epoch_metrics.csv",
+    "mosi_residual_summary.csv", "mosi_residual_mode_metrics.csv",
+    "mosi_residual_quartiles.csv", "mosi_best_valid_predictions.csv",
+    "mosi_best_test_diagnostic_predictions.csv",
+)
 
 
 def parse_args(argv=None):
@@ -175,8 +181,12 @@ def initialize_models(args, cli, loaders, scales):
 def _formal_output_guard(cli, result_dir, main_checkpoint, diagnostic_checkpoint):
     if cli.smoke_test:
         return
-    if result_dir.exists() or main_checkpoint.exists() or diagnostic_checkpoint.exists():
-        raise FileExistsError("Formal Stage 4A outputs already exist; selective reruns are forbidden.")
+    existing = [result_dir / name for name in RESULT_FILES if (result_dir / name).exists()]
+    existing.extend(path for path in (main_checkpoint, diagnostic_checkpoint) if path.exists())
+    if existing:
+        raise FileExistsError(
+            "Formal Stage 4A outputs already exist; selective reruns are forbidden: {}".format(existing)
+        )
 
 
 def train_one_seed(cli, logger, log_path):

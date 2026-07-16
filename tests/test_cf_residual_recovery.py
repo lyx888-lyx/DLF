@@ -332,6 +332,17 @@ class ResidualRecoveryTests(unittest.TestCase):
         source = Path("train_cf_residual_recovery.py").read_text()
         self.assertIn("Formal Stage 4A outputs already exist", source)
 
+    def test_formal_guard_allows_smoke_subdirectory_but_rejects_formal_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); result = root / "benchmark_train"
+            (result / "smoke").mkdir(parents=True)
+            cli = SimpleNamespace(smoke_test=False)
+            main = root / "main.pth"; diagnostic = root / "diagnostic.pth"
+            trainer._formal_output_guard(cli, result, main, diagnostic)
+            (result / "mosi_per_seed.csv").write_text("formal")
+            with self.assertRaises(FileExistsError):
+                trainer._formal_output_guard(cli, result, main, diagnostic)
+
     def test_final_report_compares_six_methods_and_stops(self):
         source = Path("generate_stage4a_audit_report.py").read_text()
         for method in ("ModDrop","FixedKD","ReliabilityKD","CFCompatKD","CFRR-only","CFCompatKD-CFRR"):
