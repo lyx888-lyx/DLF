@@ -106,7 +106,7 @@ def main():
     result_class=classification(items,audit_q)
     controls=[
         historical_row("ModDrop","result/missing_baseline/moddrop/train/mosi_per_seed.csv",j_test=.737780),
-        historical_row("FixedKD","result/missing_baseline/fixed_kd_v1/benchmark_train/mosi_per_seed.csv"),
+        historical_row("FixedKD","result/missing_baseline/fixed_kd/train/mosi_per_seed.csv"),
         historical_row("ReliabilityKD","result/missing_baseline/reliability_kd_v1/benchmark_train/mosi_per_seed.csv"),
         historical_row("CFCompatKD","result/missing_baseline/cf_compat_kd_v1/benchmark_train/mosi_per_seed.csv",.677964,CF_J),
     ]
@@ -114,7 +114,7 @@ def main():
     for name,_,row,_,_ in items:
         rows.append({"Method":name,"BestValidEpoch":int(row.BestValidEpoch),"J_valid":float(row.J_valid),"J_test_at_valid_best":float(row.J_test_at_valid_best),
                      "SelectionRegret":float(row.SelectionRegret),"CheckpointSHA256":row.MainCheckpointSHA256})
-    rows.append(historical_row("CFRR-only (historical)","result/missing_baseline/cfrr_v1/benchmark_train/mosi_per_seed.csv",.689520,CFRR_J))
+    rows.append(historical_row("CFRR-only (historical)","result/missing_baseline/cfrr_only_v1/benchmark_train/mosi_per_seed.csv",.689520,CFRR_J))
     comparison=pd.DataFrame(rows); comparison["Delta_vs_CFCompatKD"]=comparison.J_test_at_valid_best-CF_J
     metric_rows=[]
     for name,_,row,_,_ in items:
