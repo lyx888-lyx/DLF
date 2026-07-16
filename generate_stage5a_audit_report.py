@@ -46,10 +46,13 @@ def historical_row(name, path, j_valid=None, j_test=None):
         j_valid = float(row.get("J_valid", row.get("J_val", j_valid))) if not pd.isna(row.get("J_valid", row.get("J_val", np.nan))) else j_valid
         j_test = float(row.get("J_test_at_valid_best", row.get("J_test", j_test))) if not pd.isna(row.get("J_test_at_valid_best", row.get("J_test", np.nan))) else j_test
         epoch = row.get("BestValidEpoch", row.get("BestEpoch", np.nan)); checkpoint = row.get("MainCheckpoint", row.get("Checkpoint", ""))
+        regret = row.get("SelectionRegret", np.nan)
+        if pd.isna(regret) and j_test is not None and not pd.isna(row.get("BestObservedTestJ", np.nan)):
+            regret = float(j_test) - float(row.BestObservedTestJ)
         sha = checkpoint_sha256(checkpoint) if checkpoint and Path(str(checkpoint)).is_file() else "NA"
     else:
-        epoch=np.nan; sha="NA"
-    return {"Method":name,"BestValidEpoch":epoch,"J_valid":j_valid,"J_test_at_valid_best":j_test,"SelectionRegret":np.nan,"CheckpointSHA256":sha}
+        epoch=np.nan; sha="NA"; regret=np.nan
+    return {"Method":name,"BestValidEpoch":epoch,"J_valid":j_valid,"J_test_at_valid_best":j_test,"SelectionRegret":regret,"CheckpointSHA256":sha}
 
 
 def new_artifacts():
@@ -106,7 +109,7 @@ def main():
     result_class=classification(items,audit_q)
     controls=[
         historical_row("ModDrop","result/missing_baseline/moddrop/train/mosi_per_seed.csv",j_test=.737780),
-        historical_row("FixedKD","result/missing_baseline/fixed_kd/train/mosi_per_seed.csv"),
+        historical_row("FixedKD","result/missing_baseline/fixed_kd/train/mosi_per_seed.csv",j_test=.7415197613387503),
         historical_row("ReliabilityKD","result/missing_baseline/reliability_kd_v1/benchmark_train/mosi_per_seed.csv"),
         historical_row("CFCompatKD","result/missing_baseline/cf_compat_kd_v1/benchmark_train/mosi_per_seed.csv",.677964,CF_J),
     ]
