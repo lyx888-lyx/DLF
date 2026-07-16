@@ -12,12 +12,14 @@
 - `manual_replay`: replay `grad(L_sup) + grad(L_kd)` and require real DLF
   single-batch gradient, single-step parameter, optimizer, and scheduler
   equivalence before any training.
-- Real DLF preflight showed that separate autograd traversals have optimizer-
-  visible FP32 reduction-order round-off despite global cosine above 0.999999.
-  The implementation therefore also evaluates the frozen Stage 3 total gradient
-  and adds only `g_stage3_total - (g_sup + g_kd)` as a numerical replay residual.
-  This residual is common to all three policies, is not a loss or tunable method
-  term, and is required to satisfy the fixed per-parameter replay tolerance.
+- Real DLF preflight showed that separately materializing and adding gradients
+  has optimizer-visible FP32 reduction-order round-off despite global cosine
+  above 0.999999.  More importantly, ten such additions do not reproduce the
+  original `AccumulateGrad` ordering.  Each training batch therefore executes
+  exactly one native Stage 3 total-loss backward as its numerical baseline.
+  Manual Replay leaves that gradient untouched; the two interventions add only
+  `g_kd_used - g_kd_raw`.  This is algebraically `g_sup + g_kd_used`, preserves
+  the original ten-batch accumulation exactly, and introduces no extra loss.
 - `conflict_drop`: use the unchanged KD gradient when the global FP32 dot product
   is non-negative and zero it exactly when the dot product is negative.
 - `task_anchored_projection`: on a negative global FP32 dot product only, use

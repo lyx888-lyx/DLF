@@ -16,7 +16,7 @@ from trains.singleTask.gradient_aligned_cfcompat_utils import (
     clone_gradients, combine_task_kd_gradients, compare_tensor_tuples,
     finite_quantiles, gradient_cosine, gradient_dot, gradient_norm,
     group_gradient_metrics, ordered_autograd, trainable_named_parameters,
-    replay_corrected_total, write_parameter_gradients,
+    replay_corrected_total, subtract_gradient_tuples, write_parameter_gradients,
 )
 
 
@@ -156,6 +156,10 @@ class GradientAlignedCFCompatTests(unittest.TestCase):
         value = add_gradient_tuples((None, torch.tensor([1.])), (torch.tensor([2., 3.]), None))
         torch.testing.assert_close(value[0], torch.tensor([2., 3.])); torch.testing.assert_close(value[1], torch.tensor([1.]))
 
+    def test_policy_delta_is_used_minus_raw_kd(self):
+        value = subtract_gradient_tuples((None, torch.tensor([3.])), (torch.tensor([2., 1.]), torch.tensor([1.])))
+        torch.testing.assert_close(value[0], torch.tensor([-2., -1.])); torch.testing.assert_close(value[1], torch.tensor([2.]))
+
     def test_compare_tensor_tuples_reports_mismatch(self):
         result = compare_tensor_tuples((torch.ones(2), None), (torch.tensor([1., 2.]), torch.ones(1)))
         self.assertGreater(result["mismatched_parameter_count"], 0); self.assertGreater(result["max_abs_difference"], 0)
@@ -224,11 +228,12 @@ class GradientAlignedCFCompatTests(unittest.TestCase):
         for forbidden in ("--lambda-kd", "--temperature", "--threshold", "per_layer", "per_mode"):
             self.assertNotIn(forbidden, source)
 
-    def test_training_uses_two_autograd_calls_and_no_total_backward(self):
+    def test_training_uses_separate_diagnostics_and_one_reference_backward(self):
         source = inspect.getsource(train.train_one_seed)
         self.assertIn("ordered_autograd(full_loss + missing_loss", source)
         self.assertIn("ordered_autograd(kd_loss", source)
-        self.assertNotIn(".backward()", source)
+        self.assertEqual(source.count(".backward()"), 1)
+        self.assertIn("subtract_gradient_tuples(used_gradients, kd_gradients)", source)
 
     def test_reference_backward_is_confined_to_equivalence_gate(self):
         source = inspect.getsource(train.run_manual_equivalence_gate)

@@ -34,7 +34,8 @@ from trains.singleTask.gradient_aligned_cfcompat_utils import (
     clone_gradients, combine_task_kd_gradients, compare_tensor_tuples,
     finite_quantiles, gradient_dot, group_gradient_metrics,
     gradient_norm, ordered_autograd, replay_corrected_total,
-    trainable_named_parameters, write_parameter_gradients,
+    subtract_gradient_tuples, trainable_named_parameters,
+    write_parameter_gradients,
 )
 from trains.singleTask.gradient_conflict_utils import (
     ALL_GROUP, assign_compatibility_quartiles, build_parameter_groups,
@@ -398,11 +399,14 @@ def train_one_seed(cli, seed, logger):
             full_loss, missing_loss, kd_loss, _, _, modes, _ = _batch_losses(student, teacher, batch, mask, cache_by_index, args, criterion, cosine, hinge)
             task_gradients = ordered_autograd(full_loss + missing_loss, parameters, retain_graph=True)
             kd_gradients = ordered_autograd(kd_loss, parameters, retain_graph=True)
-            reference_total = ordered_autograd(full_loss + missing_loss + kd_loss, parameters, retain_graph=False)
-            used_gradients, _, metrics = combine_task_kd_gradients(parameters, task_gradients, kd_gradients, cli.gradient_policy)
-            total_gradients = replay_corrected_total(reference_total, task_gradients, kd_gradients, used_gradients)
-            metrics["GlobalTotalGradNorm"] = gradient_norm(total_gradients)
-            write_parameter_gradients(parameters, total_gradients, accumulate=True)
+            used_gradients, total_gradients, metrics = combine_task_kd_gradients(
+                parameters, task_gradients, kd_gradients, cli.gradient_policy)
+            # Exactly one native Stage 3 accumulation preserves AccumulateGrad
+            # reduction order across the frozen ten-batch update window.
+            (full_loss + missing_loss + kd_loss).backward()
+            if cli.gradient_policy != "manual_replay":
+                policy_delta = subtract_gradient_tuples(used_gradients, kd_gradients)
+                write_parameter_gradients(parameters, policy_delta, accumulate=True)
             if not first_update_done: accumulated_task = add_gradient_tuples(accumulated_task, task_gradients)
             actual_descent = float("nan"); update_boundary = step % args.update_epochs == 0 or step == len(loaders["train"])
             if update_boundary:
@@ -422,7 +426,7 @@ def train_one_seed(cli, seed, logger):
             for local in group_gradient_metrics(task_gradients, kd_gradients, used_gradients, parameters, group_indices):
                 group_rows.append({"Seed": seed, "Epoch": epoch, "Step": step, "Method": method,
                                    "GradientPolicy": cli.gradient_policy, **local})
-            del task_gradients, kd_gradients, reference_total, used_gradients, total_gradients
+            del task_gradients, kd_gradients, used_gradients, total_gradients
         if epoch == 1 and counts != Counter({"LA": 435, "LV": 430, "L": 419}):
             raise RuntimeError("Epoch1 missing counts must be LA=435 LV=430 L=419.")
         valid = evaluate_all_modes(student, loaders["valid"], args.device, "moddrop", criterion)

@@ -231,6 +231,21 @@ def add_gradient_tuples(left, right):
     return tuple(result)
 
 
+def subtract_gradient_tuples(left, right):
+    """Return ``left - right`` while preserving unused coordinates."""
+    result = []
+    for first, second in zip(left, right):
+        if first is None and second is None:
+            result.append(None)
+        elif first is None:
+            result.append(-second.detach())
+        elif second is None:
+            result.append(first.detach())
+        else:
+            result.append(first.detach() - second.detach())
+    return tuple(result)
+
+
 def replay_corrected_total(reference_total, task, raw_kd, used_kd):
     """Anchor policy updates to the exact Stage 3 backward accumulation order.
 
