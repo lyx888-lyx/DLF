@@ -119,11 +119,27 @@ def main():
                      "SelectionRegret":float(row.SelectionRegret),"CheckpointSHA256":row.MainCheckpointSHA256})
     rows.append(historical_row("CFRR-only (historical)","result/missing_baseline/cfrr_only_v1/benchmark_train/mosi_per_seed.csv",.689520,CFRR_J))
     comparison=pd.DataFrame(rows); comparison["Delta_vs_CFCompatKD"]=comparison.J_test_at_valid_best-CF_J
-    metric_rows=[]
+    metric_rows=[]; trajectory_rows=[]; selected_quartiles=[]
+    cf_metrics=one("result/missing_baseline/cf_compat_kd_v1/benchmark_train/mosi_per_seed.csv")
     for name,_,row,_,_ in items:
         for mode in MODES:
             metric_rows.append({"Method":name,"Mode":mode,**{metric:float(row["test_at_valid_best_{}_{}".format(mode,metric)]) for metric in METRICS}})
         metric_rows.append({"Method":name,"Mode":"MissingMacro",**{metric:float(row["test_at_valid_best_MissingMacro_{}".format(metric)]) for metric in METRICS}})
+        trajectory_rows.append({"Method":name,"TotalEpochs":int(row.TotalEpochs),"BestValidEpoch":int(row.BestValidEpoch),
+                                "J_valid":float(row.J_valid),"J_test_at_valid_best":float(row.J_test_at_valid_best),
+                                "BestObservedTestEpoch":int(row.BestObservedTestEpoch),"BestObservedTestJ":float(row.BestObservedTestJ),
+                                "SelectionRegret":float(row.SelectionRegret)})
+    metric_frame=pd.DataFrame(metric_rows); delta_rows=[]
+    for _,local in metric_frame.iterrows():
+        mode=local.Mode
+        deltas={}
+        for metric in METRICS:
+            if mode=="MissingMacro":
+                control=float(np.mean([cf_metrics["test_at_valid_best_{}_{}".format(m,metric)] for m in ("LA","LV","L")]))
+            else:
+                control=float(cf_metrics["test_at_valid_best_{}_{}".format(mode,metric)])
+            deltas["Delta_{}".format(metric)]=float(local[metric])-control
+        delta_rows.append({"Method":local.Method,"Mode":mode,**deltas})
     contributions=[]
     for name,_,row,route,_ in items:
         contributions.append({"Method":name,"Epoch":int(row.BestValidEpoch),"FullRaw":route.FullKDRawMean,"ModeRaw":route.ModeKDRawMean,
@@ -131,6 +147,11 @@ def main():
                               "FullFraction":route.FullContributionFraction,"ModeFraction":route.ModeContributionFraction,
                               "AlphaMean":route.AlphaMean,"AlphaStd":route.AlphaStd,"AlphaMin":route.AlphaMin,"AlphaMax":route.AlphaMax,
                               "TeacherDisagreement":route.TeacherDisagreementMean,"StudentFullGap":route.StudentFullTeacherGap,"StudentModeGap":route.StudentModeTeacherGap})
+        quartiles=pd.read_csv(Path("result/missing_baseline")/dict((n,v) for n,v in NEW)[name]/"benchmark_train/mosi_route_quartiles.csv")
+        selected=quartiles.loc[quartiles.Epoch.eq(int(row.BestValidEpoch))].copy(); selected.insert(0,"AuditMethod",name)
+        selected_quartiles.append(selected[["AuditMethod","Quartile","count","mean_compatibility","mean_weighted_full_contribution",
+                                             "mean_weighted_mode_contribution","mean_full_KD","mean_mode_KD","mean_student_label_error",
+                                             "fraction_mode_teacher_closer_to_label","fraction_student_closer_to_mode_teacher","LA_count","LV_count","L_count"]])
     q_display=audit_q[["Mode","Quartile","count","mean_compatibility","mean_full_teacher_error","mean_mode_teacher_error",
                        "fraction_mode_teacher_more_accurate","mean_initial_student_full_gap","mean_initial_student_mode_gap",
                        "fraction_mode_teacher_closer_to_student","mean_teacher_disagreement"]]
@@ -144,8 +165,10 @@ def main():
                checkpoint_sha256(audit_root/"train_dual_teacher_targets.csv")),
            "- Missing-sequence SHA: `{}` (identical across A/B/C).".format(sequence_sha),
            "- No NaN/Inf/OOM, Teacher gradient, test-based main selection, formula change, or hyperparameter change was detected.","",
-           "## Eight-method comparison","",table(comparison),"","## New-method selected-main test metrics","",table(pd.DataFrame(metric_rows)),"",
-           "## Route contributions at validation-best","",table(pd.DataFrame(contributions)),"","## Train-only suitability audit","",
+           "## Eight-method comparison","",table(comparison),"","## New-method formal trajectories","",table(pd.DataFrame(trajectory_rows)),"",
+           "## New-method selected-main test metrics","",table(metric_frame),"","## All metric deltas versus CFCompatKD","",table(pd.DataFrame(delta_rows)),"",
+           "## Route contributions at validation-best","",table(pd.DataFrame(contributions)),"","## Route compatibility quartiles at validation-best","",
+           table(pd.concat(selected_quartiles,ignore_index=True)),"","## Train-only suitability audit","",
            "The audit contains 1284 unique train samples (3852 sample-mode rows), does not read valid/test, and preserves RNG/model parameters.","",table(q_display),"",
            "Low-compatibility mean fraction Mode Teacher closer to label: {:.6f}; closer to initial Student: {:.6f}.".format(
                float(audit_q.loc[audit_q.Quartile.eq("Q1_low"),"fraction_mode_teacher_more_accurate"].mean()),
