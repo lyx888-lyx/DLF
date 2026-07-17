@@ -223,6 +223,25 @@ class CFCompatPredictionEnsembleTests(unittest.TestCase):
         self.assertEqual(len(diversity), 2 * 4 * 10)
         self.assertTrue(np.isfinite(diversity.select_dtypes(include=[np.number])).all().all())
 
+    def test_leave_one_out_metrics_have_no_not_applicable_nan(self):
+        frames = {}
+        for split in ("valid", "test"):
+            frames[split] = {
+                seed: prediction_frame(seed, split, offset=index * 0.1)
+                for index, seed in enumerate(PE5_SEEDS)
+            }
+            frames[split]["ensemble"] = equal_prediction_ensemble(
+                list(frames[split].values()), split
+            )
+        metrics, predictions = aggregate.leave_one_out(
+            frames, {"valid": 1.0, "test": 1.0}
+        )
+        self.assertFalse(metrics.isna().any().any())
+        self.assertFalse(predictions.isna().any().any())
+        self.assertTrue(
+            np.isfinite(metrics.select_dtypes(include=[np.number])).all().all()
+        )
+
     def test_manifest_rejects_ema_checkpoint(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

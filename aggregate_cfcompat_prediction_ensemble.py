@@ -182,6 +182,9 @@ def leave_one_out(frames, online_mean_j):
             omitted_frame = frames[split][omitted]
             metrics, j_value = metrics_from_predictions(ensemble)
             full_metrics, full_j = metrics_from_predictions(full)
+            mode_abs_distances = []
+            mode_signed_distances = []
+            mode_correlations = []
             for mode in PE5_MODES:
                 prediction = ensemble["{}_pred".format(mode)].to_numpy(
                     dtype=np.float64
@@ -190,6 +193,11 @@ def leave_one_out(frames, online_mean_j):
                     dtype=np.float64
                 )
                 distance = np.abs(removed - prediction)
+                signed_distance = float((removed - prediction).mean())
+                correlation = pearson(removed, prediction)
+                mode_abs_distances.append(float(distance.mean()))
+                mode_signed_distances.append(signed_distance)
+                mode_correlations.append(correlation)
                 for index, row in ensemble.iterrows():
                     prediction_rows_output.append(
                         {
@@ -218,12 +226,16 @@ def leave_one_out(frames, online_mean_j):
                             "RemovedVsRemainingMeanAbsPredictionDistance": float(
                                 distance.mean()
                             ),
-                            "RemovedVsRemainingSignedPredictionDistance": float(
-                                (removed - prediction).mean()
-                            ),
-                            "RemovedVsRemainingPredictionCorrelation": pearson(
-                                removed, prediction
-                            ),
+                            "RemovedVsRemainingSignedPredictionDistance": signed_distance,
+                            "RemovedVsRemainingPredictionCorrelation": correlation,
+                            "LOOObjectiveJ": j_value,
+                            "FullPE5ObjectiveJ": full_j,
+                            "DeltaJVsFullPE5": j_value - full_j,
+                            "OnlineFiveSeedMeanJ": online_mean_j[split],
+                            "DeltaJVsOnlineFiveSeedMean": j_value
+                            - online_mean_j[split],
+                            "BetterThanOnlineFiveSeedMean": j_value
+                            < online_mean_j[split],
                             "DiagnosticOnly": True,
                             "MemberSelectionAllowed": False,
                         }
@@ -238,8 +250,20 @@ def leave_one_out(frames, online_mean_j):
                     "Value": j_value,
                     "FullPE5Value": full_j,
                     "DeltaVsFullPE5": j_value - full_j,
-                    "OnlineFiveSeedMean": online_mean_j[split],
-                    "DeltaVsOnlineFiveSeedMean": j_value - online_mean_j[split],
+                    "RemovedVsRemainingMeanAbsPredictionDistance": float(
+                        np.mean(mode_abs_distances)
+                    ),
+                    "RemovedVsRemainingSignedPredictionDistance": float(
+                        np.mean(mode_signed_distances)
+                    ),
+                    "RemovedVsRemainingPredictionCorrelation": float(
+                        np.mean(mode_correlations)
+                    ),
+                    "LOOObjectiveJ": j_value,
+                    "FullPE5ObjectiveJ": full_j,
+                    "DeltaJVsFullPE5": j_value - full_j,
+                    "OnlineFiveSeedMeanJ": online_mean_j[split],
+                    "DeltaJVsOnlineFiveSeedMean": j_value - online_mean_j[split],
                     "BetterThanOnlineFiveSeedMean": j_value < online_mean_j[split],
                     "DiagnosticOnly": True,
                     "MemberSelectionAllowed": False,
@@ -522,7 +546,7 @@ def write_report(
         "Value",
         "FullPE5Value",
         "DeltaVsFullPE5",
-        "OnlineFiveSeedMean",
+        "OnlineFiveSeedMeanJ",
         "BetterThanOnlineFiveSeedMean",
     ]]
     diversity_summary = diversity.groupby(["Split", "Mode"], as_index=False).agg(
