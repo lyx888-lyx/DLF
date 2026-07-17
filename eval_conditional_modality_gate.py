@@ -223,6 +223,26 @@ def value_at_best(result, filename, modality, column):
     return float(local.iloc[0][column])
 
 
+def markdown_table(frame):
+    """Render a small DataFrame without adding an undeclared tabulate dependency."""
+    columns = [str(column) for column in frame.columns]
+
+    def cell(value):
+        if isinstance(value, (float, np.floating)):
+            value = "{:.6g}".format(float(value))
+        return str(value).replace("|", r"\|")
+
+    rows = [
+        "| " + " | ".join(columns) + " |",
+        "| " + " | ".join("---" for _ in columns) + " |",
+    ]
+    rows.extend(
+        "| " + " | ".join(cell(value) for value in row) + " |"
+        for row in frame.itertuples(index=False, name=None)
+    )
+    return "\n".join(rows)
+
+
 def write_final_report(cli):
     roots = {
         variant: result_directory(cli.result_root, variant, False)
@@ -233,10 +253,21 @@ def write_final_report(cli):
         for variant, root in roots.items()
     }
     replay = results["identity_replay"]
+    replay_references = {
+        "test_at_valid_best_LAV_MAE": 0.7157605886459351,
+        "test_at_valid_best_LA_MAE": 0.7190439105033875,
+        "test_at_valid_best_LV_MAE": 0.7186596393585205,
+        "test_at_valid_best_L_MAE": 0.7223015427589417,
+    }
+    replay_differences = {
+        key: abs(float(replay[key]) - reference)
+        for key, reference in replay_references.items()
+    }
     replay_pass = (
         int(replay.BestValidEpoch) == 9
         and abs(float(replay.J_valid) - 0.6779637237389882) <= 1e-4
         and abs(float(replay.J_test_at_valid_best) - 0.7178811430931091) <= 1e-4
+        and all(difference <= 1e-4 for difference in replay_differences.values())
     )
     cmug = results["utility_gate_matched"]
     utility = results["utility_gate"]
@@ -258,30 +289,99 @@ def write_final_report(cli):
         roots["utility_gate_matched"] / "mosi_matched_shuffle_summary.csv"
     )
     matched = matched[matched.Epoch.eq(int(cmug.BestValidEpoch))]
+    cmug_gate_summary = pd.read_csv(
+        roots["utility_gate_matched"] / "mosi_gate_summary.csv"
+    )
+    cmug_gate_summary = cmug_gate_summary[
+        cmug_gate_summary.Epoch.eq(int(cmug.BestValidEpoch))
+        & cmug_gate_summary.Split.eq("valid")
+    ]
     recognizable = any(
         aurocs[modality] > .55 and gaps[modality] > 0 for modality in MODALITIES
     )
+    nondegenerate = bool(
+        (
+            (cmug_gate_summary.q_std > 1e-6)
+            & (
+                cmug_gate_summary.q_low_saturation_fraction
+                + cmug_gate_summary.q_high_saturation_fraction
+                < .95
+            )
+        ).any()
+    )
+    audits = pd.read_csv(
+        roots["utility_gate_matched"] / "mosi_valid_modality_utility.csv"
+    )
+    baseline_gain = pd.read_csv(
+        stage7a_directory(cli) / "modality_gain_summary.csv"
+    )
+    baseline_gain = baseline_gain[
+        baseline_gain.State.eq("cfcompat_best_valid")
+        & baseline_gain.Split.eq("valid")
+        & baseline_gain.Modality.isin(MODALITIES)
+    ]
+    baseline_shuffle = pd.read_csv(
+        stage7a_directory(cli) / "shuffle_summary.csv"
+    )
+    baseline_shuffle = baseline_shuffle[
+        baseline_shuffle.State.eq("cfcompat_best_valid")
+        & baseline_shuffle.Split.eq("valid")
+        & baseline_shuffle.Modality.isin(MODALITIES)
+    ]
+    audit_deltas = {}
+    for modality in MODALITIES:
+        audit = audits[audits.Modality.eq(modality)].iloc[0]
+        reference_gain = float(
+            baseline_gain[baseline_gain.Modality.eq(modality)].iloc[0]["mean"]
+        )
+        reference_shuffle = float(
+            baseline_shuffle[baseline_shuffle.Modality.eq(modality)].iloc[0]["mean"]
+        )
+        audit_deltas[modality] = {
+            "MeanGainDeltaVsCFCompat": float(audit.MeanGain) - reference_gain,
+            "ShuffleDamageDeltaVsCFCompat": (
+                float(audit.ShuffleDamage) - reference_shuffle
+            ),
+        }
+    positive_audit_change = any(
+        values["MeanGainDeltaVsCFCompat"] > 0
+        or values["ShuffleDamageDeltaVsCFCompat"] > 0
+        for values in audit_deltas.values()
+    )
+    matched_better = bool((matched.FractionMatchedBetter > .5).any())
     improved = float(cmug.J_test_at_valid_best) < 0.7178811430931091
+    better_than_utility = (
+        float(cmug.J_test_at_valid_best) < float(utility.J_test_at_valid_best)
+    )
+    lav_not_worse = (
+        float(cmug.test_at_valid_best_LAV_MAE)
+        <= float(replay.test_at_valid_best_LAV_MAE) + 1e-4
+    )
+    missing_macro_not_worse = (
+        float(cmug.test_at_valid_best_MissingMacro_MAE)
+        <= float(replay.test_at_valid_best_MissingMacro_MAE) + 1e-4
+    )
+    basic_success = (
+        improved and better_than_utility and lav_not_worse
+        and missing_macro_not_worse and recognizable
+    )
+    strong_success = (
+        basic_success
+        and float(cmug.J_test_at_valid_best) < 0.716961
+        and positive_audit_change and matched_better and nondegenerate
+    )
     if not replay_pass:
         classification = "F. Identity Replay failed; implementation failure."
-    elif improved and float(cmug.J_test_at_valid_best) < float(utility.J_test_at_valid_best):
-        audits = pd.read_csv(
-            roots["utility_gate_matched"] / "mosi_valid_modality_utility.csv"
-        )
-        baseline = pd.read_csv(
-            stage7a_directory(cli) / "shuffle_summary.csv"
-        )
-        positive_audit = bool((audits.MeanGain > 0).any() or (audits.ShuffleDamage > 0).any())
-        matched_better = bool((matched.FractionMatchedBetter > .5).any())
-        if (
-            float(cmug.J_test_at_valid_best) < 0.716961
-            and positive_audit and matched_better and recognizable
-        ):
+    elif improved and better_than_utility:
+        if strong_success:
             classification = "A. CMUG SUCCESS; freeze before any five-seed replication."
-        elif recognizable:
+        elif basic_success:
             classification = "A. CMUG exceeds CFCompatKD and Utility-Gate (basic success)."
         else:
-            classification = "C. Metric improvement without supported utility recognition."
+            classification = (
+                "C. Metric improvement without complete gate/utility support; "
+                "do not claim improved modality utilization."
+            )
     elif float(utility.J_test_at_valid_best) < min(
         float(cmug.J_test_at_valid_best), 0.7178811430931091
     ):
@@ -301,15 +401,33 @@ def write_final_report(cli):
     lines = [
         "# Stage 7B Conditional Modality Utility Gating Final Audit", "",
         "## Result classification", "", "**{}**".format(classification), "",
-        "## Validation-selected performance", "", table.to_markdown(index=False), "",
+        "## Validation-selected performance", "", markdown_table(table), "",
         "## Identity replay gate", "",
         "- Passed: **{}**".format(replay_pass),
-        "- Reference: epoch 9, J_valid 0.677963724, J_test 0.717881143.", "",
+        "- Reference: epoch 9, J_valid 0.677963724, J_test 0.717881143.",
+        "- Four test-mode MAE maximum absolute difference: {:.3g}.".format(
+            max(replay_differences.values())
+        ), "",
         "## CMUG gate diagnostics at validation-best", "",
         "- Audio AUROC/gap: {:.6f} / {:.6f}".format(aurocs["A"], gaps["A"]),
-        "- Vision AUROC/gap: {:.6f} / {:.6f}".format(aurocs["V"], gaps["V"]), "",
+        "- Vision AUROC/gap: {:.6f} / {:.6f}".format(aurocs["V"], gaps["V"]),
+        "- Recognizable/nondegenerate: {} / {}.".format(recognizable, nondegenerate),
+        "- LAV/ MissingMacro non-regression: {} / {}.".format(
+            lav_not_worse, missing_macro_not_worse
+        ),
+        "- Utility audit positive change vs CFCompat: {}.".format(
+            positive_audit_change
+        ),
+        "- Audio MeanGain/ShuffleDamage deltas: {:.6g} / {:.6g}.".format(
+            audit_deltas["A"]["MeanGainDeltaVsCFCompat"],
+            audit_deltas["A"]["ShuffleDamageDeltaVsCFCompat"],
+        ),
+        "- Vision MeanGain/ShuffleDamage deltas: {:.6g} / {:.6g}.".format(
+            audit_deltas["V"]["MeanGainDeltaVsCFCompat"],
+            audit_deltas["V"]["ShuffleDamageDeltaVsCFCompat"],
+        ), "",
         "## Matched-shuffle diagnostics", "",
-        matched.to_markdown(index=False), "",
+        markdown_table(matched), "",
         "## Protocol declaration", "",
         "- Main checkpoints were selected by validation J only.",
         "- Utility labels came from Stage7A train artifacts; valid labels were diagnostic only.",
@@ -324,9 +442,19 @@ def write_final_report(cli):
         "Classification": classification,
         "IdentityReplayPassed": replay_pass,
         "CMUGRecognizableUtilityGate": recognizable,
+        "CMUGGateNondegenerate": nondegenerate,
         "CMUGImprovedOverCFCompat": improved,
+        "CMUGBetterThanUtilityGate": better_than_utility,
+        "LAVMAENotWorse": lav_not_worse,
+        "MissingMacroMAENotWorse": missing_macro_not_worse,
+        "PositiveUtilityAuditChangeVsCFCompat": positive_audit_change,
+        "MatchedBetterFractionAboveHalf": matched_better,
+        "BasicSuccess": basic_success,
+        "StrongSuccess": strong_success,
         "AudioValidAUROC": aurocs["A"], "VisionValidAUROC": aurocs["V"],
         "AudioPositiveNegativeGap": gaps["A"], "VisionPositiveNegativeGap": gaps["V"],
+        "AuditDeltasVsCFCompat": audit_deltas,
+        "IdentityReplayModeMAEMaxAbsDifference": max(replay_differences.values()),
         "NoFiveSeedStarted": True,
     }
     (roots["utility_gate_matched"] / "stage7b_cmug_final_audit.json").write_text(
