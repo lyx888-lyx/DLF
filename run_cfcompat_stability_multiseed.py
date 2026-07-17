@@ -47,6 +47,7 @@ from trains.singleTask.cfcompat_stability_utils import (
     expected_missing_sequence_sha,
     initialize_ema,
     optimizer_step_and_update_ema,
+    parameter_distance,
     preserve_rng_state,
     rank_trajectory,
     rng_states_equal,
@@ -227,8 +228,10 @@ def audit_model_state(student):
             for name, value in student.named_buffers()
         ],
         "Policy": (
-            "No BatchNorm/running-stat recalibration. Floating state follows EMA "
-            "or CPU-FP64 soup; non-floating state is copied/required identical."
+            "No BatchNorm/running-stat recalibration. EMA averages named "
+            "parameters only and exact-copies every buffer; soup averages "
+            "floating state tensors in CPU FP64 and requires non-floating "
+            "state tensors to be identical."
         ),
     }
 
@@ -573,9 +576,7 @@ def train_one_seed(cli, logger):
         gate_summary, _ = _diagnostic_rows(
             gate_records, cli.seed, epoch, "compat"
         )
-        online_state = student.state_dict()
-        ema_state = ema.state_dict()
-        distance = state_distance(ema_state, online_state)
+        distance = parameter_distance(ema, student)
         epoch_rows.append(
             {
                 "Seed": cli.seed,
@@ -746,6 +747,7 @@ def train_one_seed(cli, logger):
 
     method_rows = [online_row, ema_row]
     soup_source_rows = []
+    parameter_keys = tuple(dict(student.named_parameters()))
     for top_k in (3, 5):
         soup_state, selected = uniform_soup(
             trajectory, top_k, expected_seed=cli.seed
@@ -807,7 +809,9 @@ def train_one_seed(cli, logger):
                     "SoupCheckpoint": str(checkpoint),
                     "SoupCheckpointSHA256": checkpoint_sha256(checkpoint),
                     "SoupSourceRMSDistance": state_distance(
-                        soup_state, entry["state"]
+                        soup_state,
+                        entry["state"],
+                        parameter_keys=parameter_keys,
                     ),
                     "KeysIdentical": True,
                     "ShapesIdentical": True,
@@ -847,6 +851,9 @@ def train_one_seed(cli, logger):
                 parameter.grad is None for parameter in ema.parameters()
             ),
             "RNGPreserved": True,
+            "ParametersAveragedOnly": True,
+            "AllBuffersCopiedExactly": True,
+            "DistanceAuditExcludesBuffers": True,
         },
         "Soup": {
             "Top5Epochs": [entry["Epoch"] for entry in trajectory],

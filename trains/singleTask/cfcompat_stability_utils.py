@@ -85,21 +85,36 @@ def initialize_ema(online):
 
 @torch.no_grad()
 def update_ema(ema, online, decay=EMA_DECAY):
-    """Update floating state and exactly copy non-floating state."""
+    """Average model parameters and exactly copy every model buffer."""
     if float(decay) != EMA_DECAY:
         raise ValueError("Stage 8 fixes EMA decay at 0.999.")
-    ema_state = ema.state_dict()
-    online_state = online.state_dict()
-    if tuple(ema_state) != tuple(online_state):
+
+    ema_parameters = dict(ema.named_parameters())
+    online_parameters = dict(online.named_parameters())
+    if tuple(ema_parameters) != tuple(online_parameters):
         raise RuntimeError("EMA and online parameter keys differ.")
-    for key in ema_state:
-        target, source = ema_state[key], online_state[key].detach()
+    for key, target in ema_parameters.items():
+        source = online_parameters[key].detach()
         if target.shape != source.shape or target.dtype != source.dtype:
-            raise RuntimeError("EMA state mismatch at {}.".format(key))
+            raise RuntimeError("EMA parameter mismatch at {}.".format(key))
         if target.is_floating_point():
             target.mul_(decay).add_(source, alpha=1.0 - decay)
         else:
             target.copy_(source)
+
+    # DLF has no BatchNorm/running-stat buffers. Some transformer modules do
+    # register floating ``_float_tensor`` device/dtype anchors whose scalar
+    # values are intentionally irrelevant and may be uninitialized. They are
+    # not parameters and must not be numerically averaged.
+    ema_buffers = dict(ema.named_buffers())
+    online_buffers = dict(online.named_buffers())
+    if tuple(ema_buffers) != tuple(online_buffers):
+        raise RuntimeError("EMA and online buffer keys differ.")
+    for key, target in ema_buffers.items():
+        source = online_buffers[key].detach()
+        if target.shape != source.shape or target.dtype != source.dtype:
+            raise RuntimeError("EMA buffer mismatch at {}.".format(key))
+        target.copy_(source)
 
 
 def optimizer_step_and_update_ema(optimizer, ema, online):
@@ -117,12 +132,25 @@ def clone_state_cpu(model):
         }
 
 
-def state_distance(left, right):
-    """Root-mean-square parameter distance over floating state tensors."""
+def parameter_distance(left_model, right_model):
+    """Root-mean-square distance over floating named parameters only."""
+    left = dict(left_model.named_parameters())
+    right = dict(right_model.named_parameters())
+    return state_distance(left, right, parameter_keys=tuple(left))
+
+
+def state_distance(left, right, parameter_keys=None):
+    """RMS distance, optionally restricted to explicit parameter keys."""
     if tuple(left) != tuple(right):
         raise RuntimeError("State keys differ while computing distance.")
+    keys = tuple(left) if parameter_keys is None else tuple(parameter_keys)
+    missing = [key for key in keys if key not in left or key not in right]
+    if missing:
+        raise RuntimeError(
+            "Distance parameter keys are absent: {}.".format(missing)
+        )
     squared, count = 0.0, 0
-    for key in left:
+    for key in keys:
         a, b = left[key].detach().cpu(), right[key].detach().cpu()
         if a.shape != b.shape or a.dtype != b.dtype:
             raise RuntimeError("State mismatch at {}.".format(key))

@@ -18,6 +18,7 @@ from trains.singleTask.cfcompat_stability_utils import (
     expected_missing_sequence_sha,
     initialize_ema,
     optimizer_step_and_update_ema,
+    parameter_distance,
     preserve_rng_state,
     rank_trajectory,
     rng_states_equal,
@@ -34,6 +35,7 @@ class ToyModel(nn.Module):
         super().__init__()
         self.linear = nn.Linear(2, 1)
         self.register_buffer("counter", torch.tensor(0, dtype=torch.int64))
+        self.register_buffer("float_anchor", torch.tensor(0.0))
 
     def forward(self, values):
         return self.linear(values)
@@ -86,13 +88,15 @@ class CFCompatStabilityTests(unittest.TestCase):
         self.assertTrue(all(not p.requires_grad for p in ema.parameters()))
         self.assertTrue(all(id(p) not in optimizer_ids for p in ema.parameters()))
 
-    def test_ema_formula_and_nonfloating_copy(self):
+    def test_ema_formula_and_all_buffers_copy(self):
         online, ema = ToyModel(), ToyModel()
         with torch.no_grad():
             ema.linear.weight.fill_(0)
             online.linear.weight.fill_(2)
             ema.counter.fill_(1)
             online.counter.fill_(9)
+            ema.float_anchor.fill_(-3.5e20)
+            online.float_anchor.fill_(7.0e30)
         update_ema(ema, online)
         self.assertTrue(
             torch.allclose(
@@ -103,6 +107,16 @@ class CFCompatStabilityTests(unittest.TestCase):
             )
         )
         self.assertEqual(int(ema.counter), 9)
+        self.assertTrue(torch.equal(ema.float_anchor, online.float_anchor))
+
+    def test_parameter_distance_ignores_floating_buffers(self):
+        left, right = ToyModel(), ToyModel()
+        right.load_state_dict(left.state_dict())
+        right.float_anchor.fill_(3.5e35)
+        self.assertEqual(parameter_distance(left, right), 0.0)
+        with torch.no_grad():
+            right.linear.weight.add_(1.0)
+        self.assertGreater(parameter_distance(left, right), 0.0)
 
     def test_optimizer_wrapper_updates_ema_exactly_once_after_step(self):
         online = ToyModel()

@@ -17,15 +17,17 @@
 - Decay is fixed at 0.999.
 - EMA starts as an exact deep copy of the initial Student.
 - Exactly one EMA update follows every online `optimizer.step()`.
-- Floating state uses `0.999 * ema + 0.001 * online`; non-floating state is
-  copied exactly.
+- Named parameters use `0.999 * ema + 0.001 * online`; every registered buffer
+  is copied exactly from the online Student after each optimizer step.
 - EMA is frozen, absent from optimizer/backward, and evaluated in `eval()` mode.
 - All EMA initialization/evaluation work restores Python, NumPy, Torch CPU, and
   CUDA RNG states.
 - The EMA checkpoint is selected only by EMA validation J.
 
-The real DLF/MissingModalityWrapper has no BatchNorm. Static buffers are audited;
-no BN recalibration or additional running-stat policy is introduced.
+The real DLF/MissingModalityWrapper has no BatchNorm. Static transformer
+`_float_tensor` device/dtype anchors are audited and copied, never averaged or
+included in parameter-distance evidence. No BN recalibration or additional
+running-stat policy is introduced.
 
 ## Trajectory Soup
 
