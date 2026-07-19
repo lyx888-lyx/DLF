@@ -30,8 +30,10 @@ from train_cf_compat_kd import (
 )
 from trains.singleTask.HingeLoss import HingeLoss
 from trains.singleTask.cf_compat_kd_utils import (
+    CACHE_COLUMNS,
     CACHE_VERSION,
     MULTISEED_CACHE_VERSION,
+    cache_paths,
     compatibility_for_modes,
     gated_kd_loss,
     load_counterfactual_cache,
@@ -165,6 +167,43 @@ def _asset_manifest(seed, asset_result_root, asset_model_root):
     }
 
 
+def _load_frozen_cache(
+    seed, asset_result_root, evaluator_sha, cache_version
+):
+    """Load the immutable cache, including the audited legacy seed1111 schema."""
+    if int(seed) != 1111:
+        return load_counterfactual_cache(
+            asset_result_root,
+            "mosi",
+            version=cache_version,
+            seed=int(seed),
+            expected_evaluator_sha=evaluator_sha,
+        )
+    paths = cache_paths(
+        asset_result_root, "mosi", version=CACHE_VERSION, seed=None
+    )
+    frame = pd.read_csv(paths["csv"])
+    config = json.loads(paths["config"].read_text())
+    if (
+        config.get("version") != CACHE_VERSION
+        or config.get("seed") is not None
+        or config.get("source") != "train_only"
+        or config.get("evaluator_sha256") != evaluator_sha
+        or list(frame.columns) != list(CACHE_COLUMNS)
+        or frame.sample_index.duplicated().any()
+    ):
+        raise RuntimeError("Legacy seed1111 train-only cache audit failed.")
+    for mode in MISSING_MODES:
+        values = frame["compat_{}".format(mode)].to_numpy(dtype=np.float64)
+        if not np.all((values > 0) & (values < 1)):
+            raise RuntimeError("Legacy seed1111 compatibility is outside (0,1).")
+    by_index = {
+        int(row.sample_index): row._asdict()
+        for row in frame.itertuples(index=False)
+    }
+    return frame, by_index
+
+
 def train_no_test(
     cli,
     method,
@@ -183,12 +222,11 @@ def train_no_test(
     assets = _asset_manifest(seed, asset_result_root, asset_model_root)
     multiseed = seed != 1111
     cache_version = MULTISEED_CACHE_VERSION if multiseed else CACHE_VERSION
-    cache_frame, cache_by_index = load_counterfactual_cache(
+    cache_frame, cache_by_index = _load_frozen_cache(
+        seed,
         asset_result_root,
-        "mosi",
-        version=cache_version,
-        seed=seed if multiseed else None,
-        expected_evaluator_sha=assets["evaluator_sha"],
+        assets["evaluator_sha"],
+        cache_version,
     )
     if len(cache_frame) != 1284 or cache_frame.sample_index.nunique() != 1284:
         raise RuntimeError(
@@ -398,7 +436,7 @@ def train_no_test(
         "OptimizerConfigSHA256": canonical_sha(optimizer_config),
         "TrainerSHA256": checkpoint_sha256(trainer_path),
         "NumWorkers": int(cli.num_workers),
-        "PhysicalGPU": 3,
+        "PhysicalGPU": int(getattr(cli, "physical_gpu", 3)),
         "InternalGPU": 0,
         "SelectedBy": "official_valid_J",
         "GradientClipping": "none_historical_cfcompat_online",
