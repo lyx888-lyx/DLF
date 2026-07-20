@@ -45,7 +45,14 @@ class TransformerEncoder(nn.Module):
         if self.normalize:
             self.layer_norm = LayerNorm(embed_dim)
 
-    def forward(self, x_in, x_in_k = None, x_in_v = None):
+    def forward(
+        self,
+        x_in,
+        x_in_k=None,
+        x_in_v=None,
+        availability_mask=None,
+        return_intermediates=False,
+    ):
         """
         Args:
             x_in (FloatTensor): embedded input of shape `(src_len, batch, embed_dim)`
@@ -58,12 +65,21 @@ class TransformerEncoder(nn.Module):
                 - **encoder_padding_mask** (ByteTensor): the positions of
                   padding elements of shape `(batch, src_len)`
         """
+        def project_available(value):
+            if availability_mask is None:
+                return value
+            if availability_mask.ndim != 1 or availability_mask.numel() != value.size(1):
+                raise ValueError("availability_mask must have shape [batch].")
+            mask = availability_mask.to(device=value.device, dtype=value.dtype).view(1, -1, 1)
+            return value * mask
+
         # embed tokens and positions
         x = self.embed_scale * x_in
         #breakpoint()
         if self.embed_positions is not None:
             x += self.embed_positions(x_in.transpose(0, 1)[:, :, 0]).transpose(0, 1)   # Add positional embedding
         x = F.dropout(x, p=self.dropout, training=self.training)
+        x = project_available(x)
 
         if x_in_k is not None and x_in_v is not None:
             # embed tokens and positions    
@@ -74,6 +90,8 @@ class TransformerEncoder(nn.Module):
                 x_v += self.embed_positions(x_in_v.transpose(0, 1)[:, :, 0]).transpose(0, 1)   # Add positional embedding
             x_k = F.dropout(x_k, p=self.dropout, training=self.training)
             x_v = F.dropout(x_v, p=self.dropout, training=self.training)
+            x_k = project_available(x_k)
+            x_v = project_available(x_v)
         
         # encoder layers
         intermediates = [x]
@@ -82,11 +100,15 @@ class TransformerEncoder(nn.Module):
                 x = layer(x, x_k, x_v)
             else:
                 x = layer(x)
+            x = project_available(x)
             intermediates.append(x)
 
         if self.normalize:
             x = self.layer_norm(x)
+        x = project_available(x)
 
+        if return_intermediates:
+            return x, intermediates
         return x
 
     def max_positions(self):

@@ -154,7 +154,58 @@ class DLF(nn.Module):
                                   attn_mask=self.attn_mask)
 
 
-    def forward(self, text, audio, video, fusion_residual=None):
+    def forward(
+        self,
+        text,
+        audio,
+        video,
+        fusion_residual=None,
+        availability_mask=None,
+    ):
+        if availability_mask is not None:
+            if availability_mask.ndim != 2 or availability_mask.size(1) != 3:
+                raise ValueError("availability_mask must have shape [batch, 3].")
+            if availability_mask.size(0) != audio.size(0):
+                raise ValueError("availability_mask batch dimension mismatch.")
+            availability_mask = availability_mask.to(device=audio.device, dtype=audio.dtype)
+            if not torch.all(availability_mask[:, 0] == 1):
+                raise ValueError("Language must remain available in SAFE-DLF.")
+            availability_l = availability_mask[:, 0]
+            availability_a = availability_mask[:, 1]
+            availability_v = availability_mask[:, 2]
+        else:
+            availability_l = availability_a = availability_v = None
+
+        def mask_sequence(value, availability):
+            if availability is None:
+                return value
+            return value * availability.to(value).view(1, -1, 1)
+
+        def mask_batch(value, availability):
+            if availability is None:
+                return value
+            return value * availability.to(value).view(
+                value.size(0), *([1] * (value.ndim - 1))
+            )
+
+        def encode(network, query, availability, key=None, value=None):
+            if key is None:
+                if availability is None:
+                    return network(query)
+                return network(query, availability_mask=availability)
+            if availability is None or bool(torch.all(availability > 0.5)):
+                return network(query, key, value)
+            present = torch.nonzero(availability > 0.5, as_tuple=False).view(-1)
+            result = query.new_zeros(query.shape)
+            if present.numel() == 0:
+                return result
+            encoded = network(
+                query.index_select(1, present),
+                key.index_select(1, present),
+                value.index_select(1, present),
+            )
+            return result.index_copy(1, present, encoded)
+
         #extraction
         if self.use_bert:
             text = self.text_model(text)
@@ -167,18 +218,21 @@ class DLF(nn.Module):
         proj_x_a = x_a if self.orig_d_a == self.d_a else self.proj_a(x_a) 
         proj_x_v = x_v if self.orig_d_v == self.d_v else self.proj_v(x_v)
         
-        proj_x_l = proj_x_l.permute(2, 0, 1)   
-        proj_x_v = proj_x_v .permute(2, 0, 1)  
+        proj_x_l = proj_x_l.permute(2, 0, 1)
+        proj_x_v = proj_x_v .permute(2, 0, 1)
         proj_x_a = proj_x_a.permute(2, 0, 1)
+        proj_x_l = mask_sequence(proj_x_l, availability_l)
+        proj_x_v = mask_sequence(proj_x_v, availability_v)
+        proj_x_a = mask_sequence(proj_x_a, availability_a)
 
         #disentanglement
-        s_l = self.encoder_s_l(proj_x_l)    
-        s_v = self.encoder_s_v(proj_x_v)
-        s_a = self.encoder_s_a(proj_x_a)
+        s_l = encode(self.encoder_s_l, proj_x_l, availability_l)
+        s_v = encode(self.encoder_s_v, proj_x_v, availability_v)
+        s_a = encode(self.encoder_s_a, proj_x_a, availability_a)
 
-        c_l = self.encoder_c(proj_x_l)
-        c_v = self.encoder_c(proj_x_v)
-        c_a = self.encoder_c(proj_x_a)
+        c_l = encode(self.encoder_c, proj_x_l, availability_l)
+        c_v = encode(self.encoder_c, proj_x_v, availability_v)
+        c_a = encode(self.encoder_c, proj_x_a, availability_a)
 
 
         s_l = s_l.permute(1, 2, 0)   
@@ -191,21 +245,36 @@ class DLF(nn.Module):
         c_list = [c_l, c_v, c_a]
 
 
-        c_l_sim = self.align_c_l(c_l.contiguous().view(x_l.size(0), -1))
-        c_v_sim = self.align_c_v(c_v.contiguous().view(x_l.size(0), -1))
-        c_a_sim = self.align_c_a(c_a.contiguous().view(x_l.size(0), -1))
+        c_l_sim = mask_batch(
+            self.align_c_l(c_l.contiguous().view(x_l.size(0), -1)),
+            availability_l,
+        )
+        c_v_sim = mask_batch(
+            self.align_c_v(c_v.contiguous().view(x_l.size(0), -1)),
+            availability_v,
+        )
+        c_a_sim = mask_batch(
+            self.align_c_a(c_a.contiguous().view(x_l.size(0), -1)),
+            availability_a,
+        )
         
-        recon_l = self.decoder_l(torch.cat([s_l, c_list[0]], dim=1))
-        recon_v = self.decoder_v(torch.cat([s_v, c_list[1]], dim=1))
-        recon_a = self.decoder_a(torch.cat([s_a, c_list[2]], dim=1))
+        recon_l = mask_batch(
+            self.decoder_l(torch.cat([s_l, c_list[0]], dim=1)), availability_l
+        )
+        recon_v = mask_batch(
+            self.decoder_v(torch.cat([s_v, c_list[1]], dim=1)), availability_v
+        )
+        recon_a = mask_batch(
+            self.decoder_a(torch.cat([s_a, c_list[2]], dim=1)), availability_a
+        )
 
         recon_l = recon_l.permute(2, 0, 1)  
         recon_v = recon_v.permute(2, 0, 1)   
         recon_a = recon_a.permute(2, 0, 1)
 
-        s_l_r = self.encoder_s_l(recon_l).permute(1, 2, 0)                                                                                             
-        s_v_r = self.encoder_s_v(recon_v).permute(1, 2, 0)
-        s_a_r = self.encoder_s_a(recon_a).permute(1, 2, 0)
+        s_l_r = encode(self.encoder_s_l, recon_l, availability_l).permute(1, 2, 0)
+        s_v_r = encode(self.encoder_s_v, recon_v, availability_v).permute(1, 2, 0)
+        s_a_r = encode(self.encoder_s_a, recon_a, availability_a).permute(1, 2, 0)
         
         s_l = s_l.permute(2, 0, 1)  
         s_v = s_v.permute(2, 0, 1)   
@@ -217,38 +286,68 @@ class DLF(nn.Module):
        
        #enhancement
         hs_l_low = c_l.transpose(0, 1).contiguous().view(x_l.size(0), -1)  
-        repr_l_low = self.proj1_l_low(hs_l_low)                            
-        hs_proj_l_low = self.proj2_l_low(
-            F.dropout(F.relu(repr_l_low, inplace=True), p=self.output_dropout, training=self.training))
-        hs_proj_l_low += hs_l_low         
-        logits_l_low = self.out_layer_l_low(hs_proj_l_low)
+        repr_l_low = mask_batch(self.proj1_l_low(hs_l_low), availability_l)
+        hs_proj_l_low = mask_batch(
+            self.proj2_l_low(
+                F.dropout(
+                    F.relu(repr_l_low, inplace=True),
+                    p=self.output_dropout,
+                    training=self.training,
+                )
+            ),
+            availability_l,
+        )
+        hs_proj_l_low = mask_batch(hs_proj_l_low + hs_l_low, availability_l)
+        logits_l_low = mask_batch(
+            self.out_layer_l_low(hs_proj_l_low), availability_l
+        )
 
         hs_v_low = c_v.transpose(0, 1).contiguous().view(x_v.size(0), -1)
-        repr_v_low = self.proj1_v_low(hs_v_low)
-        hs_proj_v_low = self.proj2_v_low(
-            F.dropout(F.relu(repr_v_low, inplace=True), p=self.output_dropout, training=self.training))
-        hs_proj_v_low += hs_v_low
-        logits_v_low = self.out_layer_v_low(hs_proj_v_low)
+        repr_v_low = mask_batch(self.proj1_v_low(hs_v_low), availability_v)
+        hs_proj_v_low = mask_batch(
+            self.proj2_v_low(
+                F.dropout(
+                    F.relu(repr_v_low, inplace=True),
+                    p=self.output_dropout,
+                    training=self.training,
+                )
+            ),
+            availability_v,
+        )
+        hs_proj_v_low = mask_batch(hs_proj_v_low + hs_v_low, availability_v)
+        logits_v_low = mask_batch(
+            self.out_layer_v_low(hs_proj_v_low), availability_v
+        )
 
         hs_a_low = c_a.transpose(0, 1).contiguous().view(x_a.size(0), -1)
-        repr_a_low = self.proj1_a_low(hs_a_low)
-        hs_proj_a_low = self.proj2_a_low(
-            F.dropout(F.relu(repr_a_low, inplace=True), p=self.output_dropout, training=self.training))
-        hs_proj_a_low += hs_a_low
-        logits_a_low = self.out_layer_a_low(hs_proj_a_low)
+        repr_a_low = mask_batch(self.proj1_a_low(hs_a_low), availability_a)
+        hs_proj_a_low = mask_batch(
+            self.proj2_a_low(
+                F.dropout(
+                    F.relu(repr_a_low, inplace=True),
+                    p=self.output_dropout,
+                    training=self.training,
+                )
+            ),
+            availability_a,
+        )
+        hs_proj_a_low = mask_batch(hs_proj_a_low + hs_a_low, availability_a)
+        logits_a_low = mask_batch(
+            self.out_layer_a_low(hs_proj_a_low), availability_a
+        )
 
         
-        c_l_att = self.self_attentions_c_l(c_l)  
+        c_l_att = encode(self.self_attentions_c_l, c_l, availability_l)
         if type(c_l_att) == tuple:
             c_l_att = c_l_att[0]
         c_l_att = c_l_att[-1]
 
-        c_v_att = self.self_attentions_c_v(c_v)
+        c_v_att = encode(self.self_attentions_c_v, c_v, availability_v)
         if type(c_v_att) == tuple:
             c_v_att = c_v_att[0]
         c_v_att = c_v_att[-1]
 
-        c_a_att = self.self_attentions_c_a(c_a)
+        c_a_att = encode(self.self_attentions_c_a, c_a, availability_a)
         if type(c_a_att) == tuple:
             c_a_att = c_a_att[0]
         c_a_att = c_a_att[-1]
@@ -264,51 +363,91 @@ class DLF(nn.Module):
         # LFA
         # L --> L                
         h_ls = s_l                     
-        h_ls = self.trans_l_mem(h_ls)  
+        h_ls = encode(self.trans_l_mem, h_ls, availability_l)
         if type(h_ls) == tuple:
             h_ls = h_ls[0]
         last_h_l = last_hs = h_ls[-1]  
 
         # A --> L
-        h_l_with_as = self.trans_l_with_a(s_l, s_a, s_a) 
+        h_l_with_as = encode(
+            self.trans_l_with_a, s_l, availability_a, key=s_a, value=s_a
+        )
         h_as = h_l_with_as
-        h_as = self.trans_a_mem(h_as)
+        h_as = encode(self.trans_a_mem, h_as, availability_a)
         if type(h_as) == tuple:
             h_as = h_as[0]
         last_h_a = last_hs = h_as[-1]  
 
         # V --> L
-        h_l_with_vs = self.trans_l_with_v(s_l, s_v, s_v)  
+        h_l_with_vs = encode(
+            self.trans_l_with_v, s_l, availability_v, key=s_v, value=s_v
+        )
         h_vs = h_l_with_vs
-        h_vs = self.trans_v_mem(h_vs)
+        h_vs = encode(self.trans_v_mem, h_vs, availability_v)
         if type(h_vs) == tuple:
             h_vs = h_vs[0]
         last_h_v = last_hs = h_vs[-1]  
 
 
-        hs_proj_l_high = self.proj2_l_high(
-            F.dropout(F.relu(self.proj1_l_high(last_h_l), inplace=True), p=self.output_dropout, training=self.training))
-        hs_proj_l_high += last_h_l
-        logits_l_high = self.out_layer_l_high(hs_proj_l_high)
+        hs_proj_l_high = mask_batch(
+            self.proj2_l_high(
+                F.dropout(
+                    F.relu(self.proj1_l_high(last_h_l), inplace=True),
+                    p=self.output_dropout,
+                    training=self.training,
+                )
+            ),
+            availability_l,
+        )
+        hs_proj_l_high = mask_batch(hs_proj_l_high + last_h_l, availability_l)
+        logits_l_high = mask_batch(
+            self.out_layer_l_high(hs_proj_l_high), availability_l
+        )
 
-        hs_proj_v_high = self.proj2_v_high(
-            F.dropout(F.relu(self.proj1_v_high(last_h_v), inplace=True), p=self.output_dropout, training=self.training))
-        hs_proj_v_high += last_h_v
-        logits_v_high = self.out_layer_v_high(hs_proj_v_high)
+        hs_proj_v_high = mask_batch(
+            self.proj2_v_high(
+                F.dropout(
+                    F.relu(self.proj1_v_high(last_h_v), inplace=True),
+                    p=self.output_dropout,
+                    training=self.training,
+                )
+            ),
+            availability_v,
+        )
+        hs_proj_v_high = mask_batch(hs_proj_v_high + last_h_v, availability_v)
+        logits_v_high = mask_batch(
+            self.out_layer_v_high(hs_proj_v_high), availability_v
+        )
 
-        hs_proj_a_high = self.proj2_a_high(
-            F.dropout(F.relu(self.proj1_a_high(last_h_a), inplace=True), p=self.output_dropout,
-                      training=self.training))
-        hs_proj_a_high += last_h_a
-        logits_a_high = self.out_layer_a_high(hs_proj_a_high)
+        hs_proj_a_high = mask_batch(
+            self.proj2_a_high(
+                F.dropout(
+                    F.relu(self.proj1_a_high(last_h_a), inplace=True),
+                    p=self.output_dropout,
+                    training=self.training,
+                )
+            ),
+            availability_a,
+        )
+        hs_proj_a_high = mask_batch(hs_proj_a_high + last_h_a, availability_a)
+        logits_a_high = mask_batch(
+            self.out_layer_a_high(hs_proj_a_high), availability_a
+        )
         
         #fusion
-        last_h_l = torch.sigmoid(self.projector_l(hs_proj_l_high))   
-        last_h_v = torch.sigmoid(self.projector_v(hs_proj_v_high))
-        last_h_a = torch.sigmoid(self.projector_a(hs_proj_a_high))
+        last_h_l = mask_batch(
+            torch.sigmoid(self.projector_l(hs_proj_l_high)), availability_l
+        )
+        last_h_v = mask_batch(
+            torch.sigmoid(self.projector_v(hs_proj_v_high)), availability_v
+        )
+        last_h_a = mask_batch(
+            torch.sigmoid(self.projector_a(hs_proj_a_high)), availability_a
+        )
         c_fusion = torch.sigmoid(self.projector_c(c_fusion))
         
         last_hs = torch.cat([last_h_l, last_h_v, last_h_a, c_fusion], dim=1)   
+        fusion_input = last_hs
 
 
         # This optional residual leaves the original DLF path unchanged by default.
@@ -344,6 +483,17 @@ class DLF(nn.Module):
             'logits_v_hetero': logits_v_high, 
             'logits_a_hetero': logits_a_high,
             'logits_c': logits_c,
-            'output_logit': output
+            'output_logit': output,
+            'lfa_l': last_h_l,
+            'lfa_v': last_h_v,
+            'lfa_a': last_h_a,
+            'lfa_cross_v': h_l_with_vs,
+            'lfa_cross_a': h_l_with_as,
+            'lfa_ffn_v': h_vs,
+            'lfa_ffn_a': h_as,
+            'specific_hidden_l': hs_proj_l_high,
+            'specific_hidden_v': hs_proj_v_high,
+            'specific_hidden_a': hs_proj_a_high,
+            'fusion_input': fusion_input,
         }
         return res
