@@ -1,0 +1,10 @@
+{
+  "accepted": true,
+  "gpu_reported_gradient_max_difference": 4.656612873077393e-10,
+  "gpu_reported_loss_abs_difference": 5.960464477539063e-08,
+  "gradient_max_difference": 4.656612873077393e-10,
+  "loss_abs_difference": 0.0,
+  "new_loss": 0.2335662841796875,
+  "old_loss": 0.2335662841796875,
+  "protocol_accepted": true
+}

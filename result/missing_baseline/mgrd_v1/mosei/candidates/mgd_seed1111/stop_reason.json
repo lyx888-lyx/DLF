@@ -1,0 +1,27 @@
+{
+  "candidate_id": "mgd_seed1111",
+  "checkpoint_path": "/code/DLF-mosei-mgrd-v1/result/missing_baseline/mgrd_v1/mosei/candidates/mgd_seed1111/checkpoints/screen_epoch008.pt",
+  "downstream_not_run": [
+    "MGRD",
+    "MGRD_ShuffledGate",
+    "seed1114"
+  ],
+  "evidence": {
+    "MissingMacro_Acc5_delta": -0.003028683413504263,
+    "MissingMacro_Acc7_delta": -0.004453946196329994,
+    "MissingMacro_Corr_delta": -0.00011104029043162988,
+    "MissingMacro_MAE_delta": 0.008391797542572021,
+    "delta_J": 0.008126288652420044,
+    "epoch7_delta_J": 0.012619564930598015,
+    "missing_modes_MAE_improved": 0
+  },
+  "locked_test_access_count": 0,
+  "promotion_conditions_met": false,
+  "reason": "Screen-2 metric gate failed",
+  "rejected_component": "MGD multi-granular objective",
+  "resume_to_full": false,
+  "retained_component": null,
+  "screen_epoch": 8,
+  "status": "STAGE19D_MGD_SCREEN_FAILED",
+  "timestamp": "2026-07-20T07:32:38.765352+00:00"
+}

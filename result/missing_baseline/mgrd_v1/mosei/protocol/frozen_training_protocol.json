@@ -1,0 +1,13 @@
+{
+  "accumulation_semantics": "sum_not_mean",
+  "amp_mode": "off",
+  "batch_size": 16,
+  "implementation_commit": "82934af61f59c6c81ed5109087920a443a218f62",
+  "locked_test_access_count": 0,
+  "moddrop_reference_cache": true,
+  "source_protocol": "/code/DLF-mosei-mgrd-v1/result/missing_baseline/mgrd_v1/mosei/protocol/frozen_protocol.json",
+  "status": "STAGE19B_AMP_REJECTED_FALLBACK_FP32",
+  "teacher_cache": true,
+  "update_epochs": 10,
+  "vectorized_hinge_strict_gate_passed": true
+}

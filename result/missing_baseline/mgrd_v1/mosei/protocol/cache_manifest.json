@@ -1,0 +1,12 @@
+{
+  "estimated_teacher_forward_eliminated_ms_per_microbatch": 40.207342888461426,
+  "estimated_teacher_forward_eliminated_seconds_per_1021_batch_epoch": 41.05169668971932,
+  "locked_test_access_count": 0,
+  "moddrop_online_forward_count_during_training": 0,
+  "ordered_sample_sha_enforced": true,
+  "seed1111_manifest": "/code/DLF-mosei-mgrd-v1/result/missing_baseline/mgrd_v1/mosei/protocol/cache/seed1111/cache_manifest.json",
+  "seed1111_manifest_sha256": "426455f883dbff27490d9503e069e5520c3ddbf676af98546ae9f003e9dcb6dc",
+  "teacher_online_forward_count_during_training": 0,
+  "train_rows": 16326,
+  "valid_rows": 1871
+}

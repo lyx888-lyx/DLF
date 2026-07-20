@@ -1,0 +1,72 @@
+{
+  "accumulation_semantics": "sum_not_mean",
+  "amp_candidate_order": [
+    "bf16_if_supported",
+    "fp16_grad_scaler",
+    "off_fallback"
+  ],
+  "batch_size": 16,
+  "bf16_supported_by_runtime": false,
+  "code_commit": "82934af61f59c6c81ed5109087920a443a218f62",
+  "created_at": "2026-07-20T04:31:49.230980+00:00",
+  "early_stop": 10,
+  "headroom_gate": {
+    "aggregate_coarse_only_min": 0.1,
+    "at_least_modes": 2,
+    "c_cv_min": 0.1,
+    "per_mode_coarse_only_min": 0.05,
+    "per_mode_granularity_nonzero_coverage_min": 0.1
+  },
+  "historical_sources": [
+    {
+      "path": "/code/DLF-mosei-generalization-v1/result/missing_baseline/mosei_generalization_v1/cfcompat/seed1111/stage_manifest.json",
+      "seed": 1111,
+      "selected_epoch": 20
+    },
+    {
+      "path": "/code/DLF-mosei-generalization-v1/result/missing_baseline/mosei_generalization_v1/cfcompat/seed1112/stage_manifest.json",
+      "seed": 1112,
+      "selected_epoch": 15
+    },
+    {
+      "path": "/code/DLF-mosei-generalization-v1/result/missing_baseline/mosei_generalization_v1/cfcompat/seed1113/stage_manifest.json",
+      "seed": 1113,
+      "selected_epoch": 20
+    },
+    {
+      "path": "/code/DLF-mosei-generalization-v1/result/missing_baseline/mosei_generalization_v1/cfcompat/seed1114/stage_manifest.json",
+      "seed": 1114,
+      "selected_epoch": 2
+    },
+    {
+      "path": "/code/DLF-mosei-generalization-v1/result/missing_baseline/mosei_generalization_v1/cfcompat/seed1115/stage_manifest.json",
+      "seed": 1115,
+      "selected_epoch": 10
+    }
+  ],
+  "lambda_kd": 1.0,
+  "learning_rate": 0.0001,
+  "locked_test_access_count": 0,
+  "maximum_regular_training_epochs": 30,
+  "mgd_weights": {
+    "continuous": 0.5,
+    "granularity": "equal",
+    "ordinal_total": 0.5
+  },
+  "optimizer": "Adam",
+  "protocol": "MOSEI Multi-Granular Recoverable Distillation v1",
+  "scheduler": "ReduceLROnPlateau(mode=min,factor=0.5,patience=5)",
+  "screen_epoch_1": 4,
+  "screen_epoch_2": 8,
+  "selected_epoch_median": 15.0,
+  "selected_epoch_source": "historical MOSEI proposed CFCompat validation-selected epochs; no MOSEI Uniform trajectory existed",
+  "selected_epochs": [
+    20,
+    15,
+    20,
+    2,
+    10
+  ],
+  "tau": 0.5,
+  "update_epochs": 10
+}

@@ -1,0 +1,31 @@
+{
+  "code_commit": "82934af61f59c6c81ed5109087920a443a218f62",
+  "creation_timestamp": "2026-07-20T04:35:26.906026+00:00",
+  "dataset": "mosei",
+  "dtype": "float32",
+  "locked_test_access_count": 0,
+  "moddrop_checkpoint": "/code/DLF-mosei-generalization-v1/result/missing_baseline/mosei_generalization_v1/moddrop/seed1111/DLF_mosei_seed1111_best_valid.pth",
+  "moddrop_checkpoint_sha256": "e38d3ebcdb327d2dd1b63ab15b53f239b595babf46f5931e19a2fc93c5c4e1e2",
+  "ordered_sample_id_sha256": "0c4b0fa19a5ef63abdd345a668473a32970d5372fb567f152a0b2d507c8b0907",
+  "path": "/code/DLF-mosei-mgrd-v1/result/missing_baseline/mgrd_v1/mosei/protocol/cache/seed1111/valid_predictions.npz",
+  "sample_count": 1871,
+  "sha256": "f7970fe6eff386f76fcfb38af0a8e03dabae2c3c55fce4ae7d1f044e5aa2f472",
+  "split": "valid",
+  "teacher_checkpoint": "/code/DLF-mosei-generalization-v1/result/missing_baseline/mosei_generalization_v1/clean_dlf/seed1111/DLF_mosei_seed1111_best_valid.pth",
+  "teacher_checkpoint_sha256": "6c6542ca4140c264c3172814ec181b04e45068deaad305f8f6ba7d525cab873a",
+  "tensor_shapes": {
+    "moddrop_L": [
+      1871
+    ],
+    "moddrop_LA": [
+      1871
+    ],
+    "moddrop_LV": [
+      1871
+    ],
+    "teacher_lav": [
+      1871
+    ]
+  },
+  "unordered_sample_id_sha256": "e21a95b6dbf2a38fad43f53fba69c258d448742d59696c7631dffc013b884134"
+}

@@ -1,0 +1,7 @@
+{
+  "locked_test_access_count": 0,
+  "method_selection_uses_train_official_valid_only": true,
+  "test_loader_constructed": false,
+  "test_metrics_read": false,
+  "test_predictions_read": false
+}
