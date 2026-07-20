@@ -1,0 +1,148 @@
+{
+  "Audit": "Stage 19A MOSEI Training Runtime Forensic Audit v1",
+  "BERTForwardCounts": {
+    "student": 200,
+    "teacher": 100
+  },
+  "BatchSize": 16,
+  "BatchesPerSecond": 3.2447525176045824,
+  "CreatedAt": "2026-07-20T03:38:24.087694+00:00",
+  "ElapsedSeconds": 30.818991419975646,
+  "ExpectedBERTForwardCounts": {
+    "student": 200,
+    "teacher": 100
+  },
+  "GPUName": "NVIDIA GeForce RTX 2080 Ti",
+  "Inputs": {
+    "CleanCheckpoint": "/code/DLF-mosei-generalization-v1/result/missing_baseline/mosei_generalization_v1/clean_dlf/seed1111/DLF_mosei_seed1111_best_valid.pth",
+    "CleanCheckpointSHA256": "6c6542ca4140c264c3172814ec181b04e45068deaad305f8f6ba7d525cab873a",
+    "CompatibilityCache": "/code/DLF-mosei-generalization-v1/result/missing_baseline/mosei_generalization_v1/compatibility_cache/seed1111/train_counterfactual_compatibility.csv",
+    "CompatibilityCacheSHA256": "0cd29b8bd210c90f14f812bdb2da1bd17308ba0908e08578f1574eb0ce13738e",
+    "ConfigFile": "/code/DLF-mosei-generalization-v1/config/config.json"
+  },
+  "InternalCUDADevice": 0,
+  "MethodSemantics": {
+    "BackwardsPerMicrobatch": 1,
+    "EvaluatorForwardsPerMicrobatch": 0,
+    "FrozenTeacherForwardsPerMicrobatch": 1,
+    "LossDividedByAccumulationFactor": false,
+    "OneRandomMissingViewPerMicrobatch": true,
+    "StudentForwardsPerMicrobatch": 2
+  },
+  "NoCheckpointWrite": true,
+  "NoTestAccess": true,
+  "NoValidationAccess": true,
+  "OptimizerSteps": 10,
+  "PeakAllocatedBytes": 3734196224,
+  "PeakReservedBytes": 3915382784,
+  "PhysicalGPU": 2,
+  "SamplesPerSecond": 51.91604028167332,
+  "Seed": 1111,
+  "Status": "COMPLETED_BOUNDED_TRAIN_ONLY_PROFILE",
+  "TimedSamples": 1600,
+  "TimedTrainBatches": 100,
+  "Timing": {
+    "backward": {
+      "count": 100,
+      "max_ms": 164.96620199177414,
+      "mean_ms": 135.1900100626517,
+      "min_ms": 132.63957400340587,
+      "p50_ms": 134.32175543857738,
+      "p95_ms": 139.3419560045004,
+      "sum_ms": 13519.00100626517
+    },
+    "compatibility_and_kd": {
+      "count": 100,
+      "max_ms": 7.8653080854564905,
+      "mean_ms": 0.47023682738654315,
+      "min_ms": 0.3743390552699566,
+      "p50_ms": 0.3907284699380398,
+      "p95_ms": 0.43814375530928373,
+      "sum_ms": 47.023682738654315
+    },
+    "data_wait": {
+      "count": 100,
+      "max_ms": 2.110512927174568,
+      "mean_ms": 1.7043971770908684,
+      "min_ms": 1.4678369043394923,
+      "p50_ms": 1.6861154581420124,
+      "p95_ms": 1.9189551298040897,
+      "sum_ms": 170.43971770908684
+    },
+    "full_loss": {
+      "count": 100,
+      "max_ms": 35.94733797945082,
+      "mean_ms": 32.00945206452161,
+      "min_ms": 30.89396597351879,
+      "p50_ms": 32.106826023664325,
+      "p95_ms": 33.221036626491696,
+      "sum_ms": 3200.945206452161
+    },
+    "hinge_similarity_loss": {
+      "count": 100,
+      "max_ms": 33.71257404796779,
+      "mean_ms": 30.27332262485288,
+      "min_ms": 29.224381083622575,
+      "p50_ms": 30.384339450392872,
+      "p95_ms": 31.35985218686983,
+      "sum_ms": 3027.332262485288
+    },
+    "host_to_device": {
+      "count": 100,
+      "max_ms": 0.31041400507092476,
+      "mean_ms": 0.26290189125575125,
+      "min_ms": 0.24586194194853306,
+      "p50_ms": 0.2592279342934489,
+      "p95_ms": 0.2935387019533664,
+      "sum_ms": 26.290189125575125
+    },
+    "missing_loss": {
+      "count": 100,
+      "max_ms": 0.31696795485913754,
+      "mean_ms": 0.2701083617284894,
+      "min_ms": 0.25157094933092594,
+      "p50_ms": 0.2677225274965167,
+      "p95_ms": 0.3070901846513152,
+      "sum_ms": 27.01083617284894
+    },
+    "optimizer_step": {
+      "count": 100,
+      "max_ms": 47.60561906732619,
+      "mean_ms": 4.286658753408119,
+      "min_ms": 0.0,
+      "p50_ms": 0.0,
+      "p95_ms": 42.69527353462763,
+      "sum_ms": 428.6658753408119
+    },
+    "student_lav_forward": {
+      "count": 100,
+      "max_ms": 91.70203702524304,
+      "mean_ms": 45.822744651231915,
+      "min_ms": 42.65247902367264,
+      "p50_ms": 44.48421095730737,
+      "p95_ms": 48.97905710386111,
+      "sum_ms": 4582.2744651231915
+    },
+    "student_missing_forward": {
+      "count": 100,
+      "max_ms": 88.4338830364868,
+      "mean_ms": 43.89325474156067,
+      "min_ms": 41.88108793459833,
+      "p50_ms": 43.117445486132056,
+      "p95_ms": 46.36369682848453,
+      "sum_ms": 4389.325474156067
+    },
+    "teacher_lav_forward": {
+      "count": 100,
+      "max_ms": 107.09181101992726,
+      "mean_ms": 40.207342888461426,
+      "min_ms": 35.80354806035757,
+      "p50_ms": 36.893538024742156,
+      "p95_ms": 60.220985714113276,
+      "sum_ms": 4020.7342888461426
+    }
+  },
+  "UpdateEpochs": 10,
+  "VisibleCUDADevices": "2",
+  "WarmupBatches": 20
+}

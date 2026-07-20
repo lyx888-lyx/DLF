@@ -1,0 +1,210 @@
+{
+  "status": "STAGE19A_RUNTIME_AUDIT_COMPLETE",
+  "repo": "/code/DLF-mosei-generalization-v1",
+  "branch": "experiment/mosei-cfcompat-adpep-generalization-v1",
+  "commit": "dc8536f338c7e310a73447e4185c38be52800f48",
+  "original_worktree_dirty": false,
+  "audit_worktree": "/code/DLF-mosei-runtime-audit-v1",
+  "audit_branch": "audit/mosei-runtime-forensics-v1",
+  "environment": {
+    "python": "3.9.13",
+    "pytorch": "1.13.0+cu117",
+    "cuda_runtime": "11.7",
+    "cudnn": 8500,
+    "transformers": "4.33.1",
+    "amp": false,
+    "grad_scaler": false,
+    "tf32_matmul": false,
+    "tf32_cudnn": true,
+    "cudnn_benchmark": false,
+    "deterministic_algorithms": false,
+    "cuda_launch_blocking": false
+  },
+  "hardware": {
+    "gpu_count": 4,
+    "gpu_model": "NVIDIA GeForce RTX 2080 Ti",
+    "gpu_compute_capability": "7.5",
+    "gpu_memory_mib_each": 22528,
+    "cpu": "Intel Core i9-9900K",
+    "cpu_cores": 8,
+    "cpu_threads": 16,
+    "ram_gib_approx": 60,
+    "root_free_gb_approx": 410,
+    "data4t_free_tb_approx": 2.2
+  },
+  "running_processes": {
+    "phase0_mosei_workers": [],
+    "phase0_dlf_stage10_stage18_processes": [],
+    "all_gpus_free_at_phase0": true,
+    "existing_processes_stopped_or_modified": false
+  },
+  "dataset": {
+    "path": "/data4t/lyx/datasets/MOSEI/Processed/aligned_50.pkl",
+    "sha256": "45eccfb748a87c80ecab9bfac29582e7b1466bf6605ff29d3b338a75120bf7991",
+    "train_samples": 16326,
+    "sequence_length": 50,
+    "feature_dims": [768, 74, 35]
+  },
+  "pipeline_stages": [
+    {"name": "clean", "depends_on": ["dataset", "config", "seed"], "output": "validation-best clean checkpoint"},
+    {"name": "moddrop", "depends_on": ["clean checkpoint", "missing schedule"], "output": "validation-best ModDrop evaluator"},
+    {"name": "compatibility", "depends_on": ["ModDrop evaluator", "train sample order", "missing schedule"], "output": "train-only compatibility cache"},
+    {"name": "cfcompat", "depends_on": ["clean teacher/init", "compatibility cache", "candidate method"], "output": "validation-best candidate checkpoint"}
+  ],
+  "stage_durations": {
+    "unit": "hours",
+    "by_seed": {
+      "1111": {"clean": 0.695580, "moddrop": 1.768995, "compatibility": 0.047150, "cfcompat": 2.808400, "total": 5.320125},
+      "1112": {"clean": 0.811641, "moddrop": 1.302070, "compatibility": 0.048855, "cfcompat": 2.332546, "total": 4.495112},
+      "1113": {"clean": 1.105562, "moddrop": 1.846287, "compatibility": 0.050954, "cfcompat": 3.431065, "total": 6.433868},
+      "1114": {"clean": 1.290019, "moddrop": 2.700239, "compatibility": 0.054997, "cfcompat": 1.407823, "total": 5.453079},
+      "1115": {"clean": 1.735051, "moddrop": 2.012274, "compatibility": 0.080257, "cfcompat": 2.382858, "total": 6.210439}
+    },
+    "stage_totals": {"clean": 5.637853, "moddrop": 9.629865, "compatibility": 0.282213, "cfcompat": 12.362692, "worker_total": 27.912623},
+    "stage_means": {"clean": 1.127571, "moddrop": 1.925973, "compatibility": 0.056443, "cfcompat": 2.472538, "full_seed": 5.582525},
+    "stage_shares": {"clean": 0.2020, "moddrop": 0.3450, "compatibility": 0.0101, "cfcompat": 0.4429},
+    "coordinator_post_worker_hours_approx": 0.3264,
+    "train_valid_save_breakdown_available": false
+  },
+  "forward_counts": {
+    "per_cfcompat_train_microbatch": {
+      "student_total": 2,
+      "student_lav": 1,
+      "student_random_missing": 1,
+      "student_bert": 2,
+      "teacher_total": 1,
+      "teacher_bert": 1,
+      "evaluator": 0,
+      "bert_total": 3
+    },
+    "validation_per_batch": {"student": 4, "bert": 4, "modes": ["LAV", "LA", "LV", "L"]}
+  },
+  "backward_counts": {"per_train_microbatch": 1},
+  "optimizer_steps_per_epoch": 103,
+  "gradient_accumulation": {
+    "microbatches": 10,
+    "loss_divided_by_accumulation_steps": false,
+    "semantics": "gradient sum, not standard mean",
+    "epoch_residual_stepped": true,
+    "clip_before_optimizer_step": true
+  },
+  "dataloader_config": {
+    "batch_size": 16,
+    "shuffle_train": true,
+    "drop_last": false,
+    "num_workers": 1,
+    "pin_memory": false,
+    "persistent_workers": false,
+    "prefetch_factor_explicit": false,
+    "worker_init_fn": null,
+    "collate_fn": "default",
+    "non_blocking_h2d": false,
+    "whole_pickle_loaded_per_split": true,
+    "numpy_to_tensor_per_getitem": true
+  },
+  "evaluation_frequency": {
+    "test_during_worker_training": 0,
+    "clean_valid_per_epoch": 1,
+    "missing_mode_valid_per_epoch": 4,
+    "post_training_best_valid_prediction_passes": 4
+  },
+  "checkpoint_frequency": {
+    "policy": "overwrite validation-best only",
+    "last_checkpoint": false,
+    "epoch_checkpoints": false,
+    "checkpoint_bytes_clean_approx": 449892193,
+    "checkpoint_bytes_missing_approx": 449909341,
+    "precise_io_duration_available": false
+  },
+  "cache_status": {
+    "compatibility_cached": true,
+    "compatibility_train_only": true,
+    "compatibility_rows": 16326,
+    "evaluator_sha_bound": true,
+    "unique_contiguous_sample_index_checked": true,
+    "sample_order_sha_bound": false,
+    "teacher_logits_cached": false,
+    "teacher_train_logit_shape": [16326, 1],
+    "teacher_train_logit_fp32_bytes": 65304,
+    "teacher_train_logit_fp16_bytes": 32652,
+    "recommended_key_fields": [
+      "dataset_sha", "split_sha", "sample_order_sha", "teacher_checkpoint_sha",
+      "evaluator_checkpoint_sha", "seed", "missing_schedule_sha",
+      "feature_layer", "dtype", "code_commit_sha", "formula_version"
+    ]
+  },
+  "bottlenecks": [
+    {"rank": 1, "name": "backward", "dynamic_mean_ms": 135.190},
+    {"rank": 2, "name": "three serial DLF/BERT forwards", "dynamic_mean_ms": 129.923},
+    {"rank": 3, "name": "full-LAV loss, dominated by O(B^2) Hinge", "dynamic_mean_ms": 32.009, "hinge_mean_ms": 30.273}
+  ],
+  "optimization_candidates": {
+    "semantics_preserving_or_near_equivalent": [
+      "reuse strongly keyed clean/ModDrop/compatibility artifacts",
+      "offline FP32 frozen-teacher train logits",
+      "vectorize Hinge with loss and gradient equivalence gate",
+      "aggregate logging tensors on device and convert once per epoch",
+      "remove duplicate tensor construction/pin and non-blocking transfer while preserving order"
+    ],
+    "requires_same_protocol_baseline_retraining": [
+      "AMP FP16",
+      "microbatch or accumulation changes",
+      "standard mean gradient accumulation",
+      "merged/reused Student text encoding",
+      "validation or checkpoint frequency changes"
+    ],
+    "fast_screen_only": [
+      "freeze Student BERT",
+      "train subset",
+      "reduced epochs",
+      "shorter sequence",
+      "remove auxiliary losses",
+      "upper-layer-only proxy"
+    ]
+  },
+  "dynamic_profile_status": "COMPLETED_BOUNDED_TRAIN_ONLY_PROFILE",
+  "dynamic_profile_results": {
+    "physical_gpu": 2,
+    "warmup_batches_final_run": 20,
+    "timed_batches_final_run": 100,
+    "total_microbatches_across_instrumentation_and_final_runs": 240,
+    "batch_per_second": 3.2447525176045824,
+    "samples_per_second": 51.91604028167332,
+    "peak_allocated_bytes": 3734196224,
+    "peak_reserved_bytes": 3915382784,
+    "timing_mean_ms": {
+      "data_wait": 1.7043971770908684,
+      "host_to_device": 0.26290189125575125,
+      "student_lav_forward": 45.822744651231915,
+      "full_loss": 32.00945206452161,
+      "hinge_similarity_loss": 30.27332262485288,
+      "student_missing_forward": 43.89325474156067,
+      "missing_loss": 0.2701083617284894,
+      "teacher_lav_forward": 40.207342888461426,
+      "compatibility_and_kd": 0.47023682738654315,
+      "backward": 135.1900100626517,
+      "optimizer_step_amortized": 4.286658753408119
+    },
+    "no_validation_access": true,
+    "no_test_access": true,
+    "no_checkpoint_write": true
+  },
+  "final_recommendation": {
+    "new_candidate_minimum_stage": "proposed student only when all upstream cache keys match",
+    "safe_candidate_time_hours": [1.8, 2.4],
+    "new_protocol_amp_candidate_time_hours": [1.2, 1.9],
+    "fast_screen_time_hours": [0.5, 1.5],
+    "recommend_direct_batch_increase": false,
+    "recommend_amp_as_new_protocol": true,
+    "recommend_teacher_cache": true,
+    "recommend_compatibility_cache_reuse": true,
+    "recommended_max_independent_tasks_per_22gb_gpu": 2
+  },
+  "safety": {
+    "locked_test_access_count": 0,
+    "modified_original_mosei_worktree": false,
+    "dependencies_installed_or_upgraded": false,
+    "full_training_run": false,
+    "formal_acceleration_implemented": false
+  }
+}

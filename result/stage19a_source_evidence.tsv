@@ -1,0 +1,43 @@
+finding_id	finding	file	line_start	line_end	evidence_type	confidence
+F001	正式 seeds 为 1111–1115，stage 顺序为 clean/moddrop/compatibility/cfcompat	scripts/mosei/stage10_common.py	11	24	source	HIGH
+F002	launcher 强制正式 seeds、GPU3、clean worktree、data/config/test gate 后 detached supervisor	scripts/mosei/launch_stage10_async.py	102	201	source	HIGH
+F003	supervisor 启动 worker，等待全部 worker 成功后才启动 coordinator	scripts/mosei/stage10_supervisor.py	28	107	source	HIGH
+F004	worker 对 seed 和 stage 双层串行循环，记录 start/end sentinel，并将物理 GPU 映射为内部 GPU0	scripts/mosei/stage10_worker.py	38	131	source	HIGH
+F005	stage router 分派四个实际阶段	scripts/mosei/stage10_train.py	620	635	source	HIGH
+F006	clean 每 train microbatch 一次 Student forward、一次 backward，按 update_epochs step	scripts/mosei/stage10_train.py	201	230	source	HIGH
+F007	clean 每 epoch 只做 Official Valid；no_grad；预测和 loss 转 CPU/Python	scripts/mosei/stage10_train.py	139	155	source	HIGH
+F008	ModDrop 从同 seed clean checkpoint 初始化	scripts/mosei/stage10_train.py	255	270	source	HIGH
+F009	ModDrop 每 microbatch 做 LAV 与一个随机 missing view 两次 Student forward	scripts/mosei/stage10_train.py	281	321	source	HIGH
+F010	missing validation 对 LAV/LA/LV/L 串行执行四次完整 forward	scripts/mosei/stage10_train.py	158	183	source	HIGH
+F011	compatibility 使用冻结 ModDrop evaluator，只构造 train loader，输出 train-only cache	scripts/mosei/stage10_train.py	356	411	source	HIGH
+F012	CFCompat 校验 clean/evaluator/cache SHA，并检查 cache 行数与 sample_index 唯一性	scripts/mosei/stage10_train.py	447	479	source	HIGH
+F013	CFCompat teacher 与 student 均由 clean checkpoint 构造，teacher 不进入 optimizer	scripts/mosei/stage10_train.py	480	500	source	HIGH
+F014	CFCompat 每 microbatch 两次 Student forward、一次在线 Teacher forward、一次 backward	scripts/mosei/stage10_train.py	515	545	source	HIGH
+F015	梯度累积没有将 loss 除以 update_epochs	scripts/mosei/stage10_train.py	521	553	source	HIGH
+F016	epoch 尾部不足累积周期的梯度仍会 step，不丢失	scripts/mosei/stage10_train.py	557	560	source	HIGH
+F017	CFCompat 每 epoch 四模式 Valid，scheduler 以 validation J 每 epoch 更新	scripts/mosei/stage10_train.py	561	580	source	HIGH
+F018	CFCompat 训练后重新加载 best checkpoint 并额外生成一遍四模式 valid predictions	scripts/mosei/stage10_train.py	585	597	source	HIGH
+F019	best 改善时覆盖保存 state_dict，不保存 last/epoch-N	scripts/mosei/stage10_train.py	578	580	source	HIGH
+F020	训练 loader 只构造 train/valid；Test loader 仅 mode=test 时构造	data_loader.py	137	169	source	HIGH
+F021	DataLoader batch_size 来自配置，workers 外部传入，train shuffle，drop_last false；未设置 pin/persistent/prefetch/collate	data_loader.py	152	169	source	HIGH
+F022	每个 dataset 实例分别反序列化整个 pickle 并转 float32	data_loader.py	9	74	source	HIGH
+F023	每次 __getitem__ 对三模态 numpy slice 新建 torch.Tensor	data_loader.py	122	135	source	HIGH
+F024	Missing wrapper 掩蔽 A/V 后调用完整 DLF backbone	trains/singleTask/missing_utils.py	95	115	source	HIGH
+F025	task objective 是 final/shared/L/V/A 五个 L1 head，语言特定 head 权重为3	trains/singleTask/missing_utils.py	118	134	source	HIGH
+F026	full-LAV objective 另含三重 reconstruction、specific consistency、orthogonality、Hinge similarity	trains/singleTask/missing_utils.py	137	184	source	HIGH
+F027	Hinge 输入由三模态 shared features 拼成 3B 行，构造全 pair tensor	trains/singleTask/missing_utils.py	167	173	source	HIGH
+F028	HingeLoss repeat 为 N^2×F 并有逐 N Python loop，N=3B	trains/singleTask/HingeLoss.py	19	56	source	HIGH
+F029	frozen teacher eval 且全部 requires_grad=false	trains/singleTask/fixed_kd_utils.py	55	63	source	HIGH
+F030	teacher 每批在 inference_mode 中在线计算，仅取 output_logit	trains/singleTask/fixed_kd_utils.py	109	115	source	HIGH
+F031	frozen evaluator eval/inference_mode，并可离线预测	trains/singleTask/cf_compat_kd_utils.py	219	237	source	HIGH
+F032	compatibility cache 对 train 每样本执行 LAV/LA/LV/L evaluator forward，排序并验证连续唯一 index	trains/singleTask/cf_compat_kd_utils.py	252	279	source	HIGH
+F033	在线 compatibility lookup 含 mask GPU到CPU、逐样本 Python dict lookup	trains/singleTask/cf_compat_kd_utils.py	77	96	source	HIGH
+F034	所有 worker manifest 通过后才创建 unlock，并首次构造 test loader	scripts/mosei/stage10_coordinator.py	254	320	source	HIGH
+F035	五 seed worker stages 总计 27.912623h；单 seed 4.495112–6.433868h	runtime/mosei_generalization_v1/sentinels/seed_*/*.done	1	1	historical_timestamp	HIGH
+F036	动态 profile 100 timed batches 得到 3.2448 batch/s、51.916 sample/s、峰值 allocated 3.734GB	result/stage19a_dynamic_profile.json	1	1	dynamic_profile	HIGH
+F037	动态 hooks 实测 100 批为 200 Student BERT、100 Teacher BERT forward	result/stage19a_dynamic_profile.json	1	1	dynamic_profile	HIGH
+F038	动态 profile mean: backward 135.19ms，两个 Student forward 89.72ms，Teacher 40.21ms	result/stage19a_dynamic_profile.json	1	1	dynamic_profile	HIGH
+F039	Hinge similarity mean 30.27ms，占 full-loss 32.01ms 的大部分	result/stage19a_dynamic_profile.json	1	1	dynamic_profile	HIGH
+F040	DataLoader wait mean 1.70ms、H2D 0.263ms，未显示 CPU starvation	result/stage19a_dynamic_profile.json	1	1	dynamic_profile	HIGH
+F041	运行时没有 AMP/GradScaler；TF32 matmul false、cudnn benchmark false、deterministic algorithms false	environment query	1	1	runtime_query	HIGH
+F042	审计开始时没有 DLF/MOSEI/Stage10/Stage18 worker，四张 GPU 均无 compute process	nvidia-smi and ps snapshot	1	1	runtime_query	HIGH
