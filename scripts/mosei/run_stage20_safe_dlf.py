@@ -709,11 +709,16 @@ def main():
             cache,
             protocol,
         )
+        screen_epochs = tuple(
+            int(protocol[key])
+            for key in ("screen_epoch_1", "screen_epoch_2")
+            if key in protocol
+        )
         latest = save_resumable(
             payload,
             output,
             epoch,
-            (int(protocol["screen_epoch_1"]), int(protocol["screen_epoch_2"])),
+            screen_epochs,
         )
         print(
             "stage20 method={} seed={} epoch={} J={:.6f} best={:.6f} wall={:.1f}s latest={}".format(

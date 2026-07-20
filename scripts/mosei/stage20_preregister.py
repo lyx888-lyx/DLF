@@ -106,6 +106,8 @@ def main():
         "scheduler": "ReduceLROnPlateau(mode=min,factor=0.5,patience=5)",
         "early_stop": 10,
         "maximum_epochs": 30,
+        "screen_epoch_1": 4,
+        "screen_epoch_2": 8,
         "teacher_cache": {
             "path": str(cache_manifest),
             "sha256": sha256_file(cache_manifest),
