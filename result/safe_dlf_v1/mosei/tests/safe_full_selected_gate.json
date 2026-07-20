@@ -1,0 +1,42 @@
+{
+  "checks": {
+    "cache_binding_valid": true,
+    "cache_order_mismatch_hard_fail": true,
+    "filler_fusion_invariance": true,
+    "filler_prediction_invariance": true,
+    "lav_component_loss_parity": true,
+    "lav_output_parity": true,
+    "lav_total_loss_parity": true,
+    "mixed_batch_projection": true,
+    "present_input_gradient": true,
+    "resume_integrity": true,
+    "runner_has_no_allow_test_flag": true,
+    "runner_has_no_test_evaluation_import": true,
+    "test_lock": true,
+    "triplet_l_only_has_language": true,
+    "triplet_lav_unchanged": true,
+    "unsupported_loss_zero": true,
+    "zero_absent_input_gradient": true,
+    "zero_absent_representation": true
+  },
+  "evidence": {
+    "absent_input_gradient_max": 0.0,
+    "absent_representation_max": 0.0,
+    "filler_fusion_max_abs_diff": 0.0,
+    "filler_output_max_abs_diff": 0.0,
+    "l_triplet_entries": 4,
+    "lav_component_loss_max_abs_diff": 0.0,
+    "lav_output_max_abs_diff": 0.0,
+    "lav_total_loss_abs_diff": 0.0,
+    "lav_triplet_entries": 12,
+    "present_input_gradient_min": 0.8707744479179382,
+    "resume_max_numeric_difference": 0.0,
+    "unsupported_loss_max": 0.0
+  },
+  "failed_tests": [],
+  "locked_test_access_count": 0,
+  "status": "STAGE20_IMPLEMENTATION_AUDIT_PASSED",
+  "tests_failed": 0,
+  "tests_passed": 18,
+  "tests_run": 18
+}

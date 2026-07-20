@@ -1,0 +1,712 @@
+{
+  "absent_gradients": [
+    {
+      "AbsentBranchParameterGradientNorm": 7.82720422744751,
+      "AbsentGradientRatio": 0.04168455366128838,
+      "AbsentInputGradientNorm": 0.0,
+      "Mode": "LA",
+      "PresentBranchParameterGradientNorm": 187.7722930908203,
+      "PresentInputGradientNorm": 59.368995666503906
+    },
+    {
+      "AbsentBranchParameterGradientNorm": 11.063179016113281,
+      "AbsentGradientRatio": 0.061602732338726936,
+      "AbsentInputGradientNorm": 0.0,
+      "Mode": "LV",
+      "PresentBranchParameterGradientNorm": 179.58909606933594,
+      "PresentInputGradientNorm": 581.7909545898438
+    },
+    {
+      "AbsentBranchParameterGradientNorm": 13.490209579467773,
+      "AbsentGradientRatio": 0.07584988054061079,
+      "AbsentInputGradientNorm": 0.0,
+      "Mode": "L",
+      "PresentBranchParameterGradientNorm": 177.85406494140625,
+      "PresentInputGradientNorm": 0.0
+    }
+  ],
+  "aggregate_unsupported_gradient_share": 0.17538716339147206,
+  "attention_leakage": [
+    {
+      "AbsentBranch": "vision",
+      "MaxAttentionWeightToAbsentKV": 1.0,
+      "MeanAttentionMassToAbsentKV": 1.0,
+      "Mode": "LA"
+    },
+    {
+      "AbsentBranch": "audio",
+      "MaxAttentionWeightToAbsentKV": 1.0,
+      "MeanAttentionMassToAbsentKV": 1.0,
+      "Mode": "LV"
+    },
+    {
+      "AbsentBranch": "audio",
+      "MaxAttentionWeightToAbsentKV": 1.0,
+      "MeanAttentionMassToAbsentKV": 1.0,
+      "Mode": "L"
+    },
+    {
+      "AbsentBranch": "vision",
+      "MaxAttentionWeightToAbsentKV": 1.0,
+      "MeanAttentionMassToAbsentKV": 1.0,
+      "Mode": "L"
+    }
+  ],
+  "checkpoint": "/code/DLF-mosei-mgrd-v1/result/missing_baseline/mgrd_v1/mosei/baseline/uniform_seed1111_fp32/checkpoints/best_epoch002.pth",
+  "created_at": "2026-07-20T09:27:03.194996+00:00",
+  "filler_sensitivity": [
+    {
+      "Corr": 0.7466312898964825,
+      "DeltaJVsZero": 0.0,
+      "DeltaMAEVsZero": 0.0,
+      "Filler": "zero",
+      "J": 0.5154934128125508,
+      "MAE": 0.5197476148605347,
+      "Mode": "LA",
+      "PredictionMaxAbsDifference": 0.0,
+      "PredictionMeanAbsDifference": 0.0,
+      "RepresentationMaxAbsDifference": 0.0,
+      "RepresentationMeanAbsDifference": 0.0
+    },
+    {
+      "Corr": 0.7466312898964825,
+      "DeltaJVsZero": 0.0,
+      "DeltaMAEVsZero": 0.0,
+      "Filler": "permutation",
+      "J": 0.5154934128125508,
+      "MAE": 0.5197476148605347,
+      "Mode": "LA",
+      "PredictionMaxAbsDifference": 0.0,
+      "PredictionMeanAbsDifference": 0.0,
+      "RepresentationMaxAbsDifference": 0.0,
+      "RepresentationMeanAbsDifference": 0.0
+    },
+    {
+      "Corr": 0.7466312898964825,
+      "DeltaJVsZero": 0.0,
+      "DeltaMAEVsZero": 0.0,
+      "Filler": "gaussian",
+      "J": 0.5154934128125508,
+      "MAE": 0.5197476148605347,
+      "Mode": "LA",
+      "PredictionMaxAbsDifference": 0.0,
+      "PredictionMeanAbsDifference": 0.0,
+      "RepresentationMaxAbsDifference": 0.0,
+      "RepresentationMeanAbsDifference": 0.0
+    },
+    {
+      "Corr": 0.7466312898964825,
+      "DeltaJVsZero": 0.0,
+      "DeltaMAEVsZero": 0.0,
+      "Filler": "high",
+      "J": 0.5154934128125508,
+      "MAE": 0.5197476148605347,
+      "Mode": "LA",
+      "PredictionMaxAbsDifference": 0.0,
+      "PredictionMeanAbsDifference": 0.0,
+      "RepresentationMaxAbsDifference": 0.0,
+      "RepresentationMeanAbsDifference": 0.0
+    },
+    {
+      "Corr": 0.7505330102496433,
+      "DeltaJVsZero": 0.0,
+      "DeltaMAEVsZero": 0.0,
+      "Filler": "zero",
+      "J": 0.5154934128125508,
+      "MAE": 0.5126074552536011,
+      "Mode": "LV",
+      "PredictionMaxAbsDifference": 0.0,
+      "PredictionMeanAbsDifference": 0.0,
+      "RepresentationMaxAbsDifference": 0.0,
+      "RepresentationMeanAbsDifference": 0.0
+    },
+    {
+      "Corr": 0.7505330102496433,
+      "DeltaJVsZero": 0.0,
+      "DeltaMAEVsZero": 0.0,
+      "Filler": "permutation",
+      "J": 0.5154934128125508,
+      "MAE": 0.5126074552536011,
+      "Mode": "LV",
+      "PredictionMaxAbsDifference": 0.0,
+      "PredictionMeanAbsDifference": 0.0,
+      "RepresentationMaxAbsDifference": 0.0,
+      "RepresentationMeanAbsDifference": 0.0
+    },
+    {
+      "Corr": 0.7505330102496433,
+      "DeltaJVsZero": 0.0,
+      "DeltaMAEVsZero": 0.0,
+      "Filler": "gaussian",
+      "J": 0.5154934128125508,
+      "MAE": 0.5126074552536011,
+      "Mode": "LV",
+      "PredictionMaxAbsDifference": 0.0,
+      "PredictionMeanAbsDifference": 0.0,
+      "RepresentationMaxAbsDifference": 0.0,
+      "RepresentationMeanAbsDifference": 0.0
+    },
+    {
+      "Corr": 0.7505330102496433,
+      "DeltaJVsZero": 0.0,
+      "DeltaMAEVsZero": 0.0,
+      "Filler": "high",
+      "J": 0.5154934128125508,
+      "MAE": 0.5126074552536011,
+      "Mode": "LV",
+      "PredictionMaxAbsDifference": 0.0,
+      "PredictionMeanAbsDifference": 0.0,
+      "RepresentationMaxAbsDifference": 0.0,
+      "RepresentationMeanAbsDifference": 0.0
+    },
+    {
+      "Corr": 0.746564357199575,
+      "DeltaJVsZero": 0.0,
+      "DeltaMAEVsZero": 0.0,
+      "Filler": "zero",
+      "J": 0.5154934128125508,
+      "MAE": 0.5181628465652466,
+      "Mode": "L",
+      "PredictionMaxAbsDifference": 0.0,
+      "PredictionMeanAbsDifference": 0.0,
+      "RepresentationMaxAbsDifference": 0.0,
+      "RepresentationMeanAbsDifference": 0.0
+    },
+    {
+      "Corr": 0.746564357199575,
+      "DeltaJVsZero": 0.0,
+      "DeltaMAEVsZero": 0.0,
+      "Filler": "permutation",
+      "J": 0.5154934128125508,
+      "MAE": 0.5181628465652466,
+      "Mode": "L",
+      "PredictionMaxAbsDifference": 0.0,
+      "PredictionMeanAbsDifference": 0.0,
+      "RepresentationMaxAbsDifference": 0.0,
+      "RepresentationMeanAbsDifference": 0.0
+    },
+    {
+      "Corr": 0.746564357199575,
+      "DeltaJVsZero": 0.0,
+      "DeltaMAEVsZero": 0.0,
+      "Filler": "gaussian",
+      "J": 0.5154934128125508,
+      "MAE": 0.5181628465652466,
+      "Mode": "L",
+      "PredictionMaxAbsDifference": 0.0,
+      "PredictionMeanAbsDifference": 0.0,
+      "RepresentationMaxAbsDifference": 0.0,
+      "RepresentationMeanAbsDifference": 0.0
+    },
+    {
+      "Corr": 0.746564357199575,
+      "DeltaJVsZero": 0.0,
+      "DeltaMAEVsZero": 0.0,
+      "Filler": "high",
+      "J": 0.5154934128125508,
+      "MAE": 0.5181628465652466,
+      "Mode": "L",
+      "PredictionMaxAbsDifference": 0.0,
+      "PredictionMeanAbsDifference": 0.0,
+      "RepresentationMaxAbsDifference": 0.0,
+      "RepresentationMeanAbsDifference": 0.0
+    }
+  ],
+  "fillers": [
+    "zero",
+    "permutation",
+    "gaussian",
+    "high"
+  ],
+  "gaussian_statistics": "per-feature mean/std from the complete MOSEI train split",
+  "j_by_filler": {
+    "gaussian": 0.5154934128125508,
+    "high": 0.5154934128125508,
+    "permutation": 0.5154934128125508,
+    "zero": 0.5154934128125508
+  },
+  "layerwise_ghost_activation": [
+    {
+      "AbsentBranch": "vision",
+      "AbsentNorm": 196.89437866210938,
+      "GhostActivationRatio": 0.9977722756965358,
+      "Layer": "shared_encoder_output",
+      "Mode": "LA",
+      "PresentNorm": 197.333984375
+    },
+    {
+      "AbsentBranch": "vision",
+      "AbsentNorm": 192.86416625976562,
+      "GhostActivationRatio": 0.9999022212391555,
+      "Layer": "specific_encoder_output",
+      "Mode": "LA",
+      "PresentNorm": 192.88302612304688
+    },
+    {
+      "AbsentBranch": "vision",
+      "AbsentNorm": 138.5823516845703,
+      "GhostActivationRatio": 0.115324057124723,
+      "Layer": "positional_dropout_output",
+      "Mode": "LA",
+      "PresentNorm": 1201.677734375
+    },
+    {
+      "AbsentBranch": "vision",
+      "AbsentNorm": 195.89540100097656,
+      "GhostActivationRatio": 1.0000704977122858,
+      "Layer": "transformer_ffn_output",
+      "Mode": "LA",
+      "PresentNorm": 195.881591796875
+    },
+    {
+      "AbsentBranch": "vision",
+      "AbsentNorm": 196.19920349121094,
+      "GhostActivationRatio": 1.0001208721744037,
+      "Layer": "lfa_cross_attention_output",
+      "Mode": "LA",
+      "PresentNorm": 196.1754913330078
+    },
+    {
+      "AbsentBranch": "vision",
+      "AbsentNorm": 15.319270133972168,
+      "GhostActivationRatio": 0.9994667741496682,
+      "Layer": "projector_output",
+      "Mode": "LA",
+      "PresentNorm": 15.32744312286377
+    },
+    {
+      "AbsentBranch": "vision",
+      "AbsentNorm": 28.236120223999023,
+      "GhostActivationRatio": 0.9984313202336069,
+      "Layer": "specific_prediction_hidden",
+      "Mode": "LA",
+      "PresentNorm": 28.28048324584961
+    },
+    {
+      "AbsentBranch": "vision",
+      "AbsentNorm": 15.319270133972168,
+      "GhostActivationRatio": 0.9994667741496682,
+      "Layer": "final_fusion_input",
+      "Mode": "LA",
+      "PresentNorm": 15.32744312286377
+    },
+    {
+      "AbsentBranch": "audio",
+      "AbsentNorm": 196.88571166992188,
+      "GhostActivationRatio": 0.9951500796005746,
+      "Layer": "shared_encoder_output",
+      "Mode": "LV",
+      "PresentNorm": 197.84524536132812
+    },
+    {
+      "AbsentBranch": "audio",
+      "AbsentNorm": 199.0724639892578,
+      "GhostActivationRatio": 1.0009619549059612,
+      "Layer": "specific_encoder_output",
+      "Mode": "LV",
+      "PresentNorm": 198.8811492919922
+    },
+    {
+      "AbsentBranch": "audio",
+      "AbsentNorm": 138.49942016601562,
+      "GhostActivationRatio": 0.06595311695631487,
+      "Layer": "positional_dropout_output",
+      "Mode": "LV",
+      "PresentNorm": 2099.9677734375
+    },
+    {
+      "AbsentBranch": "audio",
+      "AbsentNorm": 196.19192504882812,
+      "GhostActivationRatio": 0.9999170989291246,
+      "Layer": "transformer_ffn_output",
+      "Mode": "LV",
+      "PresentNorm": 196.20819091796875
+    },
+    {
+      "AbsentBranch": "audio",
+      "AbsentNorm": 196.2057647705078,
+      "GhostActivationRatio": 0.9999024867814716,
+      "Layer": "lfa_cross_attention_output",
+      "Mode": "LV",
+      "PresentNorm": 196.2248992919922
+    },
+    {
+      "AbsentBranch": "audio",
+      "AbsentNorm": 14.07009220123291,
+      "GhostActivationRatio": 0.999962044502614,
+      "Layer": "projector_output",
+      "Mode": "LV",
+      "PresentNorm": 14.070626258850098
+    },
+    {
+      "AbsentBranch": "audio",
+      "AbsentNorm": 29.72752571105957,
+      "GhostActivationRatio": 1.0006677202521463,
+      "Layer": "specific_prediction_hidden",
+      "Mode": "LV",
+      "PresentNorm": 29.70768928527832
+    },
+    {
+      "AbsentBranch": "audio",
+      "AbsentNorm": 14.07009220123291,
+      "GhostActivationRatio": 0.999962044502614,
+      "Layer": "final_fusion_input",
+      "Mode": "LV",
+      "PresentNorm": 14.070626258850098
+    },
+    {
+      "AbsentBranch": "audio",
+      "AbsentNorm": 196.88571166992188,
+      "GhostActivationRatio": 0.9951500796005746,
+      "Layer": "shared_encoder_output",
+      "Mode": "L",
+      "PresentNorm": 197.84524536132812
+    },
+    {
+      "AbsentBranch": "audio",
+      "AbsentNorm": 199.0724639892578,
+      "GhostActivationRatio": 1.0009619549059612,
+      "Layer": "specific_encoder_output",
+      "Mode": "L",
+      "PresentNorm": 198.8811492919922
+    },
+    {
+      "AbsentBranch": "audio",
+      "AbsentNorm": 138.49942016601562,
+      "GhostActivationRatio": 0.06595311695631487,
+      "Layer": "positional_dropout_output",
+      "Mode": "L",
+      "PresentNorm": 2099.9677734375
+    },
+    {
+      "AbsentBranch": "audio",
+      "AbsentNorm": 196.19192504882812,
+      "GhostActivationRatio": 0.9999170989291246,
+      "Layer": "transformer_ffn_output",
+      "Mode": "L",
+      "PresentNorm": 196.20819091796875
+    },
+    {
+      "AbsentBranch": "audio",
+      "AbsentNorm": 196.2057647705078,
+      "GhostActivationRatio": 0.9999024867814716,
+      "Layer": "lfa_cross_attention_output",
+      "Mode": "L",
+      "PresentNorm": 196.2248992919922
+    },
+    {
+      "AbsentBranch": "audio",
+      "AbsentNorm": 14.07009220123291,
+      "GhostActivationRatio": 0.999962044502614,
+      "Layer": "projector_output",
+      "Mode": "L",
+      "PresentNorm": 14.070626258850098
+    },
+    {
+      "AbsentBranch": "audio",
+      "AbsentNorm": 29.72752571105957,
+      "GhostActivationRatio": 1.0006677202521463,
+      "Layer": "specific_prediction_hidden",
+      "Mode": "L",
+      "PresentNorm": 29.70768928527832
+    },
+    {
+      "AbsentBranch": "audio",
+      "AbsentNorm": 14.07009220123291,
+      "GhostActivationRatio": 0.999962044502614,
+      "Layer": "final_fusion_input",
+      "Mode": "L",
+      "PresentNorm": 14.070626258850098
+    },
+    {
+      "AbsentBranch": "vision",
+      "AbsentNorm": 196.89437866210938,
+      "GhostActivationRatio": 0.9977722756965358,
+      "Layer": "shared_encoder_output",
+      "Mode": "L",
+      "PresentNorm": 197.333984375
+    },
+    {
+      "AbsentBranch": "vision",
+      "AbsentNorm": 192.86416625976562,
+      "GhostActivationRatio": 0.9999022212391555,
+      "Layer": "specific_encoder_output",
+      "Mode": "L",
+      "PresentNorm": 192.88302612304688
+    },
+    {
+      "AbsentBranch": "vision",
+      "AbsentNorm": 138.5823516845703,
+      "GhostActivationRatio": 0.115324057124723,
+      "Layer": "positional_dropout_output",
+      "Mode": "L",
+      "PresentNorm": 1201.677734375
+    },
+    {
+      "AbsentBranch": "vision",
+      "AbsentNorm": 195.89540100097656,
+      "GhostActivationRatio": 1.0000704977122858,
+      "Layer": "transformer_ffn_output",
+      "Mode": "L",
+      "PresentNorm": 195.881591796875
+    },
+    {
+      "AbsentBranch": "vision",
+      "AbsentNorm": 196.19920349121094,
+      "GhostActivationRatio": 1.0001208721744037,
+      "Layer": "lfa_cross_attention_output",
+      "Mode": "L",
+      "PresentNorm": 196.1754913330078
+    },
+    {
+      "AbsentBranch": "vision",
+      "AbsentNorm": 15.319270133972168,
+      "GhostActivationRatio": 0.9994667741496682,
+      "Layer": "projector_output",
+      "Mode": "L",
+      "PresentNorm": 15.32744312286377
+    },
+    {
+      "AbsentBranch": "vision",
+      "AbsentNorm": 28.236120223999023,
+      "GhostActivationRatio": 0.9984313202336069,
+      "Layer": "specific_prediction_hidden",
+      "Mode": "L",
+      "PresentNorm": 28.28048324584961
+    },
+    {
+      "AbsentBranch": "vision",
+      "AbsentNorm": 15.319270133972168,
+      "GhostActivationRatio": 0.9994667741496682,
+      "Layer": "final_fusion_input",
+      "Mode": "L",
+      "PresentNorm": 15.32744312286377
+    }
+  ],
+  "locked_test_access_count": 0,
+  "maximum_ghost_activation_ratio": 1.0009619549059612,
+  "maximum_prediction_filler_sensitivity": 0.0,
+  "sample_counts": {
+    "train": 16326,
+    "valid": 1871
+  },
+  "status": "STAGE20_GHOST_AUDIT_COMPLETED",
+  "unsupported_gradients": [
+    {
+      "ActiveInFrozenUniform": true,
+      "Mode": "LA",
+      "Objective": "final_supervised",
+      "Unsupported": false,
+      "WeightedGradientNorm": 2.8702447414398193,
+      "WeightedGradientShare": 0.12418968428776199
+    },
+    {
+      "ActiveInFrozenUniform": true,
+      "Mode": "LA",
+      "Objective": "shared_prediction",
+      "Unsupported": false,
+      "WeightedGradientNorm": 6.096961975097656,
+      "WeightedGradientShare": 0.2638032122731244
+    },
+    {
+      "ActiveInFrozenUniform": true,
+      "Mode": "LA",
+      "Objective": "language_specific_prediction",
+      "Unsupported": false,
+      "WeightedGradientNorm": 8.133030891418457,
+      "WeightedGradientShare": 0.3518997959042341
+    },
+    {
+      "ActiveInFrozenUniform": true,
+      "Mode": "LA",
+      "Objective": "audio_specific_prediction",
+      "Unsupported": false,
+      "WeightedGradientNorm": 3.5063226222991943,
+      "WeightedGradientShare": 0.15171148759110262
+    },
+    {
+      "ActiveInFrozenUniform": true,
+      "Mode": "LA",
+      "Objective": "vision_specific_prediction",
+      "Unsupported": true,
+      "WeightedGradientNorm": 2.505220413208008,
+      "WeightedGradientShare": 0.10839581994373369
+    },
+    {
+      "ActiveInFrozenUniform": false,
+      "Mode": "LA",
+      "Objective": "absent_reconstruction",
+      "Unsupported": true,
+      "WeightedGradientNorm": 0.0,
+      "WeightedGradientShare": 0.0
+    },
+    {
+      "ActiveInFrozenUniform": false,
+      "Mode": "LA",
+      "Objective": "absent_specific_consistency",
+      "Unsupported": true,
+      "WeightedGradientNorm": 0.0,
+      "WeightedGradientShare": 0.0
+    },
+    {
+      "ActiveInFrozenUniform": false,
+      "Mode": "LA",
+      "Objective": "absent_orthogonality",
+      "Unsupported": true,
+      "WeightedGradientNorm": 0.0,
+      "WeightedGradientShare": 0.0
+    },
+    {
+      "ActiveInFrozenUniform": false,
+      "Mode": "LA",
+      "Objective": "absent_triplet",
+      "Unsupported": true,
+      "WeightedGradientNorm": 0.0,
+      "WeightedGradientShare": 0.0
+    },
+    {
+      "ActiveInFrozenUniform": true,
+      "Mode": "LV",
+      "Objective": "final_supervised",
+      "Unsupported": false,
+      "WeightedGradientNorm": 2.5539445877075195,
+      "WeightedGradientShare": 0.11451307723644115
+    },
+    {
+      "ActiveInFrozenUniform": true,
+      "Mode": "LV",
+      "Objective": "shared_prediction",
+      "Unsupported": false,
+      "WeightedGradientNorm": 4.114869117736816,
+      "WeightedGradientShare": 0.18450138948402492
+    },
+    {
+      "ActiveInFrozenUniform": true,
+      "Mode": "LV",
+      "Objective": "language_specific_prediction",
+      "Unsupported": false,
+      "WeightedGradientNorm": 8.133030891418457,
+      "WeightedGradientShare": 0.364666641209845
+    },
+    {
+      "ActiveInFrozenUniform": true,
+      "Mode": "LV",
+      "Objective": "audio_specific_prediction",
+      "Unsupported": true,
+      "WeightedGradientNorm": 3.0419974327087402,
+      "WeightedGradientShare": 0.13639625880744632
+    },
+    {
+      "ActiveInFrozenUniform": true,
+      "Mode": "LV",
+      "Objective": "vision_specific_prediction",
+      "Unsupported": false,
+      "WeightedGradientNorm": 4.458803653717041,
+      "WeightedGradientShare": 0.19992263326219784
+    },
+    {
+      "ActiveInFrozenUniform": false,
+      "Mode": "LV",
+      "Objective": "absent_reconstruction",
+      "Unsupported": true,
+      "WeightedGradientNorm": 0.0,
+      "WeightedGradientShare": 0.0
+    },
+    {
+      "ActiveInFrozenUniform": false,
+      "Mode": "LV",
+      "Objective": "absent_specific_consistency",
+      "Unsupported": true,
+      "WeightedGradientNorm": 0.0,
+      "WeightedGradientShare": 0.0
+    },
+    {
+      "ActiveInFrozenUniform": false,
+      "Mode": "LV",
+      "Objective": "absent_orthogonality",
+      "Unsupported": true,
+      "WeightedGradientNorm": 0.0,
+      "WeightedGradientShare": 0.0
+    },
+    {
+      "ActiveInFrozenUniform": false,
+      "Mode": "LV",
+      "Objective": "absent_triplet",
+      "Unsupported": true,
+      "WeightedGradientNorm": 0.0,
+      "WeightedGradientShare": 0.0
+    },
+    {
+      "ActiveInFrozenUniform": true,
+      "Mode": "L",
+      "Objective": "final_supervised",
+      "Unsupported": false,
+      "WeightedGradientNorm": 2.6398918628692627,
+      "WeightedGradientShare": 0.13390222636078217
+    },
+    {
+      "ActiveInFrozenUniform": true,
+      "Mode": "L",
+      "Objective": "shared_prediction",
+      "Unsupported": false,
+      "WeightedGradientNorm": 3.394930124282837,
+      "WeightedGradientShare": 0.17219974362384394
+    },
+    {
+      "ActiveInFrozenUniform": true,
+      "Mode": "L",
+      "Objective": "language_specific_prediction",
+      "Unsupported": false,
+      "WeightedGradientNorm": 8.133030891418457,
+      "WeightedGradientShare": 0.41252861859208706
+    },
+    {
+      "ActiveInFrozenUniform": true,
+      "Mode": "L",
+      "Objective": "audio_specific_prediction",
+      "Unsupported": true,
+      "WeightedGradientNorm": 3.0419974327087402,
+      "WeightedGradientShare": 0.15429807355092276
+    },
+    {
+      "ActiveInFrozenUniform": true,
+      "Mode": "L",
+      "Objective": "vision_specific_prediction",
+      "Unsupported": true,
+      "WeightedGradientNorm": 2.505220413208008,
+      "WeightedGradientShare": 0.1270713378723134
+    },
+    {
+      "ActiveInFrozenUniform": false,
+      "Mode": "L",
+      "Objective": "absent_reconstruction",
+      "Unsupported": true,
+      "WeightedGradientNorm": 0.0,
+      "WeightedGradientShare": 0.0
+    },
+    {
+      "ActiveInFrozenUniform": false,
+      "Mode": "L",
+      "Objective": "absent_specific_consistency",
+      "Unsupported": true,
+      "WeightedGradientNorm": 0.0,
+      "WeightedGradientShare": 0.0
+    },
+    {
+      "ActiveInFrozenUniform": false,
+      "Mode": "L",
+      "Objective": "absent_orthogonality",
+      "Unsupported": true,
+      "WeightedGradientNorm": 0.0,
+      "WeightedGradientShare": 0.0
+    },
+    {
+      "ActiveInFrozenUniform": false,
+      "Mode": "L",
+      "Objective": "absent_triplet",
+      "Unsupported": true,
+      "WeightedGradientNorm": 0.0,
+      "WeightedGradientShare": 0.0
+    }
+  ]
+}

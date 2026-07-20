@@ -1,0 +1,16 @@
+{
+  "accumulation_semantics": "sum_not_mean",
+  "amp_mode": "off",
+  "batch_size": 16,
+  "cache_manifest_sha": "426455f883dbff27490d9503e069e5520c3ddbf676af98546ae9f003e9dcb6dc",
+  "code_commit": "cb3655bd1b1255135c2c48953080218931259ee2",
+  "learning_rate": 0.0001,
+  "locked_test_access_count": 0,
+  "method": "sao_pm",
+  "reference_online_forward_count": 0,
+  "resume_from": null,
+  "seed": 1111,
+  "started_at": "2026-07-20T09:35:41.175023+00:00",
+  "teacher_online_forward_count": 0,
+  "update_epochs": 10
+}

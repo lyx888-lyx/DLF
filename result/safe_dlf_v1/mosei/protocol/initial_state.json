@@ -1,0 +1,14 @@
+{
+  "branch": "experiment/mosei-safe-dlf-v1",
+  "gpus_initially_free": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "head": "c1f686e8164f729e0e31d6ad18cec21d111b0c3d",
+  "locked_test_access_count": 0,
+  "running_training_processes": 0,
+  "source_worktree_head": "dc8536f338c7e310a73447e4185c38be52800f48",
+  "stage19_worktree_head": "56a7a47de5fd48c4044a6fd1790d26033aa037bd"
+}

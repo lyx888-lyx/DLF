@@ -38,6 +38,9 @@ def parse_args():
     parser.add_argument("--cache-root", required=True)
     parser.add_argument("--resume-report", required=True)
     parser.add_argument("--output-root", required=True)
+    parser.add_argument(
+        "--output-file", default="tests/test_results.json"
+    )
     parser.add_argument("--gpu-id", type=int, default=2)
     return parser.parse_args()
 
@@ -303,7 +306,7 @@ def main():
         "evidence": evidence,
         "locked_test_access_count": 0,
     }
-    atomic_json(Path(cli.output_root) / "tests/test_results.json", payload)
+    atomic_json(Path(cli.output_root) / cli.output_file, payload)
     print(json.dumps(payload, indent=2, sort_keys=True))
     if failed:
         raise SystemExit(1)

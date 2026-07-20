@@ -1,0 +1,14 @@
+{
+  "baseline_id": "stage19_uniform_seed1111_fp32",
+  "best_J_valid": 0.5154934128125508,
+  "best_epoch": 2,
+  "checkpoint_path": "/code/DLF-mosei-mgrd-v1/result/missing_baseline/mgrd_v1/mosei/baseline/uniform_seed1111_fp32/checkpoints/best_epoch002.pth",
+  "checkpoint_sha256": "5b047c72c6fd898d26afa83a52cb2f4db5964a853295fa61a1c34c500a099f06",
+  "epoch_metrics_path": "/code/DLF-mosei-mgrd-v1/result/missing_baseline/mgrd_v1/mosei/baseline/uniform_seed1111_fp32/epoch_metrics.csv",
+  "epoch_metrics_sha256": "0156f33a217b63b51dafbcf1c952a4b06f4c5c30a0716276ba71928844e6976d",
+  "locked_test_access_count": 0,
+  "manifest_path": "/code/DLF-mosei-mgrd-v1/result/missing_baseline/mgrd_v1/mosei/baseline/uniform_seed1111_fp32/run_manifest.json",
+  "manifest_sha256": "749475d14f17cbd2970ef39dcf037aaa9bb2ef7e27ace02fa080fb60f3105bba",
+  "reuse_reason": "All frozen optimizer/data/cache/initialization/loss-normalization fields match Stage 19.",
+  "reused": true
+}
