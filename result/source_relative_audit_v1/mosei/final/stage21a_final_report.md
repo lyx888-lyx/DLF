@@ -4,7 +4,7 @@
 - Source-relative claim supported: **False**
 - Generic pairwise-only signal: **False**
 - Recommend Stage21B: **False**
-- Official Valid probe run: **False**
+- Official Valid descriptive audit: **True**; controlled P0–P3 confirmation probe run: **False**
 - Locked Test access count: **0**
 - Uniform epoch-2 metric parity: **True** (max metric difference `0.000e+00`, J difference `0.000e+00`)
 
