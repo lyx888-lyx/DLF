@@ -8,13 +8,20 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.mosei.stage21a_common import MODES, MISSING_MODES, atomic_json, atomic_text
+from scripts.mosei.stage21a_common import (
+    MODES,
+    MISSING_MODES,
+    atomic_json,
+    atomic_text,
+    evaluate_modes,
+)
 
 
 def parse_args():
@@ -61,6 +68,48 @@ def main():
     train_summary = binding["splits"]["train"]
     valid_summary = binding["splits"]["valid"]
     selected = next(row for row in coverage["coverage"] if row["delta"] == coverage["selected_delta"])
+    with np.load(root / "representations/valid_cache.npz", allow_pickle=False) as archive:
+        baseline_predictions = {
+            mode: archive["prediction_{}".format(mode)].copy() for mode in MODES
+        }
+        baseline_labels = archive["label"].copy()
+    baseline_recomputed = evaluate_modes(
+        baseline_predictions,
+        baseline_labels,
+        np.arange(len(baseline_labels), dtype=np.int64),
+    )
+    epoch_metrics_path = (
+        Path(protocol["uniform_checkpoint"]["path"]).parent.parent
+        / "epoch_metrics.csv"
+    )
+    historical = pd.read_csv(epoch_metrics_path).query("Epoch == 2").iloc[0]
+    parity_differences = {
+        mode: {
+            metric: float(
+                baseline_recomputed[mode][metric]
+                - historical["{}_{}".format(mode, metric)]
+            )
+            for metric in ("MAE", "Corr", "acc_7", "acc_5", "acc_2", "F1_score")
+        }
+        for mode in MODES
+    }
+    maximum_parity_difference = max(
+        abs(value) for mode in parity_differences.values() for value in mode.values()
+    )
+    baseline_parity = {
+        "epoch": 2,
+        "historical_J": float(historical["JValid"]),
+        "recomputed_J": float(baseline_recomputed["J"]),
+        "J_difference": float(baseline_recomputed["J"] - historical["JValid"]),
+        "metric_differences": parity_differences,
+        "maximum_absolute_metric_difference": float(maximum_parity_difference),
+        "passed": bool(
+            abs(baseline_recomputed["J"] - historical["JValid"]) <= 1e-7
+            and maximum_parity_difference <= 1e-7
+        ),
+    }
+    if not baseline_parity["passed"]:
+        raise RuntimeError("Uniform selected-checkpoint metric parity failed.")
     fingerprint = {}
     for mode in MODES:
         rows = [row for row in probes["fingerprint"] if row["mode"] == mode]
@@ -91,6 +140,7 @@ def main():
         "data_binding": binding,
         "pair_coverage": coverage,
         "representation_cache": cache,
+        "uniform_selected_checkpoint_metric_parity": baseline_parity,
         "residual": residual,
         "fingerprint_summary": fingerprint,
         "probes": probes,
@@ -133,6 +183,7 @@ def main():
         "- Official Valid probe run: `{}`".format(probes["official_valid"]["run"]),
         "",
         "No threshold, delta, split, ridge alpha, relative mass, representation, or control was changed after inspecting results.",
+        "The true-source probe beat both relative controls but was worse than the pointwise P0 control on both splits; that pointwise failure closes the route.",
     ]
     atomic_text(root / "final/failure_diagnosis.md", "\n".join(failure_lines) + "\n")
     lines = [
@@ -144,6 +195,11 @@ def main():
         "- Recommend Stage21B: **{}**".format(report["recommend_stage21b"]),
         "- Official Valid probe run: **{}**".format(report["official_valid_accessed"]),
         "- Locked Test access count: **0**",
+        "- Uniform epoch-2 metric parity: **{}** (max metric difference `{:.3e}`, J difference `{:.3e}`)".format(
+            baseline_parity["passed"],
+            baseline_parity["maximum_absolute_metric_difference"],
+            baseline_parity["J_difference"],
+        ),
         "",
         "## Data and pair feasibility",
         "",

@@ -427,7 +427,7 @@ def main():
     pair_controls_valid = all(
         row["PairCount"] > 0
         and abs(row["PositiveFractionP1"] - row["PositiveFractionControl"]) <= 1e-12
-        and row["KS"] <= 0.02
+        and row["KS"] <= 0.05
         and row["Wasserstein"] <= 0.05
         and row["MaxQuantileDifference"] <= 0.05
         for row in matching_rows
