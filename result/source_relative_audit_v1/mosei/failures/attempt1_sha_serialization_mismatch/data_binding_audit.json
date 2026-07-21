@@ -1,0 +1,82 @@
+{
+  "cache_binding": {
+    "train": {
+      "actual_order_sha256": "156e40317edc9bbf54ac8b24481523021e638d17317aa65a46b8542697a0644d",
+      "expected_order_sha256": "6056a1cfa8d9089cd98af6073faeb22bafd25f579347c11a578c35ced0046175",
+      "matched": false
+    },
+    "valid": {
+      "actual_order_sha256": "670135b86983859e88875b47c009290bdae9e54e496f05a32febf81789a9bd17",
+      "expected_order_sha256": "0c4b0fa19a5ef63abdd345a668473a32970d5372fb567f152a0b2d507c8b0907",
+      "matched": false
+    }
+  },
+  "clip_id_source": "suffix of the official pkl id field after $_$",
+  "created_at": "2026-07-21T06:21:22.728184+00:00",
+  "feature_path": "/data4t/lyx/datasets/MOSEI/Processed/aligned_50.pkl",
+  "hard_failures": [
+    "train sample/cache binding",
+    "valid sample/cache binding"
+  ],
+  "locked_test_access_count": 0,
+  "sample_id_format": "video_id$_$clip_id",
+  "speaker_id_available": false,
+  "speaker_id_claimed": false,
+  "splits": {
+    "train": {
+      "clips_per_video": {
+        "max": 98,
+        "mean": 7.259226322810138,
+        "median": 5.0,
+        "min": 1,
+        "p75": 10.0,
+        "p90": 15.0
+      },
+      "duplicate_sample_id_count": 0,
+      "duplicate_video_clip_count": 0,
+      "label_max": 3.0,
+      "label_min": -3.0,
+      "label_missing_count": 0,
+      "label_nonfinite_count": 0,
+      "label_out_of_range_count": 0,
+      "missing_clip_id_count": 0,
+      "missing_video_id_count": 0,
+      "ordered_sample_id_sha256": "156e40317edc9bbf54ac8b24481523021e638d17317aa65a46b8542697a0644d",
+      "sample_count": 16326,
+      "split": "train",
+      "unique_video_id_count": 2249,
+      "unordered_sample_id_sha256": "3823fa9414a3d21cf574658a61ddbc789a778c15e1482c553800e24041abaef3"
+    },
+    "valid": {
+      "clips_per_video": {
+        "max": 39,
+        "mean": 6.236666666666666,
+        "median": 4.5,
+        "min": 1,
+        "p75": 9.0,
+        "p90": 13.0
+      },
+      "duplicate_sample_id_count": 0,
+      "duplicate_video_clip_count": 0,
+      "label_max": 3.0,
+      "label_min": -3.0,
+      "label_missing_count": 0,
+      "label_nonfinite_count": 0,
+      "label_out_of_range_count": 0,
+      "missing_clip_id_count": 0,
+      "missing_video_id_count": 0,
+      "ordered_sample_id_sha256": "670135b86983859e88875b47c009290bdae9e54e496f05a32febf81789a9bd17",
+      "sample_count": 1871,
+      "split": "valid",
+      "unique_video_id_count": 300,
+      "unordered_sample_id_sha256": "fa0d7d1aed9afca6d0bcb33092a8113b711c9db76b9429daf8910a1f18f8a93f"
+    }
+  },
+  "status": "STAGE21A_BLOCKED_ID_BINDING_ERROR",
+  "teacher_cache_manifest": "/code/DLF-mosei-mgrd-v1/result/missing_baseline/mgrd_v1/mosei/protocol/cache/seed1111/cache_manifest.json",
+  "teacher_cache_manifest_sha256": "426455f883dbff27490d9503e069e5520c3ddbf676af98546ae9f003e9dcb6dc",
+  "train_valid_sample_overlap_count": 0,
+  "train_valid_video_overlap_count": 0,
+  "video_id_semantics": "original source video ID",
+  "video_id_source": "prefix of the official pkl id field before $_$"
+}

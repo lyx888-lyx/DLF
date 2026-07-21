@@ -1,0 +1,8 @@
+{
+  "locked_test_access_count": 0,
+  "selection_uses_train_only_audit_and_conditionally_official_valid": true,
+  "test_file_existence_used_for_decision": false,
+  "test_loader_constructed": false,
+  "test_predictions_or_metrics_read": false,
+  "test_samples_read": false
+}

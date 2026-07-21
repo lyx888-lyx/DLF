@@ -1,0 +1,10 @@
+{
+  "code_commit": "cd2bf0fdaudit",
+  "data_binding_status": "PASS",
+  "gpu_id": 3,
+  "locked_test_access_count": 0,
+  "representation_cache_manifest_sha256": "14684d39828b766ff36a94f596e454d14706eead6e882e7c9bf0eb86c2bc16b2",
+  "selected_delta": 1.0,
+  "selected_pair_count": 29615,
+  "source_residual_gate_passed": true
+}

@@ -1,0 +1,23 @@
+{
+  "approved_gpu": 3,
+  "base_commit": "7ae5179e4cb019613bde85b767fc110c2994e7cf",
+  "branch": "audit/mosei-source-relative-feasibility-v1",
+  "compute_process_state": [
+    "GPU-83998aa0-1b4b-c782-74c4-dcf8fafbe98a, 2449739, [Not Found], 3032 MiB",
+    "GPU-6dce2bf9-97ab-cd99-f6e4-cb812ff95fae, 2449738, [Not Found], 2714 MiB",
+    "GPU-6dce2bf9-97ab-cd99-f6e4-cb812ff95fae, 2506634, [Not Found], 8936 MiB",
+    "GPU-0fc5fc07-9535-3ee7-f6f9-a9a1163f3784, 2449737, [Not Found], 2942 MiB",
+    "GPU-0fc5fc07-9535-3ee7-f6f9-a9a1163f3784, 2506635, [Not Found], 7958 MiB"
+  ],
+  "created_at": "2026-07-21T06:18:25.338405+00:00",
+  "external_compute_processes_present": true,
+  "git_status": "",
+  "gpu_state": [
+    "0, NVIDIA GeForce RTX 2080 Ti, 3044 MiB, 1 %",
+    "1, NVIDIA GeForce RTX 2080 Ti, 11654 MiB, 64 %",
+    "2, NVIDIA GeForce RTX 2080 Ti, 10904 MiB, 67 %",
+    "3, NVIDIA GeForce RTX 2080 Ti, 4 MiB, 0 %"
+  ],
+  "head": "9486a1a60b58650272ff8cf71191565af871a96b",
+  "locked_test_access_count": 0
+}

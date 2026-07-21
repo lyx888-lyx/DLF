@@ -1,0 +1,54 @@
+{
+  "allowed_splits": [
+    "train",
+    "valid"
+  ],
+  "audit_split_seeds": [
+    2101,
+    2102
+  ],
+  "base_commit": "7ae5179e4cb019613bde85b767fc110c2994e7cf",
+  "branch": "audit/mosei-source-relative-feasibility-v1",
+  "cluster_bootstraps": 2000,
+  "compatibility_cache": {
+    "path": "/code/DLF-mosei-generalization-v1/result/missing_baseline/mosei_generalization_v1/compatibility_cache/seed1111/train_counterfactual_compatibility.csv",
+    "sha256": "0cd29b8bd210c90f14f812bdb2da1bd17308ba0908e08578f1574eb0ce13738e"
+  },
+  "created_at": "2026-07-21T06:18:25.338405+00:00",
+  "cuda_runtime": "11.7",
+  "dataset": "mosei",
+  "delta_candidates": [
+    1.0,
+    0.75,
+    0.5
+  ],
+  "delta_selection": "first descending Train-only delta with >=60% sample and >=50% multi-clip source coverage",
+  "dependencies_upgraded": false,
+  "full_dlf_training": false,
+  "gpu_id": 3,
+  "gradient_batches_max": 20,
+  "implementation_commit": "9486a1a60b58650272ff8cf71191565af871a96b",
+  "locked_test_access_count": 0,
+  "max_pairs_per_source": 64,
+  "mode_specific_head_used_for_gate": false,
+  "official_valid_probe_requires_train_gate": true,
+  "optimizer_steps": 0,
+  "pair_seed": 2100,
+  "permutations": 2000,
+  "primary_representation": "actual single-clip tensor entering backbone.proj1 after ModDrop mask residual",
+  "protocol": "Stage 21A Source-Relative Learning Feasibility Audit v1",
+  "python": "3.9.13",
+  "pytorch": "1.13.0+cu117",
+  "relative_mass": 0.5,
+  "ridge_alpha": 0.001,
+  "secondary_representation": "concatenated c_l_sim/c_v_sim/c_a_sim; diagnostic only",
+  "shared_head": true,
+  "teacher_cache_manifest": {
+    "path": "/code/DLF-mosei-mgrd-v1/result/missing_baseline/mgrd_v1/mosei/protocol/cache/seed1111/cache_manifest.json",
+    "sha256": "426455f883dbff27490d9503e069e5520c3ddbf676af98546ae9f003e9dcb6dc"
+  },
+  "uniform_checkpoint": {
+    "path": "/code/DLF-mosei-mgrd-v1/result/missing_baseline/mgrd_v1/mosei/baseline/uniform_seed1111_fp32/checkpoints/best_epoch002.pth",
+    "sha256": "5b047c72c6fd898d26afa83a52cb2f4db5964a853295fa61a1c34c500a099f06"
+  }
+}

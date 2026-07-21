@@ -1,0 +1,52 @@
+{
+  "batch_size": 16,
+  "checkpoint_path": "/code/DLF-mosei-mgrd-v1/result/missing_baseline/mgrd_v1/mosei/baseline/uniform_seed1111_fp32/checkpoints/best_epoch002.pth",
+  "checkpoint_sha256": "5b047c72c6fd898d26afa83a52cb2f4db5964a853295fa61a1c34c500a099f06",
+  "code_commit": "2b073039fc5d43faf08f6e65b465dfbc0fb6a77b",
+  "created_at": "2026-07-21T06:26:49.291051+00:00",
+  "dtype": "float32",
+  "feature_name": "actual tensor entering backbone.proj1 after the ModDrop mask residual",
+  "locked_test_access_count": 0,
+  "missing_schedule": "seed1111+104729, LA/LV/L independent per sample during training",
+  "modes": [
+    "LAV",
+    "LA",
+    "LV",
+    "L"
+  ],
+  "optimizer_protocol": "Adam lr=1e-4, Stage19 FP32 Uniform KD",
+  "secondary_feature_name": "concatenated c_l_sim/c_v_sim/c_a_sim",
+  "selected_epoch": 2,
+  "selected_valid_J": 0.5154934128125508,
+  "splits": {
+    "train": {
+      "path": "/code/DLF-mosei-source-relative-audit-v1/result/source_relative_audit_v1/mosei/representations/train_cache.npz",
+      "primary_shape": [
+        16326,
+        300
+      ],
+      "sample_count": 16326,
+      "sample_order_sha256": "6056a1cfa8d9089cd98af6073faeb22bafd25f579347c11a578c35ced0046175",
+      "secondary_shape": [
+        16326,
+        150
+      ],
+      "sha256": "c473a5b07dabb55818818e336750abcf46541e6b4c2e65550846b0ce31cd307f"
+    },
+    "valid": {
+      "path": "/code/DLF-mosei-source-relative-audit-v1/result/source_relative_audit_v1/mosei/representations/valid_cache.npz",
+      "primary_shape": [
+        1871,
+        300
+      ],
+      "sample_count": 1871,
+      "sample_order_sha256": "0c4b0fa19a5ef63abdd345a668473a32970d5372fb567f152a0b2d507c8b0907",
+      "secondary_shape": [
+        1871,
+        150
+      ],
+      "sha256": "b0ec20e7329e96a2602d6eda40b84e1848092a5557d3cf00b1acf7d5079c76e1"
+    }
+  },
+  "teacher_checkpoint_sha256": "6c6542ca4140c264c3172814ec181b04e45068deaad305f8f6ba7d525cab873a"
+}

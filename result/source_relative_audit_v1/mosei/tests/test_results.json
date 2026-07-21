@@ -1,0 +1,100 @@
+{
+  "checks": [
+    {
+      "error": null,
+      "name": "test_lock_split_test_hard_fail",
+      "passed": true
+    },
+    {
+      "error": null,
+      "name": "id_binding_duplicate_hard_fail",
+      "passed": true
+    },
+    {
+      "error": null,
+      "name": "id_binding_missing_video_hard_fail",
+      "passed": true
+    },
+    {
+      "error": null,
+      "name": "sample_order_sha_mismatch_hard_fail",
+      "passed": true
+    },
+    {
+      "error": null,
+      "name": "source_disjoint_split",
+      "passed": true
+    },
+    {
+      "error": null,
+      "name": "true_pair_same_source",
+      "passed": true
+    },
+    {
+      "error": null,
+      "name": "pair_target_is_label_difference",
+      "passed": true
+    },
+    {
+      "error": null,
+      "name": "group_balance_equal_pair_mass",
+      "passed": true
+    },
+    {
+      "error": null,
+      "name": "cross_source_control_different_source",
+      "passed": true
+    },
+    {
+      "error": null,
+      "name": "gap_matched_pair_count_and_sign",
+      "passed": true
+    },
+    {
+      "error": null,
+      "name": "pseudo_group_size_multiset_preserved",
+      "passed": true
+    },
+    {
+      "error": null,
+      "name": "relative_bias_column_zero",
+      "passed": true
+    },
+    {
+      "error": null,
+      "name": "deterministic_ridge_solver",
+      "passed": true
+    },
+    {
+      "error": null,
+      "name": "no_source_feature_in_design",
+      "passed": true
+    },
+    {
+      "error": null,
+      "name": "single_clip_representation_contract",
+      "passed": true
+    },
+    {
+      "error": null,
+      "name": "project_metric_evaluator_parity",
+      "passed": true
+    },
+    {
+      "error": null,
+      "name": "real_cache_checkpoint_and_sample_binding",
+      "passed": true
+    },
+    {
+      "error": null,
+      "name": "official_valid_promotion_lock",
+      "passed": true
+    }
+  ],
+  "failed_tests": [],
+  "locked_test_access_count": 0,
+  "status": "STAGE21A_IMPLEMENTATION_AUDIT_PASSED",
+  "tests_failed": 0,
+  "tests_passed": 18,
+  "tests_run": 18
+}

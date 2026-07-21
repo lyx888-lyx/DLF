@@ -1,0 +1,46 @@
+{
+  "locked_test_access_count": 0,
+  "rows": [
+    {
+      "Control": "P2",
+      "KS": 0.02422468287302204,
+      "MaxQuantileDifference": 0.0,
+      "PairCount": 23571,
+      "PositiveFractionControl": 0.5113062661745366,
+      "PositiveFractionP1": 0.5113062661745366,
+      "SplitSeed": 2101,
+      "Wasserstein": 0.000544463516996127
+    },
+    {
+      "Control": "P3",
+      "KS": 0.02422468287302204,
+      "MaxQuantileDifference": 0.0,
+      "PairCount": 23571,
+      "PositiveFractionControl": 0.5113062661745366,
+      "PositiveFractionP1": 0.5113062661745366,
+      "SplitSeed": 2101,
+      "Wasserstein": 8.442158002526525e-09
+    },
+    {
+      "Control": "P2",
+      "KS": 0.02354659906329215,
+      "MaxQuantileDifference": 0.0,
+      "PairCount": 23273,
+      "PositiveFractionControl": 0.5114510376831521,
+      "PositiveFractionP1": 0.5114510376831521,
+      "SplitSeed": 2102,
+      "Wasserstein": 0.00041536885664119016
+    },
+    {
+      "Control": "P3",
+      "KS": 0.02354659906329215,
+      "MaxQuantileDifference": 0.0,
+      "PairCount": 23273,
+      "PositiveFractionControl": 0.5114510376831521,
+      "PositiveFractionP1": 0.5114510376831521,
+      "SplitSeed": 2102,
+      "Wasserstein": 8.135996863747736e-09
+    }
+  ],
+  "valid": true
+}

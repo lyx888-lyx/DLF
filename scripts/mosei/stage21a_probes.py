@@ -504,13 +504,28 @@ def main():
     atomic_frame(output / "probes/inner_split_results.tsv", result_rows)
     source_rows = []
     for row in fingerprint_rows:
-        source_rows.append({"Evidence": "source_fingerprint", **row})
+        source_rows.append(
+            {
+                "Evidence": "source_fingerprint",
+                **row,
+                "P1_minus_P0_J": "NA",
+                "P1_minus_P2_J": "NA",
+                "P1_minus_P3_J": "NA",
+            }
+        )
     for result in split_results:
         source_rows.append(
             {
                 "Evidence": "controlled_probe",
                 "split_seed": result["seed"],
                 "mode": "ALL_SHARED_HEAD",
+                "auroc": "NA",
+                "balanced_accuracy": "NA",
+                "shuffled_train_label_auroc": "NA",
+                "train_pair_count_per_class": "NA",
+                "valid_pair_count_per_class": "NA",
+                "feature_dimension": "NA",
+                "source_disjoint": True,
                 "P1_minus_P0_J": result["deltas"]["P1_minus_P0"]["J"],
                 "P1_minus_P2_J": result["deltas"]["P1_minus_P2"]["J"],
                 "P1_minus_P3_J": result["deltas"]["P1_minus_P3"]["J"],
