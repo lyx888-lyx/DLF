@@ -477,13 +477,12 @@ def make_source_split(video_ids, labels, seed, valid_fraction=0.2):
     groups = group_indices(video_ids)
     keys = np.asarray(sorted(groups), dtype=object)
     means = np.asarray([np.asarray(labels)[groups[key]].mean() for key in keys])
-    sizes = np.asarray([len(groups[key]) for key in keys])
-    mean_bin = np.digitize(means, [-1.5, -0.5, 0.5, 1.5])
-    size_bin = np.digitize(sizes, [3, 6, 10, 20])
-    strata = np.asarray(["{}_{}".format(a, b) for a, b in zip(mean_bin, size_bin)])
-    # Collapse sparse joint strata deterministically to label-only strata.
-    counts = {key: int(np.sum(strata == key)) for key in set(strata)}
-    strata = np.asarray([key if counts[key] >= 2 else "label_{}".format(a) for key, a in zip(strata, mean_bin)])
+    # Stable rank quintiles guarantee non-sparse strata while matching the
+    # source-level label-mean distribution.  This is one deterministic split,
+    # not a search over split quality or probe outcomes.
+    order = np.argsort(means, kind="mergesort")
+    strata = np.empty(len(keys), dtype=np.int64)
+    strata[order] = np.minimum(4, np.arange(len(keys)) * 5 // len(keys))
     split = StratifiedShuffleSplit(n_splits=1, test_size=float(valid_fraction), random_state=int(seed))
     train_position, valid_position = next(split.split(np.zeros(len(keys)), strata))
     train_sources = set(keys[train_position].tolist())
