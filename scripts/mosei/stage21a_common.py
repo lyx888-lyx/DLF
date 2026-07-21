@@ -75,11 +75,17 @@ def assert_order_sha(ids, expected):
 
 
 def ordered_id_sha(ids):
-    return hashlib.sha256("\n".join(canonical_ids(ids)).encode("utf-8")).hexdigest()
+    payload = json.dumps(
+        canonical_ids(ids), ensure_ascii=False, separators=(",", ":")
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def unordered_id_sha(ids):
-    return ordered_id_sha(sorted(canonical_ids(ids)))
+    payload = json.dumps(
+        sorted(canonical_ids(ids)), ensure_ascii=False, separators=(",", ":")
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def sha256_file(path, block_size=1024 * 1024):
