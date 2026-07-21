@@ -151,7 +151,9 @@ def main():
         "source_relative_claim_supported": status == "STAGE21A_SOURCE_RELATIVE_AUDIT_PASSED",
         "generic_pairwise_only": bool(probes["generic_pairwise_signal"]),
         "recommend_stage21b": status == "STAGE21A_SOURCE_RELATIVE_AUDIT_PASSED",
-        "official_valid_accessed": bool(probes["official_valid"]["run"]),
+        "official_valid_accessed": True,
+        "official_valid_descriptive_audit_accessed": True,
+        "official_valid_probe_accessed": bool(probes["official_valid"]["run"]),
         "test_accessed": False,
         "locked_test_access_count": 0,
         "dependencies_upgraded": False,
@@ -193,7 +195,9 @@ def main():
         "- Source-relative claim supported: **{}**".format(report["source_relative_claim_supported"]),
         "- Generic pairwise-only signal: **{}**".format(report["generic_pairwise_only"]),
         "- Recommend Stage21B: **{}**".format(report["recommend_stage21b"]),
-        "- Official Valid probe run: **{}**".format(report["official_valid_accessed"]),
+        "- Official Valid descriptive audit: **True**; controlled P0–P3 confirmation probe run: **{}**".format(
+            report["official_valid_probe_accessed"]
+        ),
         "- Locked Test access count: **0**",
         "- Uniform epoch-2 metric parity: **{}** (max metric difference `{:.3e}`, J difference `{:.3e}`)".format(
             baseline_parity["passed"],
