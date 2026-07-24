@@ -92,18 +92,31 @@ def main():
             "mosi_alive": alive(cli.mosi_pid),
             "folds": {},
         }
+        latest_ratios = {}
         for fold in (0, 1):
             values = new_durations(baseline, fold)
             reference = baseline[str(fold)]["baseline_seconds_per_epoch"]
             recent = float(np.mean(values[-2:])) if len(values) >= 2 else None
             ratio = recent / reference if recent is not None else None
+            latest_ratio = values[-1] / reference if values else None
+            latest_ratios[str(fold)] = latest_ratio
             snapshot["folds"][str(fold)] = {
                 "baseline_seconds_per_epoch": reference,
                 "new_epoch_seconds": values,
                 "recent_two_ratio": ratio,
+                "latest_epoch_ratio": latest_ratio,
             }
             if ratio is not None and ratio > 1.15:
                 unsafe = True
+        # Two independent primary folds each slowing by >15% is corroborated
+        # system-wide interference even if their ~5–9 minute epochs provide
+        # only one new observation per fold inside the ten-minute window.
+        if all(
+            latest_ratios.get(str(fold)) is not None
+            and latest_ratios[str(fold)] > 1.15
+            for fold in (0, 1)
+        ):
+            unsafe = True
         snapshots.append(snapshot)
         atomic_json(
             RESULT_ROOT / "parallel_safety_monitor_live.json",
