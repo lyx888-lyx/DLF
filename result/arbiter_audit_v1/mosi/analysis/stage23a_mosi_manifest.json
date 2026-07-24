@@ -1,0 +1,41 @@
+{
+  "base_commit": "bfc12dfc38bcc015adefd0c43e60305a7d9973fc",
+  "branch": "audit/mosi-personalized-teacher-feasibility-v1",
+  "code_commit_at_finalize": "609614551a815413bf9a08c291e8db92f30ae13a",
+  "completed_at": "2026-07-24T10:33:35.772667+00:00",
+  "cross_fold_slowdown": [
+    {
+      "baseline_seconds_per_epoch": 338.0227669999997,
+      "fold": 0,
+      "parallel_seconds_per_epoch": 577.667438,
+      "slowdown_fraction": 0.7089601482375902,
+      "slowdown_ratio": 1.7089601482375902
+    },
+    {
+      "baseline_seconds_per_epoch": 371.48047900000006,
+      "fold": 1,
+      "parallel_seconds_per_epoch": 469.0901050000002,
+      "slowdown_fraction": 0.2627584261298428,
+      "slowdown_ratio": 1.2627584261298428
+    }
+  ],
+  "dependencies_upgraded": false,
+  "existing_worktrees_modified": false,
+  "gpu_id": 2,
+  "gpu_released_to_preexisting_baseline": true,
+  "locked_test_access_count": 0,
+  "mosei_processes_untouched": true,
+  "official_valid_access_count": 0,
+  "parallel_monitor_sha256": "83f552f6daee14a363e7fe26d46dbda3c183cc81b61d847511be623d24ed962b",
+  "protocol_sha256": "7c49256a013f6118322d67bf8ecd53776a9591c70c504e60eb996e2fb4f273c9",
+  "report_sha256": "2d16117d90482dc732187a3f00762a0e96c9e127c747eacfade2c99d95e3bef8",
+  "speed_probe_seconds_per_epoch": 13.03478269,
+  "speed_probe_sha256": "3a4273340cc10eba981b69504b9972be0c96624c1248002681f6ebb120bc50b1",
+  "speed_ratio_vs_mean_mosei_baseline": 27.215768105758876,
+  "stage": "Stage 23A-MOSI",
+  "status": "STAGE23A_MOSI_PARALLEL_BLOCKED_NO_SAFE_RESOURCE",
+  "student_trained": false,
+  "test_loader_constructed": false,
+  "tests_passed": 3,
+  "total_wall_seconds": 829.646112
+}

@@ -1,0 +1,241 @@
+{
+  "automatic_initial_verdict": "BLOCKED_CROSS_FOLD_CORROBORATED_MOSEI_SLOWDOWN_GT_15_PERCENT",
+  "baseline": {
+    "0": {
+      "baseline_file": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v1/mosei/expert_oof/outer_fold0/experts/moddrop_seed1114/epoch_metrics.csv",
+      "baseline_seconds_per_epoch": 338.0227669999997,
+      "row_counts": {
+        "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v1/mosei/expert_oof/outer_fold0/components/clean_seed1111/epoch_metrics.csv": 15,
+        "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v1/mosei/expert_oof/outer_fold0/components/clean_seed1114/epoch_metrics.csv": 9,
+        "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v1/mosei/expert_oof/outer_fold0/experts/moddrop_seed1111/epoch_metrics.csv": 10,
+        "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v1/mosei/expert_oof/outer_fold0/experts/moddrop_seed1114/epoch_metrics.csv": 8
+      }
+    },
+    "1": {
+      "baseline_file": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v1/mosei/expert_oof/outer_fold1/experts/moddrop_seed1114/epoch_metrics.csv",
+      "baseline_seconds_per_epoch": 371.48047900000006,
+      "row_counts": {
+        "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v1/mosei/expert_oof/outer_fold1/components/clean_seed1111/epoch_metrics.csv": 12,
+        "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v1/mosei/expert_oof/outer_fold1/components/clean_seed1114/epoch_metrics.csv": 8,
+        "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v1/mosei/expert_oof/outer_fold1/experts/moddrop_seed1111/epoch_metrics.csv": 10,
+        "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v1/mosei/expert_oof/outer_fold1/experts/moddrop_seed1114/epoch_metrics.csv": 7
+      }
+    }
+  },
+  "completed_at": "2026-07-24T10:29:46.339760+00:00",
+  "cross_fold_slowdown": [
+    {
+      "baseline_seconds_per_epoch": 338.0227669999997,
+      "fold": 0,
+      "parallel_seconds_per_epoch": 577.667438,
+      "slowdown_fraction": 0.7089601482375902,
+      "slowdown_ratio": 1.7089601482375902
+    },
+    {
+      "baseline_seconds_per_epoch": 371.48047900000006,
+      "fold": 1,
+      "parallel_seconds_per_epoch": 469.0901050000002,
+      "slowdown_fraction": 0.2627584261298428,
+      "slowdown_ratio": 1.2627584261298428
+    }
+  ],
+  "locked_test_access_count": 0,
+  "monitor_minutes": 10.0,
+  "mosei_processes_untouched": true,
+  "mosi_pid": 838690,
+  "mosi_process_group_stopped": true,
+  "official_valid_access_count": 0,
+  "posthoc_cross_fold_reassessment": true,
+  "snapshots": [
+    {
+      "at": "2026-07-24T10:20:45.163499+00:00",
+      "folds": {
+        "0": {
+          "baseline_seconds_per_epoch": 338.0227669999997,
+          "new_epoch_seconds": [],
+          "recent_two_ratio": null
+        },
+        "1": {
+          "baseline_seconds_per_epoch": 371.48047900000006,
+          "new_epoch_seconds": [],
+          "recent_two_ratio": null
+        }
+      },
+      "mosi_alive": true,
+      "sample": 1
+    },
+    {
+      "at": "2026-07-24T10:21:45.286476+00:00",
+      "folds": {
+        "0": {
+          "baseline_seconds_per_epoch": 338.0227669999997,
+          "new_epoch_seconds": [],
+          "recent_two_ratio": null
+        },
+        "1": {
+          "baseline_seconds_per_epoch": 371.48047900000006,
+          "new_epoch_seconds": [],
+          "recent_two_ratio": null
+        }
+      },
+      "mosi_alive": true,
+      "sample": 2
+    },
+    {
+      "at": "2026-07-24T10:22:45.387476+00:00",
+      "folds": {
+        "0": {
+          "baseline_seconds_per_epoch": 338.0227669999997,
+          "new_epoch_seconds": [],
+          "recent_two_ratio": null
+        },
+        "1": {
+          "baseline_seconds_per_epoch": 371.48047900000006,
+          "new_epoch_seconds": [],
+          "recent_two_ratio": null
+        }
+      },
+      "mosi_alive": true,
+      "sample": 3
+    },
+    {
+      "at": "2026-07-24T10:23:45.476489+00:00",
+      "folds": {
+        "0": {
+          "baseline_seconds_per_epoch": 338.0227669999997,
+          "new_epoch_seconds": [],
+          "recent_two_ratio": null
+        },
+        "1": {
+          "baseline_seconds_per_epoch": 371.48047900000006,
+          "new_epoch_seconds": [
+            469.0901050000002
+          ],
+          "recent_two_ratio": null
+        }
+      },
+      "mosi_alive": true,
+      "sample": 4
+    },
+    {
+      "at": "2026-07-24T10:24:45.562479+00:00",
+      "folds": {
+        "0": {
+          "baseline_seconds_per_epoch": 338.0227669999997,
+          "new_epoch_seconds": [],
+          "recent_two_ratio": null
+        },
+        "1": {
+          "baseline_seconds_per_epoch": 371.48047900000006,
+          "new_epoch_seconds": [
+            469.0901050000002
+          ],
+          "recent_two_ratio": null
+        }
+      },
+      "mosi_alive": true,
+      "sample": 5
+    },
+    {
+      "at": "2026-07-24T10:25:45.724461+00:00",
+      "folds": {
+        "0": {
+          "baseline_seconds_per_epoch": 338.0227669999997,
+          "new_epoch_seconds": [],
+          "recent_two_ratio": null
+        },
+        "1": {
+          "baseline_seconds_per_epoch": 371.48047900000006,
+          "new_epoch_seconds": [
+            469.0901050000002
+          ],
+          "recent_two_ratio": null
+        }
+      },
+      "mosi_alive": true,
+      "sample": 6
+    },
+    {
+      "at": "2026-07-24T10:26:45.896527+00:00",
+      "folds": {
+        "0": {
+          "baseline_seconds_per_epoch": 338.0227669999997,
+          "new_epoch_seconds": [],
+          "recent_two_ratio": null
+        },
+        "1": {
+          "baseline_seconds_per_epoch": 371.48047900000006,
+          "new_epoch_seconds": [
+            469.0901050000002
+          ],
+          "recent_two_ratio": null
+        }
+      },
+      "mosi_alive": true,
+      "sample": 7
+    },
+    {
+      "at": "2026-07-24T10:27:45.981505+00:00",
+      "folds": {
+        "0": {
+          "baseline_seconds_per_epoch": 338.0227669999997,
+          "new_epoch_seconds": [],
+          "recent_two_ratio": null
+        },
+        "1": {
+          "baseline_seconds_per_epoch": 371.48047900000006,
+          "new_epoch_seconds": [
+            469.0901050000002
+          ],
+          "recent_two_ratio": null
+        }
+      },
+      "mosi_alive": true,
+      "sample": 8
+    },
+    {
+      "at": "2026-07-24T10:28:46.085465+00:00",
+      "folds": {
+        "0": {
+          "baseline_seconds_per_epoch": 338.0227669999997,
+          "new_epoch_seconds": [],
+          "recent_two_ratio": null
+        },
+        "1": {
+          "baseline_seconds_per_epoch": 371.48047900000006,
+          "new_epoch_seconds": [
+            469.0901050000002
+          ],
+          "recent_two_ratio": null
+        }
+      },
+      "mosi_alive": true,
+      "sample": 9
+    },
+    {
+      "at": "2026-07-24T10:29:46.284644+00:00",
+      "folds": {
+        "0": {
+          "baseline_seconds_per_epoch": 338.0227669999997,
+          "new_epoch_seconds": [
+            577.667438
+          ],
+          "recent_two_ratio": null
+        },
+        "1": {
+          "baseline_seconds_per_epoch": 371.48047900000006,
+          "new_epoch_seconds": [
+            469.0901050000002
+          ],
+          "recent_two_ratio": null
+        }
+      },
+      "mosi_alive": true,
+      "sample": 10
+    }
+  ],
+  "status": "COMPLETED",
+  "stopped_only_mosi_process_group": false,
+  "unsafe": true,
+  "verdict": "BLOCKED_CROSS_FOLD_CORROBORATED_MOSEI_SLOWDOWN_GT_15_PERCENT"
+}

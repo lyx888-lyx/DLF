@@ -1,0 +1,22 @@
+{
+  "OMP_NUM_THREADS": 2,
+  "completed_at": "2026-07-24T10:20:25.230903+00:00",
+  "component": "clean_seed1111",
+  "conservative_seconds_all_35_components_30_epochs": 13686.521824500001,
+  "dataloader_workers": 2,
+  "epoch_seconds": [
+    13.04462156,
+    12.723535260000002,
+    13.336191249999999
+  ],
+  "epochs": 3,
+  "estimated_seconds_all_35_components_12_epochs": 5474.6087298,
+  "estimated_seconds_per_component_12_epochs": 156.41739228,
+  "fold": 0,
+  "gpu_id": 2,
+  "locked_test_access_count": 0,
+  "observed_seconds_per_epoch": 13.03478269,
+  "official_valid_access_count": 0,
+  "peak_gpu_memory_bytes": 2540366848,
+  "stage": "Stage23A-MOSI 3-epoch speed probe"
+}

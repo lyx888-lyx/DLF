@@ -1,0 +1,188 @@
+{
+  "candidate_assets": {
+    "cfcompat_seed1111": {
+      "bytes": 449932335,
+      "path": "/code/DLF/pt/missing_baseline/cf_compat_kd_v1/DLF_mosi_seed1111_best_valid.pth",
+      "sha256": "260d7ba0d2f5a1b45f9c9fd07b2fa6146c521761e9f34f10f78d95ac62f4d631"
+    },
+    "cfcompat_seed1114": {
+      "bytes": 449932335,
+      "path": "/code/DLF/pt/missing_baseline/cf_compat_kd_v1/benchmark_multiseed/seed1114/DLF_mosi_seed1114_best_valid.pth",
+      "sha256": "60d805b08fafd7c4566d962ed45e87af4b09a6fb97fa842909a455ae91b32c26"
+    },
+    "moddrop_seed1111": {
+      "bytes": 449927515,
+      "path": "/code/DLF/pt/missing_baseline/moddrop/DLF_mosi_seed1111_best.pth",
+      "sha256": "2a39bb6202c1d04b609b7f20cf6c9692c704e3414fcff1584da02ac1bdd8f70c"
+    },
+    "moddrop_seed1114": {
+      "bytes": 449932335,
+      "path": "/code/DLF/pt/missing_baseline/moddrop_benchmark_multiseed_v1/seed1114/DLF_mosi_seed1114_best_valid.pth",
+      "sha256": "cefd989240c8309936a0c20b6f9db54c3060c60d542022c7047e31320f926a32"
+    },
+    "uniform_kd_seed1111": {
+      "bytes": 449916019,
+      "path": "/code/DLF-mosi-cfcompat-evidence-v1/runtime/cfcompat_evidence_v1/checkpoints/mosi/stage18d/uniform/best_valid.pth",
+      "sha256": "8d2e8695ca25a1d98858f03f078fadea00d32d7d05d865aba70892567dcc1fc4"
+    }
+  },
+  "code_commit": "fae55bbc4c0b0a96e89149b1046d5ae1e334aaab",
+  "component_ids": [
+    "clean_seed1111",
+    "clean_seed1114",
+    "uniform_kd_seed1111",
+    "moddrop_seed1111",
+    "moddrop_seed1114",
+    "cfcompat_seed1111",
+    "cfcompat_seed1114"
+  ],
+  "created_at": "2026-07-24T10:17:18.030055+00:00",
+  "dataset": "mosi",
+  "dataset_path": "/code/DLF/dataset/MOSI/Processed/aligned_50.pkl",
+  "dependencies_upgraded": false,
+  "expert_ids": [
+    "uniform_kd_seed1111",
+    "moddrop_seed1111",
+    "moddrop_seed1114",
+    "cfcompat_seed1111",
+    "cfcompat_seed1114"
+  ],
+  "expert_quality_gate": {
+    "fold_robustness": "near-best contribution occurs in at least two outer folds",
+    "near_best": "abs_error <= min_expert_error + 0.05 on >=5% samples",
+    "not_failed": "own_J <= best_single_J + 0.05",
+    "retained_count": "3..5",
+    "unique": "leave-one-out Oracle delta J >=0.001 or any mode delta >=0.001"
+  },
+  "fold_summary": [
+    {
+      "fold": 0,
+      "ordered_sample_id_sha256": "eb5b1c87e87616f787fa92e60ccd062048ec5f810b46934c7904962d32e0c35a",
+      "sample_count": 233,
+      "source_count": 11,
+      "source_id_sha256": "50637d7f189af5d0967005ed8ebc680a1e995eea2b1d39763621560af8c1aa6d"
+    },
+    {
+      "fold": 1,
+      "ordered_sample_id_sha256": "78de4d50ff838d97ffc0f409070ce5b05c6bf126a67c9269dce655d31833b00d",
+      "sample_count": 252,
+      "source_count": 11,
+      "source_id_sha256": "546bc222d65f22f4077c2d89bb1f9a98540b3c6339712d24c7e49b49e200ec2b"
+    },
+    {
+      "fold": 2,
+      "ordered_sample_id_sha256": "824b0d01879a70b4d18709b4bfc82cb9dd97c8314e742b70727b2af0dd8dbb1d",
+      "sample_count": 239,
+      "source_count": 10,
+      "source_id_sha256": "afeafed8dcc2fe1f090bf285b1aad5abac78ea1c09d259e512c7d3f5aa0a7830"
+    },
+    {
+      "fold": 3,
+      "ordered_sample_id_sha256": "b1ec7cfbcb4181b70717825ef188c5f5dd450362b9236630c90aad82f4a533fc",
+      "sample_count": 286,
+      "source_count": 10,
+      "source_id_sha256": "f961e8309adb1a784505293facd01adf65f2a360b98f229ed0c414395c6a6e1d"
+    },
+    {
+      "fold": 4,
+      "ordered_sample_id_sha256": "5c325be3d3bd5d4248e28ac92f7f32a7105eaf0c3cf2cb7a7e665654a442c5e2",
+      "sample_count": 274,
+      "source_count": 10,
+      "source_id_sha256": "d16f9774c1a9a9c5e470c6fab3b5123552ca212932bf598c46c6056bcdf39b89"
+    }
+  ],
+  "frozen_mosei_file_sha256": {
+    "result/arbiter_audit_v1/mosei/protocol/preregistered_protocol.json": "6b4777cb3480b180edb99be956221bad784f53718e35f9528d797a607b874d63",
+    "scripts/mosei/stage23a_analyze.py": "3e6dd3d20ecac1890fde47f104422b6a164264b471b5d0ca156ebfcea8ab2b66",
+    "scripts/mosei/stage23a_common.py": "164b995caa0a27113259bf3990d3d72a67f77bac31c2020328f5bc32eb385f98",
+    "scripts/mosei/stage23a_train_fold.py": "b7bc9da739f97955edd9cb92991aefb12f8e19df9ef7f504dc352442ef8499d9"
+  },
+  "frozen_mosei_protocol_sha256": "6b4777cb3480b180edb99be956221bad784f53718e35f9528d797a607b874d63",
+  "frozen_mosei_root": "/code/DLF-mosei-arbiter-audit-v1",
+  "judge": {
+    "J0": "mode-only",
+    "J1": "expert scalar predictions + mode",
+    "J2": "predictions + pairwise absolute disagreement + mode",
+    "J3": "unavailable; no frozen calibrated self-confidence",
+    "J4": "J2 with error labels shuffled within mode",
+    "forbidden_inputs": [
+      "ground truth",
+      "high-dimensional hidden state"
+    ],
+    "model": "StandardScaler + Ridge(alpha=10)",
+    "splits": "two fixed source-disjoint folds",
+    "target": "per-expert absolute error (regret ranking derived)"
+  },
+  "locked_test_access_count": 0,
+  "metric_J": "0.5*MAE_LAV + 0.5*mean(MAE_LA,MAE_LV,MAE_L)",
+  "n_folds": 5,
+  "official_valid_access_count": 0,
+  "official_valid_gate": "single confirmation only after train-only pass; must beat per-mode fixed stacking, shuffled Judge, and best single without retuning",
+  "oracle_gate": {
+    "delta_J_vs_per_mode_fixed": -0.005,
+    "minimum_actionable_missing_modes": 2,
+    "minimum_improving_outer_folds": 3,
+    "missing_mode_delta_MAE": -0.003
+  },
+  "parallel_policy": {
+    "OMP_NUM_THREADS": 2,
+    "dataloader_workers": 2,
+    "gpu_count": 1,
+    "maximum_training_workers": 1,
+    "mosei_epoch_slowdown_stop_threshold": 0.15
+  },
+  "source_split_path": "/code/DLF-mosi-arbiter-audit-v1/result/arbiter_audit_v1/mosi/protocol/source_splits.csv",
+  "source_split_sha256": "5fec407e0e0454903cf557fdafe2b5f35691c8e576c592c4e0fb103620fc3225",
+  "split_seed": 2301,
+  "stage": "Stage 23A-MOSI Frozen-Protocol Parallel Transfer Audit",
+  "status": "PREREGISTERED",
+  "student_trained": false,
+  "teacher": {
+    "fallback": "per-mode MAE-minimizing simplex stacking",
+    "fallback_trigger": "use dynamic weights only if predicted risk gain >= gamma",
+    "gamma_grid": [
+      0.0,
+      0.0001,
+      0.0005,
+      0.001,
+      0.002,
+      0.005
+    ],
+    "joint_risk": "Sigma_i=D(r_i) C_mode D(r_i)",
+    "objective": "w^T Sigma_i w + rho*||w-w_fallback||^2",
+    "rho_gamma_selection": "Judge-train-only deterministic source tune subset",
+    "rho_grid": [
+      0.001,
+      0.01,
+      0.1,
+      1.0,
+      10.0
+    ],
+    "scalar_risk": "normalize inverse predicted absolute risks",
+    "shuffled_control": "same joint construction with J4 risk"
+  },
+  "test_loader_constructed": false,
+  "train_only_gate": {
+    "dynamic_trigger_min_rate": 0.05,
+    "dynamic_weight_min_l1": 0.01,
+    "mean_delta_J_vs_fixed": -0.003,
+    "mean_delta_J_vs_shuffled": -0.002,
+    "minimum_improved_missing_modes": 2,
+    "no_systematic_classification_degradation": true,
+    "risk_bucket_max_violations": 1,
+    "two_split_direction_consistency": true,
+    "worst_LAV_delta_MAE": 0.003,
+    "worst_split_delta_J_vs_fixed": 0.001
+  },
+  "train_ordered_sample_id_sha256": "221f490e2a7a150b225335c1e2e7230604441ab108536f146704225d106c3b83",
+  "train_sample_count": 1284,
+  "train_source_count": 52,
+  "training_budget": {
+    "batch_size": 16,
+    "early_stop_patience": 6,
+    "learning_rate": 0.0001,
+    "max_epochs": 30,
+    "selection": "inner-train-only validation; no Official Valid",
+    "update_epochs": 10
+  }
+}
