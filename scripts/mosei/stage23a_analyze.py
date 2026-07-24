@@ -57,7 +57,7 @@ def load_ledger():
     keys = ["sample_id", "mode", "expert_id"]
     if frame.duplicated(keys).any():
         raise RuntimeError("Combined OOF ledger has duplicate keys.")
-    if set(frame.expert_id) != set(EXPERTS) or set(frame.mode) != set(MODES):
+    if set(frame.expert_id) != set(EXPERTS) or set(frame["mode"]) != set(MODES):
         raise RuntimeError("Combined OOF candidate or mode set differs.")
     count = frame.groupby(["sample_id", "mode"]).expert_id.nunique()
     if int(count.min()) != len(EXPERTS) or int(count.max()) != len(EXPERTS):
@@ -87,7 +87,7 @@ def wide_ledger(ledger, experts):
 def metric_rows(frame, method, prediction_column="prediction", split="train_oof"):
     rows = []
     for mode in MODES:
-        local = frame.loc[frame.mode == mode]
+        local = frame.loc[frame["mode"] == mode]
         values = regression_metrics(local[prediction_column], local.label)
         rows.append({"split": split, "mode": mode, "method": method, **values})
     overall = {
@@ -144,8 +144,8 @@ def crossfit_fixed_predictions(wide, experts):
             for expert, weight in zip(experts, global_weights)
         )
         for mode in MODES:
-            train_mode = train_mask & (wide.mode.to_numpy() == mode)
-            valid_mode = valid_mask & (wide.mode.to_numpy() == mode)
+            train_mode = train_mask & (wide["mode"].to_numpy() == mode)
+            valid_mode = valid_mask & (wide["mode"].to_numpy() == mode)
             weights = optimize_simplex(
                 values[train_mode], wide.loc[train_mode, "label"].to_numpy()
             )
@@ -193,7 +193,7 @@ def complementarity_audit(ledger, experts, output):
 
     residual_rows = []
     for mode in list(MODES) + ["Overall"]:
-        local = ledger if mode == "Overall" else ledger.loc[ledger.mode == mode]
+        local = ledger if mode == "Overall" else ledger.loc[ledger["mode"] == mode]
         residual = local.pivot_table(
             index=["sample_id", "mode"],
             columns="expert_id",
@@ -217,7 +217,7 @@ def complementarity_audit(ledger, experts, output):
     loo_rows = []
     full_oracle = metric_frame.loc[
         (metric_frame.method == "oracle_expert_selection")
-        & (metric_frame.mode == "Overall"),
+        & (metric_frame["mode"] == "Overall"),
         "J",
     ].iloc[0]
     for expert in experts:
@@ -240,31 +240,31 @@ def complementarity_audit(ledger, experts, output):
             metric_rows(reduced, "without_{}".format(expert))
         )
         reduced_j = float(
-            reduced_metrics.loc[reduced_metrics.mode == "Overall", "J"].iloc[0]
+            reduced_metrics.loc[reduced_metrics["mode"] == "Overall", "J"].iloc[0]
         )
         mode_deltas = {}
         for mode in MODES:
             full_mode = float(
                 metric_frame.loc[
                     (metric_frame.method == "oracle_expert_selection")
-                    & (metric_frame.mode == mode),
+                    & (metric_frame["mode"] == mode),
                     "J",
                 ].iloc[0]
             )
             reduced_mode = float(
-                reduced_metrics.loc[reduced_metrics.mode == mode, "J"].iloc[0]
+                reduced_metrics.loc[reduced_metrics["mode"] == mode, "J"].iloc[0]
             )
             mode_deltas[mode] = reduced_mode - full_mode
         own_j = float(
             metric_frame.loc[
-                (metric_frame.method == expert) & (metric_frame.mode == "Overall"),
+                (metric_frame.method == expert) & (metric_frame["mode"] == "Overall"),
                 "J",
             ].iloc[0]
         )
         best_single_j = float(
             metric_frame.loc[
                 metric_frame.method.isin(experts)
-                & (metric_frame.mode == "Overall"),
+                & (metric_frame["mode"] == "Overall"),
                 "J",
             ].min()
         )
@@ -292,7 +292,7 @@ def complementarity_audit(ledger, experts, output):
                     if mode == "Overall"
                     else float(
                         reduced_metrics.loc[
-                            reduced_metrics.mode == mode, "J"
+                            reduced_metrics["mode"] == mode, "J"
                         ].iloc[0]
                     )
                 ),
@@ -319,14 +319,14 @@ def complementarity_audit(ledger, experts, output):
     fixed_j = float(
         metric_frame.loc[
             (metric_frame.method == "per_mode_fixed_stacking")
-            & (metric_frame.mode == "Overall"),
+            & (metric_frame["mode"] == "Overall"),
             "J",
         ].iloc[0]
     )
     oracle_j = float(
         metric_frame.loc[
             (metric_frame.method == "oracle_expert_selection")
-            & (metric_frame.mode == "Overall"),
+            & (metric_frame["mode"] == "Overall"),
             "J",
         ].iloc[0]
     )
@@ -335,14 +335,14 @@ def complementarity_audit(ledger, experts, output):
         fixed_mode = float(
             metric_frame.loc[
                 (metric_frame.method == "per_mode_fixed_stacking")
-                & (metric_frame.mode == mode),
+                & (metric_frame["mode"] == mode),
                 "MAE",
             ].iloc[0]
         )
         oracle_mode = float(
             metric_frame.loc[
                 (metric_frame.method == "oracle_expert_selection")
-                & (metric_frame.mode == mode),
+                & (metric_frame["mode"] == mode),
                 "MAE",
             ].iloc[0]
         )
@@ -379,7 +379,7 @@ def complementarity_audit(ledger, experts, output):
 def feature_matrix(frame, experts, level):
     base = frame[list(experts)].to_numpy(dtype=np.float64)
     mode_values = np.column_stack(
-        [(frame.mode.to_numpy() == mode).astype(float) for mode in MODES]
+        [(frame["mode"].to_numpy() == mode).astype(float) for mode in MODES]
     )
     if level == 0:
         return mode_values
@@ -403,7 +403,7 @@ def fit_risk_models(train, experts, level, shuffled=False, random_seed=23):
         if shuffled:
             shuffled_target = target.copy()
             for mode in MODES:
-                index = np.flatnonzero(train.mode.to_numpy() == mode)
+                index = np.flatnonzero(train["mode"].to_numpy() == mode)
                 shuffled_target[index] = shuffled_target[index][
                     generator.permutation(len(index))
                 ]
@@ -471,7 +471,7 @@ def risk_diagnostics(train, valid, risks, experts, judge_name, split):
 def correlation_matrices(frame, experts):
     result = {}
     for mode in MODES:
-        local = frame.loc[frame.mode == mode]
+        local = frame.loc[frame["mode"] == mode]
         residual = (
             local[list(experts)].to_numpy()
             - local.label.to_numpy()[:, None]
@@ -493,7 +493,7 @@ def fixed_weights(frame, experts):
     values = frame[list(experts)].to_numpy()
     result = {}
     for mode in MODES:
-        local = frame.mode.to_numpy() == mode
+        local = frame["mode"].to_numpy() == mode
         result[mode] = optimize_simplex(values[local], frame.loc[local, "label"])
     return result
 
@@ -501,7 +501,7 @@ def fixed_weights(frame, experts):
 def inverse_mode_error_weights(frame, experts):
     result = {}
     for mode in MODES:
-        local = frame.loc[frame.mode == mode]
+        local = frame.loc[frame["mode"] == mode]
         error = np.array(
             [
                 np.mean(np.abs(local[expert] - local.label))
@@ -517,7 +517,7 @@ def apply_mode_weights(frame, experts, weights):
     prediction = np.zeros(len(frame), dtype=np.float64)
     matrix = frame[list(experts)].to_numpy()
     for mode in MODES:
-        index = frame.mode.to_numpy() == mode
+        index = frame["mode"].to_numpy() == mode
         prediction[index] = matrix[index].dot(weights[mode])
     return prediction
 
@@ -538,7 +538,7 @@ def dynamic_joint(
     predicted_gain = np.zeros(len(frame), dtype=np.float64)
     identity = np.eye(len(experts))
     for mode in MODES:
-        index = np.flatnonzero(frame.mode.to_numpy() == mode)
+        index = np.flatnonzero(frame["mode"].to_numpy() == mode)
         local_risk = risks[index]
         correlation = correlations[mode]
         sigma = (
@@ -725,7 +725,7 @@ def teacher_comparison(wide, experts, output):
             - np.abs(joint - valid.label.to_numpy())
         )
         fallback_matrix = np.row_stack(
-            [fallback[mode] for mode in valid.mode.to_numpy()]
+            [fallback[mode] for mode in valid["mode"].to_numpy()]
         )
         weight_distance = np.abs(weights - fallback_matrix).sum(axis=1)
         split_summary = {
@@ -749,9 +749,9 @@ def teacher_comparison(wide, experts, output):
                     {
                         "valid_split": valid_fold,
                         "sample_id": row.sample_id,
-                        "mode": row.mode,
+                        "mode": row["mode"],
                         "expert_id": expert,
-                        "fallback_weight": float(fallback[row.mode][expert_index]),
+                        "fallback_weight": float(fallback[row["mode"]][expert_index]),
                         "joint_weight": float(weights[position, expert_index]),
                         "shuffled_weight": float(
                             shuffled_weights[position, expert_index]
@@ -774,7 +774,7 @@ def teacher_comparison(wide, experts, output):
     atomic_csv(pd.concat(tune_rows, ignore_index=True), output / "rho_gamma_tuning.csv")
     atomic_csv(split_summary, output / "dynamic_trigger_diagnostics.csv")
 
-    overall = metrics.loc[metrics.mode == "Overall"].copy()
+    overall = metrics.loc[metrics["mode"] == "Overall"].copy()
     pivot = overall.pivot_table(
         index="method", columns="split", values="J", aggfunc="first"
     )
@@ -784,7 +784,7 @@ def teacher_comparison(wide, experts, output):
     delta = joint - baseline
     delta_shuffled = joint - shuffled
     missing = metrics.loc[
-        metrics.mode.isin(MISSING_MODES)
+        metrics["mode"].isin(MISSING_MODES)
         & metrics.method.isin(
             ["Per-mode fixed stacking", "Joint-risk personalized Teacher"]
         )
@@ -799,7 +799,7 @@ def teacher_comparison(wide, experts, output):
     mode_mean_delta = missing_pivot.groupby("mode").delta.mean()
     improved_missing_modes = int((mode_mean_delta < -1e-8).sum())
     lav = metrics.loc[
-        (metrics.mode == "LAV")
+        (metrics["mode"] == "LAV")
         & metrics.method.isin(
             ["Per-mode fixed stacking", "Joint-risk personalized Teacher"]
         )

@@ -207,7 +207,6 @@ def regression_metrics(prediction, label):
 def overall_j(frame, prediction_column="prediction"):
     maes = {}
     for mode in MODES:
-        local = frame.loc[frame.mode == mode]
+        local = frame.loc[frame["mode"] == mode]
         maes[mode] = float(np.mean(np.abs(local[prediction_column] - local.label)))
     return 0.5 * maes["LAV"] + 0.5 * np.mean([maes[mode] for mode in MISSING_MODES])
-
