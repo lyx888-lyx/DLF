@@ -47,11 +47,11 @@ if str(ROOT) not in sys.path:
 
 from config import get_config_regression
 from data_loader import MMDataset
-from trains.singleTask.HingeLoss import HingeLoss
 from trains.singleTask.cf_compat_kd_utils import (
     compatibility_from_deltas,
     gated_kd_loss,
 )
+from trains.singleTask.mgrd_utils import VectorizedHingeLoss
 from trains.singleTask.missing_utils import (
     MissingModalityWrapper,
     compute_full_dlf_loss,
@@ -63,6 +63,11 @@ from trains.singleTask.missing_utils import (
 )
 from trains.singleTask.model.DLF import DLF
 from utils.functions import assign_gpu, setup_seed
+
+
+CRITERION = nn.L1Loss()
+COSINE = nn.CosineEmbeddingLoss()
+HINGE = VectorizedHingeLoss()
 
 
 def parse_args():
@@ -267,7 +272,6 @@ def train_with_inner_selection(
 
 
 def full_supervised_loss(model, batch, device, missing_generator, include_missing):
-    criterion, cosine, hinge = nn.L1Loss(), nn.CosineEmbeddingLoss(), HingeLoss()
     text = batch["text"].to(device)
     audio = batch["audio"].to(device)
     vision = batch["vision"].to(device)
@@ -277,19 +281,19 @@ def full_supervised_loss(model, batch, device, missing_generator, include_missin
         full, _ = compute_full_dlf_loss(
             model(text, audio, vision, full_mask),
             labels,
-            criterion,
-            cosine,
-            hinge,
+            CRITERION,
+            COSINE,
+            HINGE,
         )
         missing_mask = sample_missing_masks(
             labels.size(0), missing_generator, device, audio.dtype
         )
         missing, _ = compute_task_loss(
-            model(text, audio, vision, missing_mask), labels, criterion
+            model(text, audio, vision, missing_mask), labels, CRITERION
         )
         return full + missing, (text, audio, vision, labels, missing_mask)
     full, _ = compute_full_dlf_loss(
-        model(text, audio, vision), labels, criterion, cosine, hinge
+        model(text, audio, vision), labels, CRITERION, COSINE, HINGE
     )
     return full, (text, audio, vision, labels, None)
 
