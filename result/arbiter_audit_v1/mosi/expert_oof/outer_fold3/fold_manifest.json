@@ -1,0 +1,29 @@
+{
+  "code_commit": "513e0ab124737b64cfff873c744dc3fd99ccf907",
+  "completed_at": "2026-07-24T12:50:33.001785+00:00",
+  "expert_ids": [
+    "uniform_kd_seed1111",
+    "moddrop_seed1111",
+    "moddrop_seed1114",
+    "cfcompat_seed1111",
+    "cfcompat_seed1114"
+  ],
+  "fit_samples": 898,
+  "fit_sources": 38,
+  "inner_valid_samples": 100,
+  "inner_valid_sources": 4,
+  "locked_test_access_count": 0,
+  "official_valid_access_count": 0,
+  "ordered_holdout_sample_id_sha256": "b1ec7cfbcb4181b70717825ef188c5f5dd450362b9236630c90aad82f4a533fc",
+  "outer_fold": 3,
+  "outer_holdout_samples": 286,
+  "outer_holdout_sources": 10,
+  "prediction_path": "/code/DLF-mosi-arbiter-audit-v1/result/arbiter_audit_v1/mosi/expert_oof/outer_fold3/oof_predictions.csv",
+  "prediction_sha256": "69deda93d915d979ebfec4f04edcaaf24fc3ae436bff2960fe83263e7f719d16",
+  "protocol_sha256": "7c49256a013f6118322d67bf8ecd53776a9591c70c504e60eb996e2fb4f273c9",
+  "source_disjoint": true,
+  "source_split_sha256": "5fec407e0e0454903cf557fdafe2b5f35691c8e576c592c4e0fb103620fc3225",
+  "stage": "Stage23A Expert outer cross-fit",
+  "student_trained": false,
+  "test_loader_constructed": false
+}

@@ -1,0 +1,3 @@
+valid_split,diagnostic,available,reason
+0,Self-confidence weighting,False,Frozen experts expose no calibrated self-confidence.
+1,Self-confidence weighting,False,Frozen experts expose no calibrated self-confidence.

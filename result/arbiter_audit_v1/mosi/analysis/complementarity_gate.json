@@ -1,0 +1,32 @@
+{
+  "actionable_missing_modes_threshold_minus_0p003": [
+    "LA",
+    "LV",
+    "L"
+  ],
+  "fold_robustness_passed": true,
+  "gate_passed": true,
+  "improving_outer_folds": 5,
+  "missing_mode_oracle_delta_MAE": {
+    "L": -0.2853760059044147,
+    "LA": -0.2864392540098327,
+    "LV": -0.287789107903533
+  },
+  "oracle_delta_J": -0.28744784871741746,
+  "oracle_expert_selection_J": 0.43885124906135153,
+  "per_mode_fixed_stacking_J": 0.726299097778769,
+  "retained_experts": [
+    "uniform_kd_seed1111",
+    "moddrop_seed1111",
+    "moddrop_seed1114",
+    "cfcompat_seed1111",
+    "cfcompat_seed1114"
+  ],
+  "robust_retained_experts": [
+    "uniform_kd_seed1111",
+    "moddrop_seed1111",
+    "moddrop_seed1114",
+    "cfcompat_seed1111",
+    "cfcompat_seed1114"
+  ]
+}

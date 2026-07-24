@@ -1,41 +1,88 @@
 {
-  "base_commit": "bfc12dfc38bcc015adefd0c43e60305a7d9973fc",
-  "branch": "audit/mosi-personalized-teacher-feasibility-v1",
-  "code_commit_at_finalize": "609614551a815413bf9a08c291e8db92f30ae13a",
-  "completed_at": "2026-07-24T10:33:35.772667+00:00",
-  "cross_fold_slowdown": [
-    {
-      "baseline_seconds_per_epoch": 338.0227669999997,
-      "fold": 0,
-      "parallel_seconds_per_epoch": 577.667438,
-      "slowdown_fraction": 0.7089601482375902,
-      "slowdown_ratio": 1.7089601482375902
+  "code_commit": "513e0ab124737b64cfff873c744dc3fd99ccf907",
+  "complementarity_gate": {
+    "actionable_missing_modes_threshold_minus_0p003": [
+      "LA",
+      "LV",
+      "L"
+    ],
+    "fold_robustness_passed": true,
+    "gate_passed": true,
+    "improving_outer_folds": 5,
+    "missing_mode_oracle_delta_MAE": {
+      "L": -0.2853760059044147,
+      "LA": -0.2864392540098327,
+      "LV": -0.287789107903533
     },
-    {
-      "baseline_seconds_per_epoch": 371.48047900000006,
-      "fold": 1,
-      "parallel_seconds_per_epoch": 469.0901050000002,
-      "slowdown_fraction": 0.2627584261298428,
-      "slowdown_ratio": 1.2627584261298428
-    }
-  ],
+    "oracle_delta_J": -0.28744784871741746,
+    "oracle_expert_selection_J": 0.43885124906135153,
+    "per_mode_fixed_stacking_J": 0.726299097778769,
+    "retained_experts": [
+      "uniform_kd_seed1111",
+      "moddrop_seed1111",
+      "moddrop_seed1114",
+      "cfcompat_seed1111",
+      "cfcompat_seed1114"
+    ],
+    "robust_retained_experts": [
+      "uniform_kd_seed1111",
+      "moddrop_seed1111",
+      "moddrop_seed1114",
+      "cfcompat_seed1111",
+      "cfcompat_seed1114"
+    ]
+  },
   "dependencies_upgraded": false,
-  "existing_worktrees_modified": false,
-  "gpu_id": 2,
-  "gpu_released_to_preexisting_baseline": true,
+  "fold_prediction_sha256": [
+    "96e877b267d8b023f440f020e2b37f57ed5f28db7b1edf74211e999b2b28a13a",
+    "4ac99e11ed91b8641be8df3e4d1ac774cd438bc3630ec46d6f1aa1471d3b6d0a",
+    "fe100f3b6272c1bdb2a3680a7ed52d575ff5b379179ef4db9d3ae013f1faebdd",
+    "69deda93d915d979ebfec4f04edcaaf24fc3ae436bff2960fe83263e7f719d16",
+    "138b2791f1558204cdae49a0691e9cc35e207281179807ada5693f94749c4b75"
+  ],
+  "judge_teacher_gate": {
+    "classification_systematic_degradation": true,
+    "dynamic_weights_noncollapsed": true,
+    "improved_missing_modes": 1,
+    "mean_delta_J_vs_per_mode_fixed": -2.6826647693878325e-05,
+    "mean_delta_J_vs_shuffled": 2.4326934027874003e-05,
+    "missing_mode_mean_delta_MAE": {
+      "L": 0.00017473407479268177,
+      "LA": -7.598329899999312e-05,
+      "LV": 2.0055911344074584e-05
+    },
+    "passed": false,
+    "risk_buckets_monotonic": true,
+    "split_directions_consistent": false,
+    "trigger_gain_above_fallback": false,
+    "worst_LAV_delta_MAE": 0.0009020353872808418,
+    "worst_split_delta_J_vs_per_mode_fixed": 0.0009885038044588068
+  },
   "locked_test_access_count": 0,
-  "mosei_processes_untouched": true,
+  "method_vs_seed": {
+    "larger_complementarity_source": "seed_difference",
+    "mean_method_matched_seed_residual_correlation": 0.907076271452545,
+    "mean_seed_matched_method_residual_correlation": 0.8204613623795574
+  },
   "official_valid_access_count": 0,
-  "parallel_monitor_sha256": "83f552f6daee14a363e7fe26d46dbda3c183cc81b61d847511be623d24ed962b",
   "protocol_sha256": "7c49256a013f6118322d67bf8ecd53776a9591c70c504e60eb996e2fb4f273c9",
-  "report_sha256": "2d16117d90482dc732187a3f00762a0e96c9e127c747eacfade2c99d95e3bef8",
-  "speed_probe_seconds_per_epoch": 13.03478269,
-  "speed_probe_sha256": "3a4273340cc10eba981b69504b9972be0c96624c1248002681f6ebb120bc50b1",
-  "speed_ratio_vs_mean_mosei_baseline": 27.215768105758876,
+  "retained_experts": [
+    "uniform_kd_seed1111",
+    "moddrop_seed1111",
+    "moddrop_seed1114",
+    "cfcompat_seed1111",
+    "cfcompat_seed1114"
+  ],
+  "robust_retained_experts": [
+    "uniform_kd_seed1111",
+    "moddrop_seed1111",
+    "moddrop_seed1114",
+    "cfcompat_seed1111",
+    "cfcompat_seed1114"
+  ],
+  "source_split_sha256": "5fec407e0e0454903cf557fdafe2b5f35691c8e576c592c4e0fb103620fc3225",
   "stage": "Stage 23A-MOSI",
-  "status": "STAGE23A_MOSI_PARALLEL_BLOCKED_NO_SAFE_RESOURCE",
+  "status": "STAGE23A_MOSI_JUDGE_NOT_ACTIONABLE",
   "student_trained": false,
-  "test_loader_constructed": false,
-  "tests_passed": 3,
-  "total_wall_seconds": 829.646112
+  "test_loader_constructed": false
 }

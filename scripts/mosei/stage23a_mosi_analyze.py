@@ -208,6 +208,19 @@ def write_mosi_report(
     speed = json.loads(speed_path.read_text()) if speed_path.is_file() else {}
     monitor_path = RESULT_ROOT / "parallel_safety_monitor.json"
     monitor = json.loads(monitor_path.read_text()) if monitor_path.is_file() else {}
+    waiver_path = RESULT_ROOT / "parallel_resource_user_waiver.json"
+    waiver = json.loads(waiver_path.read_text()) if waiver_path.is_file() else {}
+    runtime_path = RESULT_ROOT / "runtime_manifest.json"
+    runtime = json.loads(runtime_path.read_text()) if runtime_path.is_file() else {}
+    speed_ratio_by_fold = {
+        fold: values["baseline_seconds_per_epoch"]
+        / speed.get("observed_seconds_per_epoch", float("nan"))
+        for fold, values in monitor.get("baseline", {}).items()
+    }
+    slowdown_by_fold = {
+        str(values["fold"]): values["slowdown_fraction"]
+        for values in monitor.get("cross_fold_slowdown", [])
+    }
     j2 = (
         judges.loc[judges.judge == "J2_predictions_disagreement"]
         if judges is not None
@@ -220,11 +233,15 @@ def write_mosi_report(
         "",
         "## Required answers",
         "",
-        "1. MOSI observed seconds/epoch: {:.3f}; MOSEI baseline is recorded in the parallel monitor.".format(
-            speed.get("observed_seconds_per_epoch", float("nan"))
+        "1. MOSI observed seconds/epoch: {:.3f}; it was {:.1f}x–{:.1f}x faster per epoch than the two pre-parallel MOSEI baselines.".format(
+            speed.get("observed_seconds_per_epoch", float("nan")),
+            min(speed_ratio_by_fold.values(), default=float("nan")),
+            max(speed_ratio_by_fold.values(), default=float("nan")),
         ),
-        "2. MOSEI throughput impact: {}.".format(
-            monitor.get("verdict", "not yet available")
+        "2. MOSEI throughput impact: the initial monitor measured fold0 +{:.1%} and fold1 +{:.1%} seconds/epoch. The automatic stop verdict was `{}`; the user explicitly waived only that runtime stop and requested continued parallel execution. MOSEI was never stopped or modified.".format(
+            slowdown_by_fold.get("0", float("nan")),
+            slowdown_by_fold.get("1", float("nan")),
+            monitor.get("verdict", "not yet available"),
         ),
         "3. Five-fold OOF expert quality: see `oof_expert_metrics_by_fold.csv`; all predictions are held-out-source OOF.",
         "4. Larger complementarity source: `{}`.".format(
@@ -262,6 +279,18 @@ def write_mosi_report(
         ),
         "12. Official Valid accessed: No.",
         "13. Locked Test access count: 0.",
+        "",
+        "## Runtime",
+        "",
+        "- Five-fold wall time: {:.3f} seconds ({:.2f} hours)".format(
+            runtime.get("wall_seconds", float("nan")),
+            runtime.get("wall_seconds", float("nan")) / 3600,
+        ),
+        "- GPU: {}".format(runtime.get("gpu_id", "unknown")),
+        "- Maximum simultaneous MOSI training workers: {}".format(
+            runtime.get("maximum_simultaneous_training_workers", "unknown")
+        ),
+        "- Parallel slowdown waiver recorded: {}".format(bool(waiver)),
         "",
         "## Locks",
         "",

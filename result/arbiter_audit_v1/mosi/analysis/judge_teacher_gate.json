@@ -1,0 +1,18 @@
+{
+  "classification_systematic_degradation": true,
+  "dynamic_weights_noncollapsed": true,
+  "improved_missing_modes": 1,
+  "mean_delta_J_vs_per_mode_fixed": -2.6826647693878325e-05,
+  "mean_delta_J_vs_shuffled": 2.4326934027874003e-05,
+  "missing_mode_mean_delta_MAE": {
+    "L": 0.00017473407479268177,
+    "LA": -7.598329899999312e-05,
+    "LV": 2.0055911344074584e-05
+  },
+  "passed": false,
+  "risk_buckets_monotonic": true,
+  "split_directions_consistent": false,
+  "trigger_gain_above_fallback": false,
+  "worst_LAV_delta_MAE": 0.0009020353872808418,
+  "worst_split_delta_J_vs_per_mode_fixed": 0.0009885038044588068
+}

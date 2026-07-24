@@ -1,0 +1,41 @@
+{
+  "OMP_NUM_THREADS": 2,
+  "code_commit": "513e0ab124737b64cfff873c744dc3fd99ccf907",
+  "dataloader_workers": 2,
+  "ended_at": "2026-07-24T13:26:48.669582+00:00",
+  "folds": [
+    {
+      "fold": 0,
+      "returncode": 0,
+      "status": "COMPLETED"
+    },
+    {
+      "fold": 1,
+      "returncode": 0,
+      "status": "COMPLETED"
+    },
+    {
+      "fold": 2,
+      "returncode": 0,
+      "status": "COMPLETED"
+    },
+    {
+      "fold": 3,
+      "returncode": 0,
+      "status": "COMPLETED"
+    },
+    {
+      "fold": 4,
+      "returncode": 0,
+      "status": "COMPLETED"
+    }
+  ],
+  "gpu_id": 2,
+  "locked_test_access_count": 0,
+  "maximum_simultaneous_training_workers": 1,
+  "official_valid_access_count": 0,
+  "stage": "Stage23A-MOSI sequential fold coordinator",
+  "started_at": "2026-07-24T10:40:25.703484+00:00",
+  "status": "COMPLETED",
+  "wall_seconds": 9982.966098
+}
