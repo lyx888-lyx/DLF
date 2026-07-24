@@ -1,0 +1,14 @@
+{
+  "authorization": "User explicitly accepts slower MOSEI and requests MOSI to continue in parallel.",
+  "authorized_at": "2026-07-24T10:40:22.167394+00:00",
+  "authorized_by": "user",
+  "locked_test_access_count": 0,
+  "method_protocol_changed": false,
+  "official_valid_gate_changed": false,
+  "previous_status": "STAGE23A_MOSI_PARALLEL_BLOCKED_NO_SAFE_RESOURCE",
+  "previous_status_superseded_for_execution": true,
+  "single_gpu_single_worker_unchanged": true,
+  "stage": "Stage 23A-MOSI",
+  "train_only_gates_changed": false,
+  "waived_gate": "parallel slowdown stop threshold only"
+}

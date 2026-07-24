@@ -50,6 +50,7 @@ def main():
     current = "not_started"
     current_epoch = 0
     epoch_times = []
+    found_current = False
     for fold in range(N_FOLDS):
         fold_root = RESULT_ROOT / "expert_oof" / "outer_fold{}".format(fold)
         for name, relative in COMPONENTS:
@@ -67,14 +68,13 @@ def main():
                 current_epoch = len(frame)
                 if len(frame):
                     epoch_times.append(float(frame.wall_seconds.iloc[-1]) / len(frame))
+                found_current = True
                 break
             else:
-                if current == "not_started":
-                    current = "fold{}:{}".format(fold, name)
+                current = "fold{}:{}".format(fold, name)
+                found_current = True
                 break
-        if current.startswith("fold{}".format(fold)) and not (
-            fold_root / "fold_manifest.json"
-        ).is_file():
+        if found_current and not (fold_root / "fold_manifest.json").is_file():
             break
     mean_epoch = float(np.median(epoch_times)) if epoch_times else None
     expected_epochs = 12
@@ -102,7 +102,14 @@ def main():
     monitor = RESULT_ROOT / "parallel_safety_monitor.json"
     if monitor.is_file():
         value = json.loads(monitor.read_text())
-        print("Parallel safety: {}".format(value.get("verdict", value.get("status"))))
+        waiver = RESULT_ROOT / "parallel_resource_user_waiver.json"
+        if waiver.is_file():
+            print(
+                "Parallel safety: USER_WAIVED_SLOWDOWN_STOP "
+                "(original: {})".format(value.get("verdict", value.get("status")))
+            )
+        else:
+            print("Parallel safety: {}".format(value.get("verdict", value.get("status"))))
     try:
         output = subprocess.check_output(
             [
