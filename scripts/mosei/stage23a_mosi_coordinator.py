@@ -15,6 +15,7 @@ from stage23a_mosi_common import N_FOLDS, RESULT_ROOT, atomic_json, git_head
 
 ROOT = Path(__file__).resolve().parents[2]
 RUNTIME = ROOT / "runtime" / "stage23a_mosi"
+LEGACY_ASSET_CWD = Path("/code/DLF")
 
 
 def main():
@@ -58,7 +59,7 @@ def main():
         print("Starting MOSI fold {}: {}".format(fold, " ".join(command)), flush=True)
         completed = subprocess.run(
             command,
-            cwd=str(ROOT),
+            cwd=str(LEGACY_ASSET_CWD),
             env=environment,
             check=False,
         )

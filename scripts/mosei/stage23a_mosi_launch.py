@@ -12,12 +12,13 @@ from stage23a_mosi_common import RESULT_ROOT
 
 
 ROOT = Path(__file__).resolve().parents[2]
+LEGACY_ASSET_CWD = Path("/code/DLF")
 
 
 def run(command, environment):
     print("Launching: {}".format(" ".join(command)), flush=True)
     completed = subprocess.run(
-        command, cwd=str(ROOT), env=environment, check=False
+        command, cwd=str(LEGACY_ASSET_CWD), env=environment, check=False
     )
     if completed.returncode:
         raise SystemExit(completed.returncode)
@@ -74,4 +75,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
