@@ -1,0 +1,730 @@
+section	split	mode	method	expert_id	metric	value	reference	notes
+teacher_oof_metric	judge_valid_0	LAV	Best single	NA	J	0.5642828202	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Best single	NA	MAE	0.5642828202	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Best single	NA	Corr	0.742395228	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Best single	NA	Acc7	0.5231247124	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Best single	NA	Acc5	0.5431431201	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Best single	NA	Acc2	0.8410498378	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Best single	NA	F1	0.8405352503	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Best single	NA	J	0.5652490807	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Best single	NA	MAE	0.5652490807	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Best single	NA	Corr	0.7416108549	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Best single	NA	Acc7	0.5224344225	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Best single	NA	Acc5	0.5421076852	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Best single	NA	Acc2	0.8397227956	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Best single	NA	F1	0.8391624094	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Best single	NA	J	0.5647066181	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Best single	NA	MAE	0.5647066181	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Best single	NA	Corr	0.7418749712	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Best single	NA	Acc7	0.5224344225	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Best single	NA	Acc5	0.5427979751	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Best single	NA	Acc2	0.8403125922	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Best single	NA	F1	0.8398943805	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Best single	NA	J	0.5655557709	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Best single	NA	MAE	0.5655557709	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Best single	NA	Corr	0.7411846515	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Best single	NA	Acc7	0.5227795674	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Best single	NA	Acc5	0.5426829268	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Best single	NA	Acc2	0.8388381009	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Best single	NA	F1	0.8384275985	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Best single	NA	J	0.564726655	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Best single	NA	MAE	0.5649485725	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Best single	NA	Corr	0.7417664264	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Best single	NA	Acc7	0.5226932812	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Best single	NA	Acc5	0.5426829268	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Best single	NA	Acc2	0.8399808316	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Best single	NA	F1	0.8395049096	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Equal average	NA	J	0.5527313898	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Equal average	NA	MAE	0.5527313898	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Equal average	NA	Corr	0.7573875358	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Equal average	NA	Acc7	0.5273815002	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Equal average	NA	Acc5	0.5487804878	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Equal average	NA	Acc2	0.8431141256	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Equal average	NA	F1	0.8428526377	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Equal average	NA	J	0.5545436276	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Equal average	NA	MAE	0.5545436276	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Equal average	NA	Corr	0.7557345788	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Equal average	NA	Acc7	0.5255407271	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Equal average	NA	Acc5	0.546709618	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Equal average	NA	Acc2	0.8431141256	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Equal average	NA	F1	0.8427758988	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Equal average	NA	J	0.5529810536	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Equal average	NA	MAE	0.5529810536	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Equal average	NA	Corr	0.7570660477	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Equal average	NA	Acc7	0.5287620801	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Equal average	NA	Acc5	0.549930971	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Equal average	NA	Acc2	0.8437039221	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Equal average	NA	F1	0.843464977	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Equal average	NA	J	0.554728533	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Equal average	NA	MAE	0.554728533	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Equal average	NA	Corr	0.7555063301	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Equal average	NA	Acc7	0.5249654855	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Equal average	NA	Acc5	0.5461343764	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Equal average	NA	Acc2	0.8432615748	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Equal average	NA	F1	0.8429731293	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Equal average	NA	J	0.5534078973	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Equal average	NA	MAE	0.553746151	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Equal average	NA	Corr	0.7564236231	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Equal average	NA	Acc7	0.5266624482	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Equal average	NA	Acc5	0.5478888633	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Equal average	NA	Acc2	0.843298437	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Equal average	NA	F1	0.8430166607	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Global fixed stacking	NA	J	0.5535822569	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Global fixed stacking	NA	MAE	0.5535822569	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Global fixed stacking	NA	Corr	0.7563568075	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Global fixed stacking	NA	Acc7	0.5260009204	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Global fixed stacking	NA	Acc5	0.5477450529	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Global fixed stacking	NA	Acc2	0.84237688	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Global fixed stacking	NA	F1	0.8420203397	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Global fixed stacking	NA	J	0.555327751	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Global fixed stacking	NA	MAE	0.555327751	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Global fixed stacking	NA	Corr	0.7547699074	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Global fixed stacking	NA	Acc7	0.5251955821	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Global fixed stacking	NA	Acc5	0.546709618	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Global fixed stacking	NA	Acc2	0.8437039221	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Global fixed stacking	NA	F1	0.8432323063	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Global fixed stacking	NA	J	0.5538906331	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Global fixed stacking	NA	MAE	0.5538906331	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Global fixed stacking	NA	Corr	0.7559649116	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Global fixed stacking	NA	Acc7	0.5279567418	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Global fixed stacking	NA	Acc5	0.5494707777	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Global fixed stacking	NA	Acc2	0.8426717782	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Global fixed stacking	NA	F1	0.8423270414	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Global fixed stacking	NA	J	0.5556023466	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Global fixed stacking	NA	MAE	0.5556023466	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Global fixed stacking	NA	Corr	0.7544908835	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Global fixed stacking	NA	Acc7	0.5256557754	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Global fixed stacking	NA	Acc5	0.5471698113	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Global fixed stacking	NA	Acc2	0.8422294308	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Global fixed stacking	NA	F1	0.841799188	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Global fixed stacking	NA	J	0.5542612502	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Global fixed stacking	NA	MAE	0.5546007469	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Global fixed stacking	NA	Corr	0.7553956275	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Global fixed stacking	NA	Acc7	0.5262022549	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Global fixed stacking	NA	Acc5	0.547773815	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Global fixed stacking	NA	Acc2	0.8427455028	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Global fixed stacking	NA	F1	0.8423447189	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Per-mode fixed stacking	NA	J	0.5535445414	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Per-mode fixed stacking	NA	MAE	0.5535445414	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Per-mode fixed stacking	NA	Corr	0.7563919812	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Per-mode fixed stacking	NA	Acc7	0.5261159687	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Per-mode fixed stacking	NA	Acc5	0.5479751496	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Per-mode fixed stacking	NA	Acc2	0.8432615748	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Per-mode fixed stacking	NA	F1	0.8428959092	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Per-mode fixed stacking	NA	J	0.555511554	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Per-mode fixed stacking	NA	MAE	0.555511554	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Per-mode fixed stacking	NA	Corr	0.7544938837	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Per-mode fixed stacking	NA	Acc7	0.5255407271	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Per-mode fixed stacking	NA	Acc5	0.547054763	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Per-mode fixed stacking	NA	Acc2	0.8442937187	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Per-mode fixed stacking	NA	F1	0.8438124977	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Per-mode fixed stacking	NA	J	0.5538216143	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Per-mode fixed stacking	NA	MAE	0.5538216143	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Per-mode fixed stacking	NA	Corr	0.7560996938	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Per-mode fixed stacking	NA	Acc7	0.5276115969	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Per-mode fixed stacking	NA	Acc5	0.5491256328	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Per-mode fixed stacking	NA	Acc2	0.8429666765	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Per-mode fixed stacking	NA	F1	0.8426114703	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Per-mode fixed stacking	NA	J	0.5556008643	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Per-mode fixed stacking	NA	MAE	0.5556008643	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Per-mode fixed stacking	NA	Corr	0.7545052142	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Per-mode fixed stacking	NA	Acc7	0.5251955821	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Per-mode fixed stacking	NA	Acc5	0.546709618	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Per-mode fixed stacking	NA	Acc2	0.8422294308	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Per-mode fixed stacking	NA	F1	0.841776341	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Per-mode fixed stacking	NA	J	0.5542612762	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Per-mode fixed stacking	NA	MAE	0.5546196435	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Per-mode fixed stacking	NA	Corr	0.7553726932	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Per-mode fixed stacking	NA	Acc7	0.5261159687	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Per-mode fixed stacking	NA	Acc5	0.5477162908	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Per-mode fixed stacking	NA	Acc2	0.8431878502	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Per-mode fixed stacking	NA	F1	0.8427740545	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Mode-only weighting	NA	J	0.5527346934	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Mode-only weighting	NA	MAE	0.5527346934	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Mode-only weighting	NA	Corr	0.7573797066	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Mode-only weighting	NA	Acc7	0.5273815002	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Mode-only weighting	NA	Acc5	0.5487804878	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Mode-only weighting	NA	Acc2	0.8432615748	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Mode-only weighting	NA	F1	0.8429949077	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Mode-only weighting	NA	J	0.5545421769	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Mode-only weighting	NA	MAE	0.5545421769	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Mode-only weighting	NA	Corr	0.7557293902	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Mode-only weighting	NA	Acc7	0.5254256788	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Mode-only weighting	NA	Acc5	0.5465945697	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Mode-only weighting	NA	Acc2	0.8429666765	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Mode-only weighting	NA	F1	0.8426225859	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Mode-only weighting	NA	J	0.5529845385	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Mode-only weighting	NA	MAE	0.5529845385	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Mode-only weighting	NA	Corr	0.7570580444	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Mode-only weighting	NA	Acc7	0.5289921767	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Mode-only weighting	NA	Acc5	0.5501610676	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Mode-only weighting	NA	Acc2	0.8438513713	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Mode-only weighting	NA	F1	0.8436180168	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Mode-only weighting	NA	J	0.5547283056	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Mode-only weighting	NA	MAE	0.5547283056	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Mode-only weighting	NA	Corr	0.7555009129	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Mode-only weighting	NA	Acc7	0.5254256788	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Mode-only weighting	NA	Acc5	0.5465945697	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Mode-only weighting	NA	Acc2	0.8431141256	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Mode-only weighting	NA	F1	0.8428199393	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Mode-only weighting	NA	J	0.5534098502	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Mode-only weighting	NA	MAE	0.5537474286	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Mode-only weighting	NA	Corr	0.7564170135	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Mode-only weighting	NA	Acc7	0.5268062586	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Mode-only weighting	NA	Acc5	0.5480326737	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Mode-only weighting	NA	Acc2	0.843298437	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Mode-only weighting	NA	F1	0.8430138624	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Scalar-risk weighting	NA	J	0.5526196875	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Scalar-risk weighting	NA	MAE	0.5526196875	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Scalar-risk weighting	NA	Corr	0.7574055581	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Scalar-risk weighting	NA	Acc7	0.5270363553	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Scalar-risk weighting	NA	Acc5	0.5484353428	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Scalar-risk weighting	NA	Acc2	0.8438513713	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Scalar-risk weighting	NA	F1	0.8435640112	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Scalar-risk weighting	NA	J	0.5544157315	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Scalar-risk weighting	NA	MAE	0.5544157315	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Scalar-risk weighting	NA	Corr	0.7557603906	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Scalar-risk weighting	NA	Acc7	0.5247353889	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Scalar-risk weighting	NA	Acc5	0.5460193281	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Scalar-risk weighting	NA	Acc2	0.8441462695	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Scalar-risk weighting	NA	F1	0.8437826679	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Scalar-risk weighting	NA	J	0.5528732061	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Scalar-risk weighting	NA	MAE	0.5528732061	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Scalar-risk weighting	NA	Corr	0.7570810643	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Scalar-risk weighting	NA	Acc7	0.5270363553	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Scalar-risk weighting	NA	Acc5	0.5483202945	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Scalar-risk weighting	NA	Acc2	0.8447360661	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Scalar-risk weighting	NA	F1	0.8444719076	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Scalar-risk weighting	NA	J	0.554604736	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Scalar-risk weighting	NA	MAE	0.554604736	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Scalar-risk weighting	NA	Corr	0.7555310906	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Scalar-risk weighting	NA	Acc7	0.5245052922	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Scalar-risk weighting	NA	Acc5	0.5457892315	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Scalar-risk weighting	NA	Acc2	0.8439988204	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Scalar-risk weighting	NA	F1	0.8436844599	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Scalar-risk weighting	NA	J	0.5532921227	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Scalar-risk weighting	NA	MAE	0.5536283403	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Scalar-risk weighting	NA	Corr	0.7564445259	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Scalar-risk weighting	NA	Acc7	0.5258283479	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Scalar-risk weighting	NA	Acc5	0.5471410492	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Scalar-risk weighting	NA	Acc2	0.8441831318	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Scalar-risk weighting	NA	F1	0.8438757617	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Joint-risk personalized Teacher	NA	J	0.5535154206	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Joint-risk personalized Teacher	NA	MAE	0.5535154206	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Joint-risk personalized Teacher	NA	Corr	0.7563142888	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Joint-risk personalized Teacher	NA	Acc7	0.5260009204	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Joint-risk personalized Teacher	NA	Acc5	0.5478601012	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Joint-risk personalized Teacher	NA	Acc2	0.8432615748	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Joint-risk personalized Teacher	NA	F1	0.8428959092	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Joint-risk personalized Teacher	NA	J	0.5554609842	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Joint-risk personalized Teacher	NA	MAE	0.5554609842	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Joint-risk personalized Teacher	NA	Corr	0.7544285619	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Joint-risk personalized Teacher	NA	Acc7	0.5258858721	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Joint-risk personalized Teacher	NA	Acc5	0.547399908	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Joint-risk personalized Teacher	NA	Acc2	0.8442937187	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Joint-risk personalized Teacher	NA	F1	0.8438124977	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Joint-risk personalized Teacher	NA	J	0.5537817401	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Joint-risk personalized Teacher	NA	MAE	0.5537817401	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Joint-risk personalized Teacher	NA	Corr	0.7560330973	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Joint-risk personalized Teacher	NA	Acc7	0.5274965486	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Joint-risk personalized Teacher	NA	Acc5	0.5490105844	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Joint-risk personalized Teacher	NA	Acc2	0.8431141256	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Joint-risk personalized Teacher	NA	F1	0.8427536885	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Joint-risk personalized Teacher	NA	J	0.5555359314	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Joint-risk personalized Teacher	NA	MAE	0.5555359314	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Joint-risk personalized Teacher	NA	Corr	0.7544471525	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Joint-risk personalized Teacher	NA	Acc7	0.5253106305	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Joint-risk personalized Teacher	NA	Acc5	0.5468246664	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Joint-risk personalized Teacher	NA	Acc2	0.8422294308	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Joint-risk personalized Teacher	NA	F1	0.841776341	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Joint-risk personalized Teacher	NA	J	0.5542208196	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Joint-risk personalized Teacher	NA	MAE	0.5545735191	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Joint-risk personalized Teacher	NA	Corr	0.7553057751	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Joint-risk personalized Teacher	NA	Acc7	0.5261734929	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Joint-risk personalized Teacher	NA	Acc5	0.547773815	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Joint-risk personalized Teacher	NA	Acc2	0.8432247125	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Joint-risk personalized Teacher	NA	F1	0.8428096091	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Shuffled Judge	NA	J	0.5535445414	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Shuffled Judge	NA	MAE	0.5535445414	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Shuffled Judge	NA	Corr	0.7563919812	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Shuffled Judge	NA	Acc7	0.5261159687	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Shuffled Judge	NA	Acc5	0.5479751496	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Shuffled Judge	NA	Acc2	0.8432615748	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Shuffled Judge	NA	F1	0.8428959092	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Shuffled Judge	NA	J	0.555511554	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Shuffled Judge	NA	MAE	0.555511554	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Shuffled Judge	NA	Corr	0.7544938837	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Shuffled Judge	NA	Acc7	0.5255407271	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Shuffled Judge	NA	Acc5	0.547054763	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Shuffled Judge	NA	Acc2	0.8442937187	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Shuffled Judge	NA	F1	0.8438124977	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Shuffled Judge	NA	J	0.5538216143	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Shuffled Judge	NA	MAE	0.5538216143	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Shuffled Judge	NA	Corr	0.7560996938	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Shuffled Judge	NA	Acc7	0.5276115969	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Shuffled Judge	NA	Acc5	0.5491256328	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Shuffled Judge	NA	Acc2	0.8429666765	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Shuffled Judge	NA	F1	0.8426114703	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Shuffled Judge	NA	J	0.5556008643	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Shuffled Judge	NA	MAE	0.5556008643	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Shuffled Judge	NA	Corr	0.7545052142	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Shuffled Judge	NA	Acc7	0.5251955821	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Shuffled Judge	NA	Acc5	0.546709618	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Shuffled Judge	NA	Acc2	0.8422294308	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Shuffled Judge	NA	F1	0.841776341	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Shuffled Judge	NA	J	0.5542612762	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Shuffled Judge	NA	MAE	0.5546196435	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Shuffled Judge	NA	Corr	0.7553726932	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Shuffled Judge	NA	Acc7	0.5261159687	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Shuffled Judge	NA	Acc5	0.5477162908	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Shuffled Judge	NA	Acc2	0.8431878502	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Shuffled Judge	NA	F1	0.8427740545	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Oracle expert selection	NA	J	0.397100775	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Oracle expert selection	NA	MAE	0.397100775	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Oracle expert selection	NA	Corr	0.8509424998	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Oracle expert selection	NA	Acc7	0.6576161988	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Oracle expert selection	NA	Acc5	0.6786700414	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Oracle expert selection	NA	Acc2	0.9088764376	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LAV	Oracle expert selection	NA	F1	0.9086541119	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Oracle expert selection	NA	J	0.3999793211	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Oracle expert selection	NA	MAE	0.3999793211	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Oracle expert selection	NA	Corr	0.8494138144	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Oracle expert selection	NA	Acc7	0.655545329	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Oracle expert selection	NA	Acc5	0.676369075	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Oracle expert selection	NA	Acc2	0.9068121498	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LA	Oracle expert selection	NA	F1	0.9065647441	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Oracle expert selection	NA	J	0.3985118723	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Oracle expert selection	NA	MAE	0.3985118723	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Oracle expert selection	NA	Corr	0.8504113519	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Oracle expert selection	NA	Acc7	0.6546249425	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Oracle expert selection	NA	Acc5	0.6762540267	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Oracle expert selection	NA	Acc2	0.9085815394	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	LV	Oracle expert selection	NA	F1	0.9083584941	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Oracle expert selection	NA	J	0.4008900616	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Oracle expert selection	NA	MAE	0.4008900616	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Oracle expert selection	NA	Corr	0.8491245311	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Oracle expert selection	NA	Acc7	0.6543948458	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Oracle expert selection	NA	Acc5	0.6757938334	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Oracle expert selection	NA	Acc2	0.9056325568	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	L	Oracle expert selection	NA	F1	0.9053820193	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Oracle expert selection	NA	J	0.3984472633	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Oracle expert selection	NA	MAE	0.3991205075	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Oracle expert selection	NA	Corr	0.8499730493	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Oracle expert selection	NA	Acc7	0.655545329	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Oracle expert selection	NA	Acc5	0.6767717441	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Oracle expert selection	NA	Acc2	0.9074756709	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_0	Overall	Oracle expert selection	NA	F1	0.9072398423	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Best single	NA	J	0.5675894855	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Best single	NA	MAE	0.5675894855	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Best single	NA	Corr	0.7331262589	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Best single	NA	Acc7	0.5104794341	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Best single	NA	Acc5	0.5301283731	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Best single	NA	Acc2	0.8469353764	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Best single	NA	F1	0.8457657925	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Best single	NA	J	0.5688562974	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Best single	NA	MAE	0.5688562974	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Best single	NA	Corr	0.7317825354	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Best single	NA	Acc7	0.5091695048	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Best single	NA	Acc5	0.528556458	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Best single	NA	Acc2	0.8459360426	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Best single	NA	F1	0.8447588227	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Best single	NA	J	0.5673179956	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Best single	NA	MAE	0.5673179956	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Best single	NA	Corr	0.7329896128	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Best single	NA	Acc7	0.5100864553	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Best single	NA	Acc5	0.5301283731	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Best single	NA	Acc2	0.8469353764	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Best single	NA	F1	0.8458279297	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Best single	NA	J	0.5685513297	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Best single	NA	MAE	0.5685513297	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Best single	NA	Corr	0.7316849382	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Best single	NA	Acc7	0.5095624836	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Best single	NA	Acc5	0.5288184438	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Best single	NA	Acc2	0.8469353764	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Best single	NA	F1	0.8458072663	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Best single	NA	J	0.5679156799	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Best single	NA	MAE	0.568078777	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Best single	NA	Corr	0.7323958363	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Best single	NA	Acc7	0.5098244695	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Best single	NA	Acc5	0.529407912	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Best single	NA	Acc2	0.846685543	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Best single	NA	F1	0.8455399528	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Equal average	NA	J	0.5552579669	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Equal average	NA	MAE	0.5552579669	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Equal average	NA	Corr	0.741478517	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Equal average	NA	Acc7	0.5204348965	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Equal average	NA	Acc5	0.5390358921	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Equal average	NA	Acc2	0.848934044	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Equal average	NA	F1	0.8484872556	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Equal average	NA	J	0.5568288533	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Equal average	NA	MAE	0.5568288533	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Equal average	NA	Corr	0.7396701466	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Equal average	NA	Acc7	0.5201729107	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Equal average	NA	Acc5	0.5381189416	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Equal average	NA	Acc2	0.8484343771	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Equal average	NA	F1	0.8479388013	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Equal average	NA	J	0.5551049382	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Equal average	NA	MAE	0.5551049382	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Equal average	NA	Corr	0.7414041334	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Equal average	NA	Acc7	0.5189939743	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Equal average	NA	Acc5	0.537332984	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Equal average	NA	Acc2	0.8494337109	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Equal average	NA	F1	0.8490537089	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Equal average	NA	J	0.5567487965	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Equal average	NA	MAE	0.5567487965	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Equal average	NA	Corr	0.7396059155	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Equal average	NA	Acc7	0.5199109248	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Equal average	NA	Acc5	0.5378569557	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Equal average	NA	Acc2	0.8486009327	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Equal average	NA	F1	0.8481719803	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Equal average	NA	J	0.5557427481	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Equal average	NA	MAE	0.5559851387	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Equal average	NA	Corr	0.7405396781	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Equal average	NA	Acc7	0.5198781766	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Equal average	NA	Acc5	0.5380861933	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Equal average	NA	Acc2	0.8488507662	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Equal average	NA	F1	0.8484129365	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Global fixed stacking	NA	J	0.5553782982	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Global fixed stacking	NA	MAE	0.5553782982	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Global fixed stacking	NA	Corr	0.74151737	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Global fixed stacking	NA	Acc7	0.519648939	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Global fixed stacking	NA	Acc5	0.5386429133	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Global fixed stacking	NA	Acc2	0.8492671552	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Global fixed stacking	NA	F1	0.8488025671	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Global fixed stacking	NA	J	0.5569561356	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Global fixed stacking	NA	MAE	0.5569561356	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Global fixed stacking	NA	Corr	0.7397555989	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Global fixed stacking	NA	Acc7	0.5204348965	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Global fixed stacking	NA	Acc5	0.5385119204	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Global fixed stacking	NA	Acc2	0.8492671552	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Global fixed stacking	NA	F1	0.8487079427	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Global fixed stacking	NA	J	0.5551866268	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Global fixed stacking	NA	MAE	0.5551866268	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Global fixed stacking	NA	Corr	0.7414619197	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Global fixed stacking	NA	Acc7	0.5179460309	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Global fixed stacking	NA	Acc5	0.5366780194	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Global fixed stacking	NA	Acc2	0.8482678215	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Global fixed stacking	NA	F1	0.8478190627	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Global fixed stacking	NA	J	0.5568322038	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Global fixed stacking	NA	MAE	0.5568322038	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Global fixed stacking	NA	Corr	0.7397132977	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Global fixed stacking	NA	Acc7	0.5203039036	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Global fixed stacking	NA	Acc5	0.5382499345	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Global fixed stacking	NA	Acc2	0.8491005996	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Global fixed stacking	NA	F1	0.8486636892	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Global fixed stacking	NA	J	0.5558516434	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Global fixed stacking	NA	MAE	0.5560883161	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Global fixed stacking	NA	Corr	0.7406120466	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Global fixed stacking	NA	Acc7	0.5195834425	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Global fixed stacking	NA	Acc5	0.5380206969	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Global fixed stacking	NA	Acc2	0.8489756829	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Global fixed stacking	NA	F1	0.8484983154	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Per-mode fixed stacking	NA	J	0.5552048653	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Per-mode fixed stacking	NA	MAE	0.5552048653	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Per-mode fixed stacking	NA	Corr	0.7416527621	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Per-mode fixed stacking	NA	Acc7	0.521351847	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Per-mode fixed stacking	NA	Acc5	0.5400838355	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Per-mode fixed stacking	NA	Acc2	0.848934044	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Per-mode fixed stacking	NA	F1	0.8484306362	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Per-mode fixed stacking	NA	J	0.556945224	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Per-mode fixed stacking	NA	MAE	0.556945224	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Per-mode fixed stacking	NA	Corr	0.7396820605	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Per-mode fixed stacking	NA	Acc7	0.5200419177	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Per-mode fixed stacking	NA	Acc5	0.5383809274	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Per-mode fixed stacking	NA	Acc2	0.8491005996	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Per-mode fixed stacking	NA	F1	0.8485882798	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Per-mode fixed stacking	NA	J	0.5552020295	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Per-mode fixed stacking	NA	MAE	0.5552020295	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Per-mode fixed stacking	NA	Corr	0.7415088326	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Per-mode fixed stacking	NA	Acc7	0.5191249673	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Per-mode fixed stacking	NA	Acc5	0.5377259628	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Per-mode fixed stacking	NA	Acc2	0.8487674883	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Per-mode fixed stacking	NA	F1	0.8483483906	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Per-mode fixed stacking	NA	J	0.55696562	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Per-mode fixed stacking	NA	MAE	0.55696562	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Per-mode fixed stacking	NA	Corr	0.7395927454	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Per-mode fixed stacking	NA	Acc7	0.5188629814	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Per-mode fixed stacking	NA	Acc5	0.5369400052	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Per-mode fixed stacking	NA	Acc2	0.8492671552	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Per-mode fixed stacking	NA	F1	0.8488400904	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Per-mode fixed stacking	NA	J	0.5557879116	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Per-mode fixed stacking	NA	MAE	0.5560794347	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Per-mode fixed stacking	NA	Corr	0.7406091002	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Per-mode fixed stacking	NA	Acc7	0.5198454283	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Per-mode fixed stacking	NA	Acc5	0.5382826827	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Per-mode fixed stacking	NA	Acc2	0.8490173218	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Per-mode fixed stacking	NA	F1	0.8485518492	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Mode-only weighting	NA	J	0.5552553382	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Mode-only weighting	NA	MAE	0.5552553382	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Mode-only weighting	NA	Corr	0.7414776541	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Mode-only weighting	NA	Acc7	0.5205658894	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Mode-only weighting	NA	Acc5	0.539166885	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Mode-only weighting	NA	Acc2	0.848934044	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Mode-only weighting	NA	F1	0.8484872556	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Mode-only weighting	NA	J	0.5568227699	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Mode-only weighting	NA	MAE	0.5568227699	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Mode-only weighting	NA	Corr	0.7396713481	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Mode-only weighting	NA	Acc7	0.5200419177	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Mode-only weighting	NA	Acc5	0.5379879487	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Mode-only weighting	NA	Acc2	0.8484343771	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Mode-only weighting	NA	F1	0.8479388013	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Mode-only weighting	NA	J	0.5551046461	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Mode-only weighting	NA	MAE	0.5551046461	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Mode-only weighting	NA	Corr	0.7414019331	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Mode-only weighting	NA	Acc7	0.5188629814	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Mode-only weighting	NA	Acc5	0.5372019911	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Mode-only weighting	NA	Acc2	0.8496002665	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Mode-only weighting	NA	F1	0.8492114002	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Mode-only weighting	NA	J	0.55674551	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Mode-only weighting	NA	MAE	0.55674551	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Mode-only weighting	NA	Corr	0.7396058448	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Mode-only weighting	NA	Acc7	0.519517946	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Mode-only weighting	NA	Acc5	0.5374639769	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Mode-only weighting	NA	Acc2	0.848934044	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Mode-only weighting	NA	F1	0.8485247685	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Mode-only weighting	NA	J	0.5557398234	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Mode-only weighting	NA	MAE	0.5559820661	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Mode-only weighting	NA	Corr	0.740539195	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Mode-only weighting	NA	Acc7	0.5197471837	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Mode-only weighting	NA	Acc5	0.5379552004	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Mode-only weighting	NA	Acc2	0.8489756829	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Mode-only weighting	NA	F1	0.8485405564	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Scalar-risk weighting	NA	J	0.5551800088	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Scalar-risk weighting	NA	MAE	0.5551800088	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Scalar-risk weighting	NA	Corr	0.7414860629	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Scalar-risk weighting	NA	Acc7	0.5206968824	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Scalar-risk weighting	NA	Acc5	0.5392978779	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Scalar-risk weighting	NA	Acc2	0.8496002665	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Scalar-risk weighting	NA	F1	0.8491179152	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Scalar-risk weighting	NA	J	0.5567715578	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Scalar-risk weighting	NA	MAE	0.5567715578	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Scalar-risk weighting	NA	Corr	0.73967252	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Scalar-risk weighting	NA	Acc7	0.5204348965	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Scalar-risk weighting	NA	Acc5	0.5383809274	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Scalar-risk weighting	NA	Acc2	0.8487674883	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Scalar-risk weighting	NA	F1	0.8482540376	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Scalar-risk weighting	NA	J	0.5550285244	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Scalar-risk weighting	NA	MAE	0.5550285244	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Scalar-risk weighting	NA	Corr	0.7414050427	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Scalar-risk weighting	NA	Acc7	0.5189939743	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Scalar-risk weighting	NA	Acc5	0.537332984	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Scalar-risk weighting	NA	Acc2	0.8491005996	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Scalar-risk weighting	NA	F1	0.8486636892	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Scalar-risk weighting	NA	J	0.5566856551	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Scalar-risk weighting	NA	MAE	0.5566856551	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Scalar-risk weighting	NA	Corr	0.7396038023	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Scalar-risk weighting	NA	Acc7	0.5205658894	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Scalar-risk weighting	NA	Acc5	0.5385119204	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Scalar-risk weighting	NA	Acc2	0.848934044	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Scalar-risk weighting	NA	F1	0.848449556	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Scalar-risk weighting	NA	J	0.5556709606	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Scalar-risk weighting	NA	MAE	0.5559164365	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Scalar-risk weighting	NA	Corr	0.740541857	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Scalar-risk weighting	NA	Acc7	0.5201729107	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Scalar-risk weighting	NA	Acc5	0.5383809274	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Scalar-risk weighting	NA	Acc2	0.8491005996	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Scalar-risk weighting	NA	F1	0.8486212995	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Joint-risk personalized Teacher	NA	J	0.5551703121	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Joint-risk personalized Teacher	NA	MAE	0.5551703121	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Joint-risk personalized Teacher	NA	Corr	0.7416044419	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Joint-risk personalized Teacher	NA	Acc7	0.521351847	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Joint-risk personalized Teacher	NA	Acc5	0.5400838355	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Joint-risk personalized Teacher	NA	Acc2	0.8491005996	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Joint-risk personalized Teacher	NA	F1	0.8485882798	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Joint-risk personalized Teacher	NA	J	0.556908956	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Joint-risk personalized Teacher	NA	MAE	0.556908956	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Joint-risk personalized Teacher	NA	Corr	0.739641103	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Joint-risk personalized Teacher	NA	Acc7	0.5199109248	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Joint-risk personalized Teacher	NA	Acc5	0.5382499345	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Joint-risk personalized Teacher	NA	Acc2	0.8492671552	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Joint-risk personalized Teacher	NA	F1	0.8487459326	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Joint-risk personalized Teacher	NA	J	0.5551658306	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Joint-risk personalized Teacher	NA	MAE	0.5551658306	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Joint-risk personalized Teacher	NA	Corr	0.7414662885	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Joint-risk personalized Teacher	NA	Acc7	0.5192559602	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Joint-risk personalized Teacher	NA	Acc5	0.5378569557	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Joint-risk personalized Teacher	NA	Acc2	0.8487674883	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Joint-risk personalized Teacher	NA	F1	0.8483483906	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Joint-risk personalized Teacher	NA	J	0.5569313543	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Joint-risk personalized Teacher	NA	MAE	0.5569313543	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Joint-risk personalized Teacher	NA	Corr	0.7395527163	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Joint-risk personalized Teacher	NA	Acc7	0.5188629814	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Joint-risk personalized Teacher	NA	Acc5	0.5369400052	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Joint-risk personalized Teacher	NA	Acc2	0.8494337109	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Joint-risk personalized Teacher	NA	F1	0.8489977649	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Joint-risk personalized Teacher	NA	J	0.5557528462	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Joint-risk personalized Teacher	NA	MAE	0.5560441133	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Joint-risk personalized Teacher	NA	Corr	0.7405661374	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Joint-risk personalized Teacher	NA	Acc7	0.5198454283	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Joint-risk personalized Teacher	NA	Acc5	0.5382826827	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Joint-risk personalized Teacher	NA	Acc2	0.8491422385	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Joint-risk personalized Teacher	NA	F1	0.848670092	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Shuffled Judge	NA	J	0.5552007039	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Shuffled Judge	NA	MAE	0.5552007039	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Shuffled Judge	NA	Corr	0.7416584134	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Shuffled Judge	NA	Acc7	0.521351847	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Shuffled Judge	NA	Acc5	0.5400838355	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Shuffled Judge	NA	Acc2	0.848934044	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Shuffled Judge	NA	F1	0.8484306362	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Shuffled Judge	NA	J	0.5569410773	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Shuffled Judge	NA	MAE	0.5569410773	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Shuffled Judge	NA	Corr	0.73968774	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Shuffled Judge	NA	Acc7	0.5200419177	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Shuffled Judge	NA	Acc5	0.5383809274	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Shuffled Judge	NA	Acc2	0.8491005996	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Shuffled Judge	NA	F1	0.8485882798	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Shuffled Judge	NA	J	0.5551979248	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Shuffled Judge	NA	MAE	0.5551979248	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Shuffled Judge	NA	Corr	0.7415143568	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Shuffled Judge	NA	Acc7	0.5191249673	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Shuffled Judge	NA	Acc5	0.5377259628	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Shuffled Judge	NA	Acc2	0.8487674883	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Shuffled Judge	NA	F1	0.8483483906	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Shuffled Judge	NA	J	0.5569615	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Shuffled Judge	NA	MAE	0.5569615	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Shuffled Judge	NA	Corr	0.7395983116	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Shuffled Judge	NA	Acc7	0.5188629814	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Shuffled Judge	NA	Acc5	0.5369400052	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Shuffled Judge	NA	Acc2	0.8492671552	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Shuffled Judge	NA	F1	0.8488400904	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Shuffled Judge	NA	J	0.555783769	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Shuffled Judge	NA	MAE	0.5560753015	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Shuffled Judge	NA	Corr	0.7406147055	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Shuffled Judge	NA	Acc7	0.5198454283	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Shuffled Judge	NA	Acc5	0.5382826827	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Shuffled Judge	NA	Acc2	0.8490173218	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Shuffled Judge	NA	F1	0.8485518492	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Oracle expert selection	NA	J	0.403750262	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Oracle expert selection	NA	MAE	0.403750262	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Oracle expert selection	NA	Corr	0.8383321424	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Oracle expert selection	NA	Acc7	0.6520827875	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Oracle expert selection	NA	Acc5	0.6698978255	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Oracle expert selection	NA	Acc2	0.902898068	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LAV	Oracle expert selection	NA	F1	0.9024636793	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Oracle expert selection	NA	J	0.4060410719	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Oracle expert selection	NA	MAE	0.4060410719	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Oracle expert selection	NA	Corr	0.8370429672	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Oracle expert selection	NA	Acc7	0.6510348441	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Oracle expert selection	NA	Acc5	0.668980875	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Oracle expert selection	NA	Acc2	0.9005662891	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LA	Oracle expert selection	NA	F1	0.9000830874	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Oracle expert selection	NA	J	0.4043928554	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Oracle expert selection	NA	MAE	0.4043928554	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Oracle expert selection	NA	Corr	0.8382692912	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Oracle expert selection	NA	Acc7	0.6510348441	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Oracle expert selection	NA	Acc5	0.6693738538	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Oracle expert selection	NA	Acc2	0.9030646236	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	LV	Oracle expert selection	NA	F1	0.9026371897	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Oracle expert selection	NA	J	0.4064099691	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Oracle expert selection	NA	MAE	0.4064099691	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Oracle expert selection	NA	Corr	0.8370642453	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Oracle expert selection	NA	Acc7	0.6499869007	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Oracle expert selection	NA	Acc5	0.6681949175	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Oracle expert selection	NA	Acc2	0.9003997335	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	L	Oracle expert selection	NA	F1	0.8999092874	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Oracle expert selection	NA	J	0.404682447	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Oracle expert selection	NA	MAE	0.4051485396	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Oracle expert selection	NA	Corr	0.8376771615	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Oracle expert selection	NA	Acc7	0.6510348441	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Oracle expert selection	NA	Acc5	0.669111868	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Oracle expert selection	NA	Acc2	0.9017321785	Per-mode fixed stacking	NA
+teacher_oof_metric	judge_valid_1	Overall	Oracle expert selection	NA	F1	0.901273311	Per-mode fixed stacking	NA
+dynamic_weight_diagnostic	0	LAV	Joint-risk personalized Teacher	NA	mean_expert_weight_variance	2.414590043938595e-06	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	LAV	Joint-risk personalized Teacher	NA	max_expert_weight_variance	4.339709828700241e-06	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	LAV	Joint-risk personalized Teacher	NA	mean_distance_to_fallback_l1	0.0006327502184907963	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	LAV	Joint-risk personalized Teacher	NA	p90_distance_to_fallback_l1	0.0	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	LAV	Joint-risk personalized Teacher	NA	trigger_rate	0.012195121951219513	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	LAV	Joint-risk personalized Teacher	NA	fallback_rate	0.9878048780487805	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	LA	Joint-risk personalized Teacher	NA	mean_expert_weight_variance	2.1086122522789576e-06	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	LA	Joint-risk personalized Teacher	NA	max_expert_weight_variance	4.489210860629656e-06	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	LA	Joint-risk personalized Teacher	NA	mean_distance_to_fallback_l1	0.0005742929150462955	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	LA	Joint-risk personalized Teacher	NA	p90_distance_to_fallback_l1	0.0	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	LA	Joint-risk personalized Teacher	NA	trigger_rate	0.011849976990335942	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	LA	Joint-risk personalized Teacher	NA	fallback_rate	0.988150023009664	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	LV	Joint-risk personalized Teacher	NA	mean_expert_weight_variance	2.296782808765064e-06	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	LV	Joint-risk personalized Teacher	NA	max_expert_weight_variance	4.487390775190616e-06	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	LV	Joint-risk personalized Teacher	NA	mean_distance_to_fallback_l1	0.0006037602705354348	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	LV	Joint-risk personalized Teacher	NA	p90_distance_to_fallback_l1	0.0	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	LV	Joint-risk personalized Teacher	NA	trigger_rate	0.011734928670041417	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	LV	Joint-risk personalized Teacher	NA	fallback_rate	0.9882650713299586	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	L	Joint-risk personalized Teacher	NA	mean_expert_weight_variance	2.0744399772777794e-06	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	L	Joint-risk personalized Teacher	NA	max_expert_weight_variance	4.951636188228758e-06	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	L	Joint-risk personalized Teacher	NA	mean_distance_to_fallback_l1	0.0004940160992348826	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	L	Joint-risk personalized Teacher	NA	p90_distance_to_fallback_l1	0.0	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	L	Joint-risk personalized Teacher	NA	trigger_rate	0.010009203865623562	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	0	L	Joint-risk personalized Teacher	NA	fallback_rate	0.9899907961343765	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	LAV	Joint-risk personalized Teacher	NA	mean_expert_weight_variance	3.307022556120097e-06	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	LAV	Joint-risk personalized Teacher	NA	max_expert_weight_variance	4.93403231215999e-06	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	LAV	Joint-risk personalized Teacher	NA	mean_distance_to_fallback_l1	0.0011776919557898874	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	LAV	Joint-risk personalized Teacher	NA	p90_distance_to_fallback_l1	0.0	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	LAV	Joint-risk personalized Teacher	NA	trigger_rate	0.034320146712077546	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	LAV	Joint-risk personalized Teacher	NA	fallback_rate	0.9656798532879225	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	LA	Joint-risk personalized Teacher	NA	mean_expert_weight_variance	3.294308232105927e-06	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	LA	Joint-risk personalized Teacher	NA	max_expert_weight_variance	4.7591825448281885e-06	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	LA	Joint-risk personalized Teacher	NA	mean_distance_to_fallback_l1	0.0011878768783678282	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	LA	Joint-risk personalized Teacher	NA	p90_distance_to_fallback_l1	0.0	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	LA	Joint-risk personalized Teacher	NA	trigger_rate	0.034975111343987425	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	LA	Joint-risk personalized Teacher	NA	fallback_rate	0.9650248886560125	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	LV	Joint-risk personalized Teacher	NA	mean_expert_weight_variance	3.2389354725194577e-06	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	LV	Joint-risk personalized Teacher	NA	max_expert_weight_variance	4.86169063033393e-06	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	LV	Joint-risk personalized Teacher	NA	mean_distance_to_fallback_l1	0.001149978178739848	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	LV	Joint-risk personalized Teacher	NA	p90_distance_to_fallback_l1	0.0	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	LV	Joint-risk personalized Teacher	NA	trigger_rate	0.03340319622740372	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	LV	Joint-risk personalized Teacher	NA	fallback_rate	0.9665968037725963	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	L	Joint-risk personalized Teacher	NA	mean_expert_weight_variance	3.2635452893151403e-06	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	L	Joint-risk personalized Teacher	NA	max_expert_weight_variance	4.763362038285558e-06	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	L	Joint-risk personalized Teacher	NA	mean_distance_to_fallback_l1	0.0011765926573788315	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	L	Joint-risk personalized Teacher	NA	p90_distance_to_fallback_l1	0.0	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	L	Joint-risk personalized Teacher	NA	trigger_rate	0.034713125491223476	Per-mode fixed stacking	diagnostic_only
+dynamic_weight_diagnostic	1	L	Joint-risk personalized Teacher	NA	fallback_rate	0.9652868745087765	Per-mode fixed stacking	diagnostic_only
+expert_dominance	0	LAV	Joint-risk personalized Teacher	uniform_kd_seed1111	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	0	LAV	Joint-risk personalized Teacher	moddrop_seed1111	dominance_fraction	0.9998849516797055	NA	diagnostic_only
+expert_dominance	0	LAV	Joint-risk personalized Teacher	moddrop_seed1114	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	0	LAV	Joint-risk personalized Teacher	cfcompat_seed1111	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	0	LAV	Joint-risk personalized Teacher	cfcompat_seed1114	dominance_fraction	0.0001150483202945237	NA	diagnostic_only
+expert_dominance	0	LA	Joint-risk personalized Teacher	uniform_kd_seed1111	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	0	LA	Joint-risk personalized Teacher	moddrop_seed1111	dominance_fraction	1.0	NA	diagnostic_only
+expert_dominance	0	LA	Joint-risk personalized Teacher	moddrop_seed1114	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	0	LA	Joint-risk personalized Teacher	cfcompat_seed1111	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	0	LA	Joint-risk personalized Teacher	cfcompat_seed1114	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	0	LV	Joint-risk personalized Teacher	uniform_kd_seed1111	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	0	LV	Joint-risk personalized Teacher	moddrop_seed1111	dominance_fraction	0.999769903359411	NA	diagnostic_only
+expert_dominance	0	LV	Joint-risk personalized Teacher	moddrop_seed1114	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	0	LV	Joint-risk personalized Teacher	cfcompat_seed1111	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	0	LV	Joint-risk personalized Teacher	cfcompat_seed1114	dominance_fraction	0.0002300966405890474	NA	diagnostic_only
+expert_dominance	0	L	Joint-risk personalized Teacher	uniform_kd_seed1111	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	0	L	Joint-risk personalized Teacher	moddrop_seed1111	dominance_fraction	1.0	NA	diagnostic_only
+expert_dominance	0	L	Joint-risk personalized Teacher	moddrop_seed1114	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	0	L	Joint-risk personalized Teacher	cfcompat_seed1111	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	0	L	Joint-risk personalized Teacher	cfcompat_seed1114	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	1	LAV	Joint-risk personalized Teacher	uniform_kd_seed1111	dominance_fraction	0.9997380141472361	NA	diagnostic_only
+expert_dominance	1	LAV	Joint-risk personalized Teacher	moddrop_seed1111	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	1	LAV	Joint-risk personalized Teacher	moddrop_seed1114	dominance_fraction	0.00026198585276395077	NA	diagnostic_only
+expert_dominance	1	LAV	Joint-risk personalized Teacher	cfcompat_seed1111	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	1	LAV	Joint-risk personalized Teacher	cfcompat_seed1114	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	1	LA	Joint-risk personalized Teacher	uniform_kd_seed1111	dominance_fraction	0.9861147498035107	NA	diagnostic_only
+expert_dominance	1	LA	Joint-risk personalized Teacher	moddrop_seed1111	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	1	LA	Joint-risk personalized Teacher	moddrop_seed1114	dominance_fraction	0.013885250196489389	NA	diagnostic_only
+expert_dominance	1	LA	Joint-risk personalized Teacher	cfcompat_seed1111	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	1	LA	Joint-risk personalized Teacher	cfcompat_seed1114	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	1	LV	Joint-risk personalized Teacher	uniform_kd_seed1111	dominance_fraction	0.9997380141472361	NA	diagnostic_only
+expert_dominance	1	LV	Joint-risk personalized Teacher	moddrop_seed1111	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	1	LV	Joint-risk personalized Teacher	moddrop_seed1114	dominance_fraction	0.00026198585276395077	NA	diagnostic_only
+expert_dominance	1	LV	Joint-risk personalized Teacher	cfcompat_seed1111	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	1	LV	Joint-risk personalized Teacher	cfcompat_seed1114	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	1	L	Joint-risk personalized Teacher	uniform_kd_seed1111	dominance_fraction	0.9934503536809012	NA	diagnostic_only
+expert_dominance	1	L	Joint-risk personalized Teacher	moddrop_seed1111	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	1	L	Joint-risk personalized Teacher	moddrop_seed1114	dominance_fraction	0.006549646319098768	NA	diagnostic_only
+expert_dominance	1	L	Joint-risk personalized Teacher	cfcompat_seed1111	dominance_fraction	0.0	NA	diagnostic_only
+expert_dominance	1	L	Joint-risk personalized Teacher	cfcompat_seed1114	dominance_fraction	0.0	NA	diagnostic_only
+frozen_teacher_gate	mean_or_worst	Overall	Joint-risk personalized Teacher	NA	classification_systematic_degradation	True	Per-mode fixed stacking	NA
+frozen_teacher_gate	mean_or_worst	Overall	Joint-risk personalized Teacher	NA	dynamic_weights_noncollapsed	False	Per-mode fixed stacking	NA
+frozen_teacher_gate	mean_or_worst	Overall	Joint-risk personalized Teacher	NA	improved_missing_modes	3	Per-mode fixed stacking	NA
+frozen_teacher_gate	mean_or_worst	Overall	Joint-risk personalized Teacher	NA	mean_delta_J_vs_per_mode_fixed	-3.776099777552666e-05	Per-mode fixed stacking	NA
+frozen_teacher_gate	mean_or_worst	Overall	Joint-risk personalized Teacher	NA	mean_delta_J_vs_shuffled	-3.568968332562372e-05	Per-mode fixed stacking	NA
+frozen_teacher_gate	mean_or_worst	Overall	Joint-risk personalized Teacher	NA	passed	False	Per-mode fixed stacking	NA
+frozen_teacher_gate	mean_or_worst	Overall	Joint-risk personalized Teacher	NA	risk_buckets_monotonic	True	Per-mode fixed stacking	NA
+frozen_teacher_gate	mean_or_worst	Overall	Joint-risk personalized Teacher	NA	split_directions_consistent	True	Per-mode fixed stacking	NA
+frozen_teacher_gate	mean_or_worst	Overall	Joint-risk personalized Teacher	NA	trigger_gain_above_fallback	True	Per-mode fixed stacking	NA
+frozen_teacher_gate	mean_or_worst	Overall	Joint-risk personalized Teacher	NA	worst_LAV_delta_MAE	-2.9120846290586755e-05	Per-mode fixed stacking	NA
+frozen_teacher_gate	mean_or_worst	Overall	Joint-risk personalized Teacher	NA	worst_split_delta_J_vs_per_mode_fixed	-3.5065403341083545e-05	Per-mode fixed stacking	NA

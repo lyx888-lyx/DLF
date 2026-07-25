@@ -1,0 +1,14 @@
+{
+  "final_status": "STAGE23A_JUDGE_NOT_ACTIONABLE",
+  "locked_test_access_count": 0,
+  "official_valid_access_count": 0,
+  "reason": "Judge/Personalized Teacher frozen gate failed before Official Valid.",
+  "stage": "Stage23A-MOSEI",
+  "status": "LOCKED",
+  "student_trained": false,
+  "test_labels_read": 0,
+  "test_loader_constructed": false,
+  "test_metrics_read": 0,
+  "test_predictions_read": 0,
+  "test_samples_read": 0
+}

@@ -1,0 +1,13 @@
+{
+  "analysis_code_commit": "3c00e5cd1f540dc5143a2f1ef6a23f94177dc3ad",
+  "completed_at": "2026-07-25T05:45:03.319498+00:00",
+  "expert_oof_retrained": false,
+  "frozen_expert_pool_modified": false,
+  "locked_test_access_count": 0,
+  "official_valid_access_count": 0,
+  "phase": "FINALIZED",
+  "stage": "Stage23A-MOSEI",
+  "status": "STAGE23A_JUDGE_NOT_ACTIONABLE",
+  "student_trained": false,
+  "test_loader_constructed": false
+}
