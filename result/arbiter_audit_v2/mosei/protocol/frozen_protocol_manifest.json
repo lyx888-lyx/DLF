@@ -1,0 +1,197 @@
+{
+  "artifact_sha256": {
+    "result/arbiter_audit_v2/mosei/audit/long_to_wide_pivot_report.json": "013688dcba6ffbb80fa28cdc37d039612ec570eb003d0192550b670891f973fd",
+    "result/arbiter_audit_v2/mosei/audit/meta_row_assertions.json": "95cc64012607f0fd1d931513bef8e816c2caf953356ed291ffffc9f9e7963a15",
+    "result/arbiter_audit_v2/mosei/audit/oracle_recomputation_metrics.csv": "e1b0b621a33bd4586ea9e8923924a5cb9acfbbb756a65c0d4c4b5e95aecc89f1",
+    "result/arbiter_audit_v2/mosei/audit/oracle_recomputation_report.json": "4aa6c04b4e35081046877340158f110479e0e81dba268f1c708e1f96c7405c2c",
+    "result/arbiter_audit_v2/mosei/audit/oracle_sample_audit.csv": "9f7691015966ea212bbc0f9b5179319cd39def7f721900d5660c6009d6962bdc",
+    "result/arbiter_audit_v2/mosei/audit/repository_runtime_audit.json": "cdb63baa5a8cb5cc8411425f4a7dd1b88259aa8aefec84e433e4c03c464de354",
+    "result/arbiter_audit_v2/mosei/data/meta_ledger.csv": "5a360463f56f29a5efef83cb8095af4bc9fc4548e31c591b5b24471ed1dd1b4c",
+    "result/arbiter_audit_v2/mosei/protocol/content_feature_schema.json": "d712d72c240d3f9e2cb3d840ee20b1556a3139d77c2295e0241f301af50ba138",
+    "result/arbiter_audit_v2/mosei/protocol/direction_A_sources.csv": "b8c9af3da98f206a0a6eadd9abfa2ca6853581fda3b5470daa929fe92c973257",
+    "result/arbiter_audit_v2/mosei/protocol/direction_B_sources.csv": "98eb0050d2d67bbb165dd42de80ef90545c9b637bae9748ae6cd8ea3186b1e42",
+    "result/arbiter_audit_v2/mosei/protocol/feature_schema.json": "35a31556b3f1534bbcbafd293bf213152ca400e9b12652f9539a0ba940d817df",
+    "result/arbiter_audit_v2/mosei/protocol/frozen_expert_pool.csv": "7ea2f7cfcb64725f246039f1050774e761b4f541fe093ceb115e98f8034cdced",
+    "result/arbiter_audit_v2/mosei/protocol/frozen_gate_criteria.json": "4660b32950dce598d081606ee7c19099e99a69102c29f0da99052c9c94b4f15c",
+    "result/arbiter_audit_v2/mosei/protocol/hierarchical_head_mapping.json": "02d686bb7723a13ed1c03b31df69aa993f7190529cd29ac74b4330fcb3646572",
+    "result/arbiter_audit_v2/mosei/protocol/judge_main_configuration.json": "f19230bbeeb84f5bb10f8b4c99a3b0be1e3dbab3e3b362cefbc3a7b364b44371",
+    "result/arbiter_audit_v2/mosei/protocol/preprocessing_fit_scope.json": "7f02ebbf95f2fe46becea604cf7bbdbf44ea928ead0f976d47d21fc6708343ac",
+    "result/arbiter_audit_v2/mosei/protocol/random_controls.json": "6010718b3866dedb5a34c406130e1de4549bf6684e226c1c5f334e3a894a2129"
+  },
+  "code_commit_before_protocol_outputs": "2ddbec453fa24d15dcee0bdb59a29b0f48a7b461",
+  "combined_replay_report_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/validation/replay_consistency_report.json",
+  "combined_replay_report_sha256": "75ae213439206c35cae1ee9ed224d45292309881e248db6d8be412b1af08ba01",
+  "content_feature_schema_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/content_feature_schema.json",
+  "created_at": "2026-07-25T13:22:05.299830+00:00",
+  "directions": {
+    "A": {
+      "counts": {
+        "inner_train": {
+          "meta_rows": 29752,
+          "samples": 7438,
+          "sources": 1007
+        },
+        "inner_valid": {
+          "meta_rows": 4376,
+          "samples": 1094,
+          "sources": 130
+        },
+        "outer_evaluation": {
+          "meta_rows": 31176,
+          "samples": 7794,
+          "sources": 1112
+        }
+      },
+      "development_expert_fold": 0,
+      "inner_split_seed": 2302,
+      "inner_valid_rule": "sha256(stage23a_v2_direction_A_seed2302|video_id) mod 8 == 0",
+      "outer_evaluation_expert_fold": 1,
+      "outer_evaluation_used_for_selection": false,
+      "source_manifest_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/direction_A_sources.csv",
+      "source_manifest_sha256": "b8c9af3da98f206a0a6eadd9abfa2ca6853581fda3b5470daa929fe92c973257"
+    },
+    "B": {
+      "counts": {
+        "inner_train": {
+          "meta_rows": 27732,
+          "samples": 6933,
+          "sources": 980
+        },
+        "inner_valid": {
+          "meta_rows": 3444,
+          "samples": 861,
+          "sources": 132
+        },
+        "outer_evaluation": {
+          "meta_rows": 34128,
+          "samples": 8532,
+          "sources": 1137
+        }
+      },
+      "development_expert_fold": 1,
+      "inner_split_seed": 2302,
+      "inner_valid_rule": "sha256(stage23a_v2_direction_B_seed2302|video_id) mod 8 == 0",
+      "outer_evaluation_expert_fold": 0,
+      "outer_evaluation_used_for_selection": false,
+      "source_manifest_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/direction_B_sources.csv",
+      "source_manifest_sha256": "98eb0050d2d67bbb165dd42de80ef90545c9b637bae9748ae6cd8ea3186b1e42"
+    }
+  },
+  "expert_checkpoint_modified": false,
+  "feature_schema_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/feature_schema.json",
+  "frozen_at": "2026-07-25T13:22:14.418067+00:00",
+  "gate_criteria_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/frozen_gate_criteria.json",
+  "git_diff_base_commit": "00731d93773d856b1942e79f56e2d4210788ad76",
+  "git_diff_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/audit/git_diff.patch",
+  "git_diff_sha256": "1ea5d34dbbe7297338c594a34baf9f454f7e263358ef65fdfe1bf014ba9e3ff9",
+  "hierarchical_mapping_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/hierarchical_head_mapping.json",
+  "implementation_authorized": false,
+  "inputs": {
+    "accessed_dataset_partition": "train only",
+    "dataset_path": "/data4t/lyx/datasets/MOSEI/Processed/aligned_50.pkl",
+    "dataset_sha256": "45eccfb748a87c80ecab9bfac29582e7b1466bf6605ff29d3b338a75120bf791",
+    "frozen_expert_pool_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/frozen_expert_pool.csv",
+    "frozen_expert_pool_sha256": "7ea2f7cfcb64725f246039f1050774e761b4f541fe093ceb115e98f8034cdced",
+    "outer_folds": [
+      {
+        "fold_manifest_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v1/mosei/expert_oof/outer_fold0/fold_manifest.json",
+        "fold_manifest_sha256": "7ecfd33e0ecf5e5a2a0360c15d89520c35b07681366e36421cd24d0316eb53ee",
+        "outer_fold": 0,
+        "prediction_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v1/mosei/expert_oof/outer_fold0/oof_predictions.csv",
+        "prediction_sha256": "79e8fce17b5926bcba66f0c698b576f8562633fe44746935d407ad7d98a97fff",
+        "rows": 170640,
+        "samples": 8532,
+        "sources": 1137
+      },
+      {
+        "fold_manifest_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v1/mosei/expert_oof/outer_fold1/fold_manifest.json",
+        "fold_manifest_sha256": "3fe8286fb7964cec02ee815c825fdf4195a292265e185a81c7bb9e402c05a59e",
+        "outer_fold": 1,
+        "prediction_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v1/mosei/expert_oof/outer_fold1/oof_predictions.csv",
+        "prediction_sha256": "edd6e41ab40481c5229e1e84688bc631f19a561dd3c3773de53b869802d13a46",
+        "rows": 155880,
+        "samples": 7794,
+        "sources": 1112
+      }
+    ],
+    "v1_protocol_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v1/mosei/protocol/preregistered_protocol.json",
+    "v1_protocol_sha256": "6b4777cb3480b180edb99be956221bad784f53718e35f9528d797a607b874d63",
+    "v1_source_split_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v1/mosei/protocol/source_splits.csv",
+    "v1_source_split_sha256": "cbc8ef8d94050fedeba722f2a4de843e8fdc18f9ec8313c042587af15005535a"
+  },
+  "judge_configuration_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/judge_main_configuration.json",
+  "judge_training_authorized": false,
+  "judge_training_started": false,
+  "locked_test_access_count": 0,
+  "meta_ledger": {
+    "assertion_status": "PASS",
+    "path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/data/meta_ledger.csv",
+    "rows": 65304,
+    "sha256": "5a360463f56f29a5efef83cb8095af4bc9fc4548e31c591b5b24471ed1dd1b4c"
+  },
+  "next_action": "wait for user confirmation before hierarchical/content feature implementation or Feature-Rich Judge training",
+  "official_valid_access_count": 0,
+  "oracle": {
+    "J_definition": "0.5*MAE(LAV)+0.5*mean(MAE(LA),MAE(LV),MAE(L))",
+    "absolute_difference_from_expected": 0.0,
+    "best_single": "moddrop_seed1111",
+    "definition": "For each unique (sample_id, mode), select exactly one scalar prediction with minimum absolute error from the five frozen Experts in that same mode.",
+    "deltas_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/audit/oracle_deltas.csv",
+    "expected_oracle_minus_fixed_J": -0.15361230650316943,
+    "forbidden_operations_absent": {
+      "clean_component_inclusion": true,
+      "cross_mode_selection": true,
+      "free_convex_combination": true,
+      "ground_truth_interpolation": true,
+      "official_valid_or_test_labels": true
+    },
+    "metrics_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/audit/oracle_recomputation_metrics.csv",
+    "recomputed_oracle_minus_fixed_J": -0.15361230650316943,
+    "same_evaluator_for_all_methods": true,
+    "sample_audit_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/audit/oracle_sample_audit.csv",
+    "sample_audit_rows": 24,
+    "selection_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/audit/oracle_selection_proportions.csv",
+    "status": "PASS",
+    "weights_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/audit/per_mode_fixed_stacking_weights.csv"
+  },
+  "preprocessing_fit_scope_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/preprocessing_fit_scope.json",
+  "protocol_code_commit": "2ddbec453fa24d15dcee0bdb59a29b0f48a7b461",
+  "random_controls_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/random_controls.json",
+  "replay": [
+    {
+      "max_abs_diff": 5.000000413701855e-10,
+      "mean_abs_diff": 8.154280799004715e-11,
+      "mismatch_gt_1e_5": 0,
+      "mismatch_gt_1e_6": 0,
+      "outer_fold": 0,
+      "report_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/validation/replay_fold0_report.json",
+      "report_sha256": "80d6807bda55423813e55926738baf21def7675bd4d9f82e9c64516b3870a8b4"
+    },
+    {
+      "max_abs_diff": 5.000000413701855e-10,
+      "mean_abs_diff": 7.5769171519954e-11,
+      "mismatch_gt_1e_5": 0,
+      "mismatch_gt_1e_6": 0,
+      "outer_fold": 1,
+      "report_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/validation/replay_fold1_report.json",
+      "report_sha256": "d8d4d307fc8f7617f4928ac0b4eb4970b2c31c3993f205540698a6a9ad2e5e99"
+    }
+  ],
+  "replay_gate": {
+    "hard_stop_max_abs_diff": 1e-05,
+    "hierarchical_extraction_allowed_before_pass": false,
+    "preferred_max_abs_diff": 1e-06
+  },
+  "reproducible_commands": [
+    "/usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_v2_prepare_protocol.py",
+    "/usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_v2_replay_final.py --outer-fold 0 --gpu-id 0",
+    "/usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_v2_replay_final.py --outer-fold 1 --gpu-id 1",
+    "/usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_v2_freeze_protocol.py"
+  ],
+  "reproducible_commands_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/audit/reproducible_commands.txt",
+  "reproducible_commands_sha256": "67c88cc81742196305310612cf11483c09559a221d7a72956bc02b818cb1c965",
+  "stage": "Stage23A-v2 Feature-Rich OOF Meta-Judge protocol validation",
+  "status": "FROZEN_READY_FOR_FEATURE_IMPLEMENTATION",
+  "student_trained": false,
+  "test_loader_constructed": false
+}

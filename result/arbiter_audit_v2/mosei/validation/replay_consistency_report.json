@@ -1,0 +1,32 @@
+{
+  "expert_retrained": false,
+  "folds": [
+    {
+      "max_abs_diff": 5.000000413701855e-10,
+      "mean_abs_diff": 8.154280799004715e-11,
+      "mismatch_gt_1e_5": 0,
+      "mismatch_gt_1e_6": 0,
+      "outer_fold": 0,
+      "report_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/validation/replay_fold0_report.json",
+      "report_sha256": "80d6807bda55423813e55926738baf21def7675bd4d9f82e9c64516b3870a8b4"
+    },
+    {
+      "max_abs_diff": 5.000000413701855e-10,
+      "mean_abs_diff": 7.5769171519954e-11,
+      "mismatch_gt_1e_5": 0,
+      "mismatch_gt_1e_6": 0,
+      "outer_fold": 1,
+      "report_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/validation/replay_fold1_report.json",
+      "report_sha256": "d8d4d307fc8f7617f4928ac0b4eb4970b2c31c3993f205540698a6a9ad2e5e99"
+    }
+  ],
+  "hard_stop_threshold": 1e-05,
+  "hierarchical_features_extracted": false,
+  "max_abs_diff": 5.000000413701855e-10,
+  "mean_abs_diff": 7.878648539737864e-11,
+  "mismatch_gt_1e_5": 0,
+  "mismatch_gt_1e_6": 0,
+  "preferred_threshold": 1e-06,
+  "status": "PASS",
+  "total_rows": 326520
+}

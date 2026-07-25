@@ -1,0 +1,25 @@
+{
+  "assertions_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/audit/meta_row_assertions.json",
+  "binding_columns": [
+    "meta_row_id",
+    "content_binding_key",
+    "hierarchical_binding_key"
+  ],
+  "identity_columns": [
+    "sample_id",
+    "video_id",
+    "train_index",
+    "mode",
+    "label",
+    "expert_fold"
+  ],
+  "meta_ledger_sha256": "5a360463f56f29a5efef83cb8095af4bc9fc4548e31c591b5b24471ed1dd1b4c",
+  "prediction_columns": [
+    "prediction__uniform_kd_seed1111",
+    "prediction__moddrop_seed1111",
+    "prediction__moddrop_seed1114",
+    "prediction__cfcompat_seed1111",
+    "prediction__cfcompat_seed1114"
+  ],
+  "status": "PASS"
+}

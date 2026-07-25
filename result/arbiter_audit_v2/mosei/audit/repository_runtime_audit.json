@@ -1,0 +1,56 @@
+{
+  "branch": "audit/mosei-feature-rich-meta-judge-v2-protocol",
+  "created_at": "2026-07-25T13:21:29.175307+00:00",
+  "expert_checkpoint_modified": false,
+  "git_status_before_generated_outputs": [],
+  "gpu_snapshot": [
+    {
+      "index": 0,
+      "memory_total_mib": 22528,
+      "memory_used_mib": 9,
+      "name": "NVIDIA GeForce RTX 2080 Ti",
+      "utilization_percent": 0
+    },
+    {
+      "index": 1,
+      "memory_total_mib": 22528,
+      "memory_used_mib": 1,
+      "name": "NVIDIA GeForce RTX 2080 Ti",
+      "utilization_percent": 0
+    },
+    {
+      "index": 2,
+      "memory_total_mib": 22528,
+      "memory_used_mib": 1,
+      "name": "NVIDIA GeForce RTX 2080 Ti",
+      "utilization_percent": 0
+    },
+    {
+      "index": 3,
+      "memory_total_mib": 22528,
+      "memory_used_mib": 16918,
+      "name": "NVIDIA GeForce RTX 2080 Ti",
+      "utilization_percent": 86
+    }
+  ],
+  "head": "2ddbec453fa24d15dcee0bdb59a29b0f48a7b461",
+  "judge_training_started": false,
+  "locked_test_access_count": 0,
+  "matched_processes": [
+    " 818060  817228  1-06:00:38  0.0  0.0 watch -n 30 /usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_status.py"
+  ],
+  "official_valid_access_count": 0,
+  "stage": "Stage23A-v2 protocol audit",
+  "stage23a_pid_files": {
+    "runtime/stage23a/fold0.pid": {
+      "alive": false,
+      "pid": 816042
+    },
+    "runtime/stage23a/fold1.pid": {
+      "alive": false,
+      "pid": 816045
+    }
+  },
+  "student_trained": false,
+  "test_loader_constructed": false
+}

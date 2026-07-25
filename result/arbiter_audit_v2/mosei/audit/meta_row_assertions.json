@@ -1,0 +1,91 @@
+{
+  "duplicate_meta_rows": 0,
+  "expected_fold0_meta_rows": 34128,
+  "expected_fold1_meta_rows": 31176,
+  "expected_long_rows": 326520,
+  "expected_meta_rows": 65304,
+  "expert_fold0_meta_rows": 34128,
+  "expert_fold1_meta_rows": 31176,
+  "five_experts_per_sample_mode": true,
+  "four_modes_per_sample": true,
+  "long_rows": 326520,
+  "meta_ledger_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/data/meta_ledger.csv",
+  "meta_ledger_sha256": "5a360463f56f29a5efef83cb8095af4bc9fc4548e31c591b5b24471ed1dd1b4c",
+  "meta_rows": 65304,
+  "missing_expert_predictions": 0,
+  "modes": [
+    "L",
+    "LA",
+    "LAV",
+    "LV"
+  ],
+  "one_expert_fold_per_sample": true,
+  "one_expert_fold_per_source": true,
+  "samples": 16326,
+  "schema": [
+    {
+      "column": "sample_id",
+      "dtype": "object"
+    },
+    {
+      "column": "video_id",
+      "dtype": "object"
+    },
+    {
+      "column": "train_index",
+      "dtype": "int64"
+    },
+    {
+      "column": "mode",
+      "dtype": "object"
+    },
+    {
+      "column": "label",
+      "dtype": "float64"
+    },
+    {
+      "column": "prediction__cfcompat_seed1111",
+      "dtype": "float64"
+    },
+    {
+      "column": "prediction__cfcompat_seed1114",
+      "dtype": "float64"
+    },
+    {
+      "column": "prediction__moddrop_seed1111",
+      "dtype": "float64"
+    },
+    {
+      "column": "prediction__moddrop_seed1114",
+      "dtype": "float64"
+    },
+    {
+      "column": "prediction__uniform_kd_seed1111",
+      "dtype": "float64"
+    },
+    {
+      "column": "expert_fold",
+      "dtype": "int64"
+    },
+    {
+      "column": "judge_fold",
+      "dtype": "int64"
+    },
+    {
+      "column": "meta_row_id",
+      "dtype": "object"
+    },
+    {
+      "column": "content_binding_key",
+      "dtype": "object"
+    },
+    {
+      "column": "hierarchical_binding_key",
+      "dtype": "object"
+    }
+  ],
+  "sources": 2249,
+  "status": "PASS",
+  "unique_sample_mode": 65304,
+  "video_mapping_matches": true
+}

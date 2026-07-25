@@ -1,0 +1,15 @@
+{
+  "expert_checkpoint_modified": false,
+  "frozen_protocol_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/frozen_protocol_manifest.json",
+  "frozen_protocol_sha256": "ba4226714ba0f19e7ec75715a68891f6baaf61ef7d1829ba422d2d81d2bcfa3f",
+  "implementation_authorized": false,
+  "judge_training_authorized": false,
+  "locked_test_access_count": 0,
+  "official_valid_access_count": 0,
+  "phase": "FROZEN_WAITING_FOR_USER_CONFIRMATION",
+  "stage": "Stage23A-v2 protocol validation",
+  "status": "READY_FOR_FEATURE_IMPLEMENTATION_NOT_AUTHORIZED",
+  "student_trained": false,
+  "test_loader_constructed": false,
+  "updated_at": "2026-07-25T13:22:14.439474+00:00"
+}

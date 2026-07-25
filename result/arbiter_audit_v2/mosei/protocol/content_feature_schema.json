@@ -1,0 +1,149 @@
+{
+  "accessed_partition": "train only",
+  "dataset_path": "/data4t/lyx/datasets/MOSEI/Processed/aligned_50.pkl",
+  "dataset_sha256": "45eccfb748a87c80ecab9bfac29582e7b1466bf6605ff29d3b338a75120bf791",
+  "fit_unit": "one unique clip; four modes are never repeated during PCA fitting",
+  "forbidden": [
+    "joint PCA across modalities",
+    "PCA fit on all Train",
+    "PCA fit with four duplicated mode rows per clip",
+    "reading unavailable Audio/Vision blocks for LA/LV/L",
+    "raw DLF hidden representations from different Expert folds"
+  ],
+  "locked_test_access_count": 0,
+  "normalization": "per-modality StandardScaler fit on unique inner-train clips only",
+  "official_valid_access_count": 0,
+  "pca": {
+    "Audio": {
+      "input_dim": 148,
+      "output_dim": 8,
+      "random_state": 2302,
+      "solver": "randomized",
+      "source_key": "audio"
+    },
+    "Text": {
+      "input_dim": 1536,
+      "output_dim": 16,
+      "random_state": 2302,
+      "solver": "randomized",
+      "source_key": "text"
+    },
+    "Vision": {
+      "input_dim": 70,
+      "output_dim": 8,
+      "random_state": 2302,
+      "solver": "randomized",
+      "source_key": "vision"
+    }
+  },
+  "pca_total_dim": 32,
+  "raw_inputs": {
+    "audio": {
+      "active_timestep_max": 48,
+      "active_timestep_mean": 22.850177630773,
+      "active_timestep_min": 1,
+      "dtype": "float64",
+      "feature_dim": 74,
+      "finite": true,
+      "padding_rule": "timestep is active iff any feature value is non-zero",
+      "summary": "padding-aware temporal mean concatenated with population std",
+      "summary_dim": 148,
+      "temporal_length": 50,
+      "train_shape": [
+        16326,
+        50,
+        74
+      ],
+      "zero_active_timestep_clips": 0,
+      "zero_active_timestep_policy": "emit an all-zero temporal summary; do not borrow another modality"
+    },
+    "text": {
+      "active_timestep_max": 50,
+      "active_timestep_mean": 50.0,
+      "active_timestep_min": 50,
+      "dtype": "float32",
+      "feature_dim": 768,
+      "finite": true,
+      "padding_rule": "timestep is active iff any feature value is non-zero",
+      "summary": "padding-aware temporal mean concatenated with population std",
+      "summary_dim": 1536,
+      "temporal_length": 50,
+      "train_shape": [
+        16326,
+        50,
+        768
+      ],
+      "zero_active_timestep_clips": 0,
+      "zero_active_timestep_policy": "emit an all-zero temporal summary; do not borrow another modality"
+    },
+    "vision": {
+      "active_timestep_max": 48,
+      "active_timestep_mean": 21.661276491485975,
+      "active_timestep_min": 0,
+      "dtype": "float64",
+      "feature_dim": 35,
+      "finite": true,
+      "padding_rule": "timestep is active iff any feature value is non-zero",
+      "summary": "padding-aware temporal mean concatenated with population std",
+      "summary_dim": 70,
+      "temporal_length": 50,
+      "train_shape": [
+        16326,
+        50,
+        35
+      ],
+      "zero_active_timestep_clips": 482,
+      "zero_active_timestep_policy": "emit an all-zero temporal summary; do not borrow another modality"
+    }
+  },
+  "visibility": {
+    "L": {
+      "availability_mask": [
+        1,
+        0,
+        0
+      ],
+      "content_blocks": {
+        "Audio8": "zero",
+        "Text16": "visible",
+        "Vision8": "zero"
+      }
+    },
+    "LA": {
+      "availability_mask": [
+        1,
+        1,
+        0
+      ],
+      "content_blocks": {
+        "Audio8": "visible",
+        "Text16": "visible",
+        "Vision8": "zero"
+      }
+    },
+    "LAV": {
+      "availability_mask": [
+        1,
+        1,
+        1
+      ],
+      "content_blocks": {
+        "Audio8": "visible",
+        "Text16": "visible",
+        "Vision8": "visible"
+      }
+    },
+    "LV": {
+      "availability_mask": [
+        1,
+        0,
+        1
+      ],
+      "content_blocks": {
+        "Audio8": "zero",
+        "Text16": "visible",
+        "Vision8": "visible"
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "architecture": {
+    "actionability_head": "sigmoid",
+    "actionability_output_bias": -3.8918202981106265,
+    "activation": "ReLU",
+    "dropout": 0.1,
+    "dynamic_head": "5-way softmax",
+    "hidden_dims": [
+      32,
+      16
+    ],
+    "input_dim": 57
+  },
+  "fit_scope": "all preprocessing, stacking, targets, temperatures, scale floors, model fitting and early stopping use only the Direction development side's fixed inner-train/inner-valid; outer evaluation is one-shot",
+  "loss": {
+    "lambda_actionability_bce": 0.1,
+    "lambda_fallback_alpha_squared": 0.05,
+    "lambda_preference_kl": 0.1,
+    "prediction": "SmoothL1(beta=1.0)"
+  },
+  "optimizer": {
+    "batch_size": 256,
+    "early_stop_patience": 10,
+    "learning_rate": 0.001,
+    "max_epochs": 100,
+    "name": "AdamW",
+    "selection_metric": "inner-valid J",
+    "weight_decay": 0.0001
+  },
+  "seed": 2302,
+  "status": "FROZEN_NOT_TRAINED",
+  "targets": {
+    "actionability": "sigmoid((fixed_advantage-0.005)/tau_action)",
+    "fixed_advantage": "fixed_error-oracle_select_one_error",
+    "preference": "softmax(-regret/tau)",
+    "regret": "abs(y-p_e)-min_k(abs(y-p_k))",
+    "tau": "clip(median positive regret on inner-train, 0.02, 0.50)",
+    "tau_action": "clip(IQR(fixed_advantage)/1.349 on inner-train, 0.01, 0.25)"
+  }
+}

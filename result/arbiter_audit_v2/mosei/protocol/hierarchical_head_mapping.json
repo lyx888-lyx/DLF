@@ -1,0 +1,33 @@
+{
+  "definition": "MAD(final, shared, active mode-specific heads)",
+  "missing_specific_head_policy": "explicitly excluded by mode even if a non-zero ghost logit exists",
+  "mode_active_heads": {
+    "L": [
+      "output_logit",
+      "logits_c",
+      "logits_l_hetero"
+    ],
+    "LA": [
+      "output_logit",
+      "logits_c",
+      "logits_l_hetero",
+      "logits_a_hetero"
+    ],
+    "LAV": [
+      "output_logit",
+      "logits_c",
+      "logits_l_hetero",
+      "logits_a_hetero",
+      "logits_v_hetero"
+    ],
+    "LV": [
+      "output_logit",
+      "logits_c",
+      "logits_l_hetero",
+      "logits_v_hetero"
+    ]
+  },
+  "per_expert_output_dim": 1,
+  "replay_first_step": "only final prediction is replayed for checkpoint consistency; hierarchical features may be extracted only after the <=1e-5 gate",
+  "status": "FROZEN_BEFORE_REPLAY"
+}

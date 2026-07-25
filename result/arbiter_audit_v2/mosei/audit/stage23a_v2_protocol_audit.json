@@ -1,0 +1,297 @@
+{
+  "checks": {
+    "checkpoint_replay": "PASS",
+    "content_visibility": "PASS",
+    "direction_inner_split": "PASS",
+    "judge_training": "NOT_RUN",
+    "meta_row_reconstruction": "PASS",
+    "official_valid": "NOT_ACCESSED",
+    "oracle_reproduction": "PASS",
+    "repository_runtime": "PASS",
+    "source_and_mode_leakage": "PASS",
+    "student": "NOT_TRAINED",
+    "test": "LOCKED_0"
+  },
+  "content": {
+    "main_feature_dim": 57,
+    "pca_dims": {
+      "Audio": 8,
+      "Text": 16,
+      "Vision": 8
+    },
+    "raw_dims": {
+      "Audio": 148,
+      "Text": 1536,
+      "Vision": 70
+    },
+    "raw_summary": "per-modality padding-aware temporal mean + population std",
+    "total_pca_dim": 32
+  },
+  "direction_counts": {
+    "A": {
+      "counts": {
+        "inner_train": {
+          "meta_rows": 29752,
+          "samples": 7438,
+          "sources": 1007
+        },
+        "inner_valid": {
+          "meta_rows": 4376,
+          "samples": 1094,
+          "sources": 130
+        },
+        "outer_evaluation": {
+          "meta_rows": 31176,
+          "samples": 7794,
+          "sources": 1112
+        }
+      },
+      "development_expert_fold": 0,
+      "inner_split_seed": 2302,
+      "inner_valid_rule": "sha256(stage23a_v2_direction_A_seed2302|video_id) mod 8 == 0",
+      "outer_evaluation_expert_fold": 1,
+      "outer_evaluation_used_for_selection": false,
+      "source_manifest_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/direction_A_sources.csv",
+      "source_manifest_sha256": "b8c9af3da98f206a0a6eadd9abfa2ca6853581fda3b5470daa929fe92c973257"
+    },
+    "B": {
+      "counts": {
+        "inner_train": {
+          "meta_rows": 27732,
+          "samples": 6933,
+          "sources": 980
+        },
+        "inner_valid": {
+          "meta_rows": 3444,
+          "samples": 861,
+          "sources": 132
+        },
+        "outer_evaluation": {
+          "meta_rows": 34128,
+          "samples": 8532,
+          "sources": 1137
+        }
+      },
+      "development_expert_fold": 1,
+      "inner_split_seed": 2302,
+      "inner_valid_rule": "sha256(stage23a_v2_direction_B_seed2302|video_id) mod 8 == 0",
+      "outer_evaluation_expert_fold": 0,
+      "outer_evaluation_used_for_selection": false,
+      "source_manifest_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/direction_B_sources.csv",
+      "source_manifest_sha256": "98eb0050d2d67bbb165dd42de80ef90545c9b637bae9748ae6cd8ea3186b1e42"
+    }
+  },
+  "frozen_protocol_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/frozen_protocol_manifest.json",
+  "frozen_protocol_sha256": "ba4226714ba0f19e7ec75715a68891f6baaf61ef7d1829ba422d2d81d2bcfa3f",
+  "implementation_authorized": false,
+  "judge_training_authorized": false,
+  "meta_ledger_sha256": "5a360463f56f29a5efef83cb8095af4bc9fc4548e31c591b5b24471ed1dd1b4c",
+  "meta_rows": 65304,
+  "oracle_definition": "For each unique (sample_id, mode), select exactly one scalar prediction with minimum absolute error from the five frozen Experts in that same mode.",
+  "oracle_delta_J": -0.15361230650316943,
+  "overall_absolute_J": {
+    "cfcompat_seed1111": 0.5670355826,
+    "cfcompat_seed1114": 0.5706992069,
+    "equal_average": 0.5544996681,
+    "moddrop_seed1111": 0.5642720318,
+    "moddrop_seed1114": 0.5729723026,
+    "oracle_expert_selection": 0.4013628209,
+    "per_mode_fixed_stacking": 0.5549751274,
+    "uniform_kd_seed1111": 0.5653316367
+  },
+  "per_mode_MAE": [
+    {
+      "MAE": 0.5649748215,
+      "method": "uniform_kd_seed1111",
+      "mode": "LAV"
+    },
+    {
+      "MAE": 0.5663533611,
+      "method": "uniform_kd_seed1111",
+      "mode": "LA"
+    },
+    {
+      "MAE": 0.5647084798,
+      "method": "uniform_kd_seed1111",
+      "mode": "LV"
+    },
+    {
+      "MAE": 0.566003515,
+      "method": "uniform_kd_seed1111",
+      "mode": "L"
+    },
+    {
+      "MAE": 0.5638540161,
+      "method": "moddrop_seed1111",
+      "mode": "LAV"
+    },
+    {
+      "MAE": 0.5647679765,
+      "method": "moddrop_seed1111",
+      "mode": "LA"
+    },
+    {
+      "MAE": 0.5642332485,
+      "method": "moddrop_seed1111",
+      "mode": "LV"
+    },
+    {
+      "MAE": 0.5650689173,
+      "method": "moddrop_seed1111",
+      "mode": "L"
+    },
+    {
+      "MAE": 0.5726299621,
+      "method": "moddrop_seed1114",
+      "mode": "LAV"
+    },
+    {
+      "MAE": 0.5744304276,
+      "method": "moddrop_seed1114",
+      "mode": "LA"
+    },
+    {
+      "MAE": 0.5717511958,
+      "method": "moddrop_seed1114",
+      "mode": "LV"
+    },
+    {
+      "MAE": 0.5737623058,
+      "method": "moddrop_seed1114",
+      "mode": "L"
+    },
+    {
+      "MAE": 0.5666996262,
+      "method": "cfcompat_seed1111",
+      "mode": "LAV"
+    },
+    {
+      "MAE": 0.5677352833,
+      "method": "cfcompat_seed1111",
+      "mode": "LA"
+    },
+    {
+      "MAE": 0.5667462471,
+      "method": "cfcompat_seed1111",
+      "mode": "LV"
+    },
+    {
+      "MAE": 0.5676330865,
+      "method": "cfcompat_seed1111",
+      "mode": "L"
+    },
+    {
+      "MAE": 0.5698640482,
+      "method": "cfcompat_seed1114",
+      "mode": "LAV"
+    },
+    {
+      "MAE": 0.5721369662,
+      "method": "cfcompat_seed1114",
+      "mode": "LA"
+    },
+    {
+      "MAE": 0.5697365361,
+      "method": "cfcompat_seed1114",
+      "mode": "LV"
+    },
+    {
+      "MAE": 0.5727295942,
+      "method": "cfcompat_seed1114",
+      "mode": "L"
+    },
+    {
+      "MAE": 0.5539128114,
+      "method": "equal_average",
+      "mode": "LAV"
+    },
+    {
+      "MAE": 0.5556121939,
+      "method": "equal_average",
+      "mode": "LA"
+    },
+    {
+      "MAE": 0.5539741771,
+      "method": "equal_average",
+      "mode": "LV"
+    },
+    {
+      "MAE": 0.5556732036,
+      "method": "equal_average",
+      "mode": "L"
+    },
+    {
+      "MAE": 0.5543209051,
+      "method": "per_mode_fixed_stacking",
+      "mode": "LAV"
+    },
+    {
+      "MAE": 0.5561819348,
+      "method": "per_mode_fixed_stacking",
+      "mode": "LA"
+    },
+    {
+      "MAE": 0.5544670933,
+      "method": "per_mode_fixed_stacking",
+      "mode": "LV"
+    },
+    {
+      "MAE": 0.556239021,
+      "method": "per_mode_fixed_stacking",
+      "mode": "L"
+    },
+    {
+      "MAE": 0.4002100598,
+      "method": "oracle_expert_selection",
+      "mode": "LAV"
+    },
+    {
+      "MAE": 0.4028137818,
+      "method": "oracle_expert_selection",
+      "mode": "LA"
+    },
+    {
+      "MAE": 0.4012618064,
+      "method": "oracle_expert_selection",
+      "mode": "LV"
+    },
+    {
+      "MAE": 0.4034711576,
+      "method": "oracle_expert_selection",
+      "mode": "L"
+    }
+  ],
+  "replay": {
+    "expert_retrained": false,
+    "folds": [
+      {
+        "max_abs_diff": 5.000000413701855e-10,
+        "mean_abs_diff": 8.154280799004715e-11,
+        "mismatch_gt_1e_5": 0,
+        "mismatch_gt_1e_6": 0,
+        "outer_fold": 0,
+        "report_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/validation/replay_fold0_report.json",
+        "report_sha256": "80d6807bda55423813e55926738baf21def7675bd4d9f82e9c64516b3870a8b4"
+      },
+      {
+        "max_abs_diff": 5.000000413701855e-10,
+        "mean_abs_diff": 7.5769171519954e-11,
+        "mismatch_gt_1e_5": 0,
+        "mismatch_gt_1e_6": 0,
+        "outer_fold": 1,
+        "report_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/validation/replay_fold1_report.json",
+        "report_sha256": "d8d4d307fc8f7617f4928ac0b4eb4970b2c31c3993f205540698a6a9ad2e5e99"
+      }
+    ],
+    "hard_stop_threshold": 1e-05,
+    "hierarchical_features_extracted": false,
+    "max_abs_diff": 5.000000413701855e-10,
+    "mean_abs_diff": 7.878648539737864e-11,
+    "mismatch_gt_1e_5": 0,
+    "mismatch_gt_1e_6": 0,
+    "preferred_threshold": 1e-06,
+    "status": "PASS",
+    "total_rows": 326520
+  },
+  "status": "PASS_READY_FOR_FEATURE_IMPLEMENTATION_NOT_AUTHORIZED"
+}

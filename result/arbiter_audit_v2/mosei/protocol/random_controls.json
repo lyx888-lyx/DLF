@@ -1,0 +1,21 @@
+{
+  "matched_random_noise": {
+    "report": "mean, variance, and strongest (lowest-J) negative control",
+    "rule": "57D schema keeps non-content blocks; each content PCA coordinate is replaced by independent hash-keyed noise matched to inner-train coordinate mean/std; evaluation noise never uses labels",
+    "seeds": [
+      23121,
+      23122,
+      23123
+    ]
+  },
+  "shuffled_content": {
+    "inner_valid_outer_rule": "evaluate the Judge learned from shuffled inner-train content on normally paired transformed content; no evaluation label is used",
+    "report": "mean, variance, and strongest (lowest-J) negative control",
+    "seeds": [
+      23021,
+      23022,
+      23023
+    ],
+    "train_rule": "within each mode, deterministic cross-source derangement of content on meta inner-train; predictions, labels, and source split unchanged"
+  }
+}

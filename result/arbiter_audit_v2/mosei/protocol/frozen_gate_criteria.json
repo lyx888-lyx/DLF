@@ -1,0 +1,29 @@
+{
+  "classification": {
+    "metrics": [
+      "Acc7",
+      "Acc5",
+      "Acc2",
+      "F1"
+    ],
+    "systematic_degradation_allowed": false,
+    "systematic_degradation_definition": "for any metric, more than half of direction×mode deltas are < -1e-8"
+  },
+  "corr": {
+    "mean_delta_min": -0.002,
+    "worst_direction_delta_min": -0.005
+  },
+  "delta_J_vs_strongest_shuffled_content_max": -0.002,
+  "directions": "both Direction A and B delta J must be <= 0",
+  "dynamic_noncollapse_each_direction": {
+    "alpha_std_min": 0.01,
+    "fraction_alpha_ge_0p1_min": 0.05,
+    "mean_weight_l1_from_fallback_min": 0.01
+  },
+  "failure_action": "permanently close Judge/Arbiter; do not access Official Valid, change depth, tune thresholds, train Student, or access Test",
+  "mean_delta_J_max": -0.003,
+  "missing_modes_with_mean_MAE_improvement_min": 2,
+  "primary_reference": "per-mode fixed stacking fit on inner-train only",
+  "trigger_actionability_each_direction": "triggered mean actual gain > 0 and > untriggered mean actual gain",
+  "worst_direction_delta_J_max": 0.001
+}

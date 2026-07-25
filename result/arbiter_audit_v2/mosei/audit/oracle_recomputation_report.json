@@ -1,0 +1,23 @@
+{
+  "J_definition": "0.5*MAE(LAV)+0.5*mean(MAE(LA),MAE(LV),MAE(L))",
+  "absolute_difference_from_expected": 0.0,
+  "best_single": "moddrop_seed1111",
+  "definition": "For each unique (sample_id, mode), select exactly one scalar prediction with minimum absolute error from the five frozen Experts in that same mode.",
+  "deltas_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/audit/oracle_deltas.csv",
+  "expected_oracle_minus_fixed_J": -0.15361230650316943,
+  "forbidden_operations_absent": {
+    "clean_component_inclusion": true,
+    "cross_mode_selection": true,
+    "free_convex_combination": true,
+    "ground_truth_interpolation": true,
+    "official_valid_or_test_labels": true
+  },
+  "metrics_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/audit/oracle_recomputation_metrics.csv",
+  "recomputed_oracle_minus_fixed_J": -0.15361230650316943,
+  "same_evaluator_for_all_methods": true,
+  "sample_audit_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/audit/oracle_sample_audit.csv",
+  "sample_audit_rows": 24,
+  "selection_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/audit/oracle_selection_proportions.csv",
+  "status": "PASS",
+  "weights_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/audit/per_mode_fixed_stacking_weights.csv"
+}

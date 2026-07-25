@@ -1,0 +1,88 @@
+{
+  "directions": {
+    "A": {
+      "counts": {
+        "inner_train": {
+          "meta_rows": 29752,
+          "samples": 7438,
+          "sources": 1007
+        },
+        "inner_valid": {
+          "meta_rows": 4376,
+          "samples": 1094,
+          "sources": 130
+        },
+        "outer_evaluation": {
+          "meta_rows": 31176,
+          "samples": 7794,
+          "sources": 1112
+        }
+      },
+      "development_expert_fold": 0,
+      "inner_split_seed": 2302,
+      "inner_valid_rule": "sha256(stage23a_v2_direction_A_seed2302|video_id) mod 8 == 0",
+      "outer_evaluation_expert_fold": 1,
+      "outer_evaluation_used_for_selection": false,
+      "source_manifest_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/direction_A_sources.csv",
+      "source_manifest_sha256": "b8c9af3da98f206a0a6eadd9abfa2ca6853581fda3b5470daa929fe92c973257"
+    },
+    "B": {
+      "counts": {
+        "inner_train": {
+          "meta_rows": 27732,
+          "samples": 6933,
+          "sources": 980
+        },
+        "inner_valid": {
+          "meta_rows": 3444,
+          "samples": 861,
+          "sources": 132
+        },
+        "outer_evaluation": {
+          "meta_rows": 34128,
+          "samples": 8532,
+          "sources": 1137
+        }
+      },
+      "development_expert_fold": 1,
+      "inner_split_seed": 2302,
+      "inner_valid_rule": "sha256(stage23a_v2_direction_B_seed2302|video_id) mod 8 == 0",
+      "outer_evaluation_expert_fold": 0,
+      "outer_evaluation_used_for_selection": false,
+      "source_manifest_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/direction_B_sources.csv",
+      "source_manifest_sha256": "98eb0050d2d67bbb165dd42de80ef90545c9b637bae9748ae6cd8ea3186b1e42"
+    }
+  },
+  "fit_unit": "one unique clip/source-bound meta row; content PCA sees each clip once",
+  "inner_train_fit_only": [
+    "per-modality temporal-summary normalization",
+    "per-modality PCA",
+    "per-mode fixed simplex stacking",
+    "robust outlier scale floor",
+    "soft-regret temperature",
+    "actionability temperature",
+    "feature selection (none in main configuration)",
+    "Judge model parameters"
+  ],
+  "inner_valid_use_only": [
+    "early stopping",
+    "single pre-registered epoch selection"
+  ],
+  "locked_test_access_count": 0,
+  "official_valid_access_count": 0,
+  "outer_evaluation_forbidden": [
+    "normalization or PCA fit",
+    "fixed stacking fit",
+    "temperature/lambda/dropout/weight-decay selection",
+    "scale-floor or threshold selection",
+    "feature selection",
+    "seed or epoch selection"
+  ],
+  "outer_evaluation_use_only": [
+    "one-shot transform with frozen inner-train preprocessors",
+    "one-shot prediction",
+    "metrics after predictions are frozen"
+  ],
+  "source_grouping": "all clips and all four modes from one video_id remain in one role",
+  "status": "FROZEN_BEFORE_JUDGE_TRAINING"
+}

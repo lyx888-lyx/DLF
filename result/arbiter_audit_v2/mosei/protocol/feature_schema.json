@@ -1,0 +1,114 @@
+{
+  "blocks": [
+    {
+      "dim": 4,
+      "name": "mode_one_hot"
+    },
+    {
+      "dim": 5,
+      "experts": [
+        "uniform_kd_seed1111",
+        "moddrop_seed1111",
+        "moddrop_seed1114",
+        "cfcompat_seed1111",
+        "cfcompat_seed1114"
+      ],
+      "name": "expert_predictions"
+    },
+    {
+      "dim": 3,
+      "features": [
+        "prediction_std",
+        "prediction_max_min",
+        "polarity_split"
+      ],
+      "name": "committee_disagreement"
+    },
+    {
+      "clip": [
+        0.0,
+        10.0
+      ],
+      "definition": "abs(prediction-median_prediction)/max(sample_prediction_MAD, mode_inner_train_scale_floor)",
+      "dim": 5,
+      "name": "robust_outlier",
+      "scale_floor": "max(inner-train mode-specific Q10 of sample prediction MAD, 1e-3)"
+    },
+    {
+      "dim": 5,
+      "ghost_head_policy": "missing-modality specific heads are ignored by explicit mode mapping",
+      "mode_active_heads": {
+        "L": [
+          "output_logit",
+          "logits_c",
+          "logits_l_hetero"
+        ],
+        "LA": [
+          "output_logit",
+          "logits_c",
+          "logits_l_hetero",
+          "logits_a_hetero"
+        ],
+        "LAV": [
+          "output_logit",
+          "logits_c",
+          "logits_l_hetero",
+          "logits_a_hetero",
+          "logits_v_hetero"
+        ],
+        "LV": [
+          "output_logit",
+          "logits_c",
+          "logits_l_hetero",
+          "logits_v_hetero"
+        ]
+      },
+      "name": "hierarchical_consistency",
+      "per_expert": "MAD(final, shared, active mode-specific heads)"
+    },
+    {
+      "allocation": {
+        "Audio": 8,
+        "Text": 16,
+        "Vision": 8
+      },
+      "dim": 32,
+      "name": "content_pca",
+      "schema_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/content_feature_schema.json"
+    },
+    {
+      "dim": 3,
+      "mapping": {
+        "L": [
+          1,
+          0,
+          0
+        ],
+        "LA": [
+          1,
+          1,
+          0
+        ],
+        "LAV": [
+          1,
+          1,
+          1
+        ],
+        "LV": [
+          1,
+          0,
+          1
+        ]
+      },
+      "name": "availability_mask"
+    }
+  ],
+  "name": "Stage23A-v2 main 57D feature schema",
+  "optional_not_in_main": {
+    "dim": 5,
+    "name": "final_to_active_head_median",
+    "status": "pre-registered ablation only; cannot replace main configuration"
+  },
+  "status": "FROZEN_BEFORE_JUDGE_TRAINING",
+  "total_dim": 57
+}

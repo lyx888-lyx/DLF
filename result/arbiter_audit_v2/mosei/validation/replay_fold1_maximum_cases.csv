@@ -1,0 +1,6 @@
+outer_fold,expert_id,sample_id,mode,old_prediction,replayed_prediction,absolute_difference
+1,uniform_kd_seed1111,DgO5O-oDeX8$_$1,LAV,1.077148438,1.077148438,5.000000414e-10
+1,moddrop_seed1111,8EHEEXex5D8$_$8,LA,1.125976562,1.125976562,5.000000414e-10
+1,moddrop_seed1114,92521$_$7,LV,-2.110351562,-2.110351562,5.000000414e-10
+1,cfcompat_seed1111,1F0qH0EEBfo$_$27,LV,1.813694715,1.813694715,4.998779168e-10
+1,cfcompat_seed1114,DtwbwyfajnI$_$0,LA,1.727539062,1.727539062,5.000000414e-10

@@ -1,0 +1,4 @@
+/usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_v2_prepare_protocol.py
+/usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_v2_replay_final.py --outer-fold 0 --gpu-id 0
+/usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_v2_replay_final.py --outer-fold 1 --gpu-id 1
+/usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_v2_freeze_protocol.py
