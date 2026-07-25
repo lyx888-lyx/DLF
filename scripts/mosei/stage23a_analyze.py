@@ -38,6 +38,22 @@ from stage23a_common import (
 EPS = 1e-9
 
 
+def markdown_table(frame):
+    """Render a compact Markdown table without optional pandas dependencies."""
+    display = frame.copy()
+    for column in display.columns:
+        if pd.api.types.is_float_dtype(display[column]):
+            display[column] = display[column].map(lambda value: "{:.6g}".format(value))
+    headers = [str(value) for value in display.columns]
+    rows = [[str(value) for value in row] for row in display.itertuples(index=False)]
+    lines = [
+        "| " + " | ".join(headers) + " |",
+        "| " + " | ".join(["---"] * len(headers)) + " |",
+    ]
+    lines.extend("| " + " | ".join(row) + " |" for row in rows)
+    return "\n".join(lines)
+
+
 def load_ledger():
     frames, manifests = [], []
     for fold in (0, 1):
@@ -991,7 +1007,7 @@ def write_report(
             "",
             "## Retention evidence",
             "",
-            contributions.to_markdown(index=False),
+            markdown_table(contributions),
             "",
             "Only `STAGE23A_PERSONALIZED_TEACHER_FEASIBILITY_PASSED` would permit a Stage23B recommendation.",
             "",
