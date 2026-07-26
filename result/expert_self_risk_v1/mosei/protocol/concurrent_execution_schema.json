@@ -1,0 +1,18 @@
+{
+  "stage": "Stage23D-A isolated concurrent CPU execution",
+  "frozen_before_any_phase1_outer_evaluation": true,
+  "reason": "Stage23C has six S6 screens and eighteen final ledgers after pre-screen; global process serialization would block an independent CPU-only audit for hours.",
+  "stage23d_gpu_count": 0,
+  "stage23d_cpu_affinity": [15],
+  "stage23d_nice": 19,
+  "stage23d_ionice_class": "idle",
+  "OMP_NUM_THREADS": 1,
+  "MKL_NUM_THREADS": 1,
+  "OPENBLAS_NUM_THREADS": 1,
+  "NUMEXPR_NUM_THREADS": 1,
+  "stage23c_gpu_ids_untouched": [0, 1, 2],
+  "stage23c_processes_modified": 0,
+  "stage23c_worktree_files_modified": 0,
+  "outer_protocol_changed": false,
+  "official_valid_or_test_authorized": false
+}

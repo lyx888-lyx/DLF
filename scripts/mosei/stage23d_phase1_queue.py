@@ -143,7 +143,21 @@ def run(command):
 
 def main():
     wait_for_extraction()
-    wait_for_safe_start()
+    isolated_concurrent = (
+        os.environ.get("STAGE23D_ISOLATED_CONCURRENT_CPU") == "1"
+    )
+    if isolated_concurrent:
+        if os.getpriority(os.PRIO_PROCESS, 0) < 19:
+            raise RuntimeError("Isolated concurrent Phase-1 requires nice=19")
+        write_state(
+            "ISOLATED_CONCURRENT_CPU_AUTHORIZED",
+            note=(
+                "One pinned CPU, nice=19, idle I/O, no GPU; Stage23C "
+                "GPU0/1/2 and default-priority processes remain untouched"
+            ),
+        )
+    else:
+        wait_for_safe_start()
     validation_path = OUT / "audit" / "feature_extraction_audit.json"
     validation_ok = False
     if validation_path.exists():
