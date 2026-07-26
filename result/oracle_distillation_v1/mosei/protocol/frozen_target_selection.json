@@ -1,0 +1,36 @@
+{
+  "directions": {
+    "A": {
+      "convex_hull_violations": 0,
+      "development_fold": 0,
+      "outer_target_constructed": false,
+      "responsibility_path": "/code/DLF-mosei-arbiter-audit-v1/result/oracle_distillation_v1/mosei/targets/direction_A_soft_oracle_responsibility.csv.gz",
+      "responsibility_sha256": "b47eed03587f5d6cf7f65a8ba3ac1aa8da5f69224f7e28f35f2387c6af939433",
+      "selected_fixed_l2": 0.0,
+      "selected_tau": 0.02,
+      "teacher_target_path": "/code/DLF-mosei-arbiter-audit-v1/result/oracle_distillation_v1/mosei/targets/direction_A_teacher_targets.csv.gz",
+      "teacher_target_sha256": "b70a7d59139bf3c120555138e20589085f634828d42f3588d46786252339da72",
+      "training_target_npz_path": "/code/DLF-mosei-arbiter-audit-v1/result/oracle_distillation_v1/mosei/targets/direction_A_training_targets.npz",
+      "training_target_npz_sha256": "d7b8e749281cedc1a4d63a0756330ed0e1b00dc244bf2a0f0f5b31d1da55ecec"
+    },
+    "B": {
+      "convex_hull_violations": 0,
+      "development_fold": 1,
+      "outer_target_constructed": false,
+      "responsibility_path": "/code/DLF-mosei-arbiter-audit-v1/result/oracle_distillation_v1/mosei/targets/direction_B_soft_oracle_responsibility.csv.gz",
+      "responsibility_sha256": "75fb429a07c6308a6e3913d3eecf868ab2ac1e2638c5165dff75e25aed83094c",
+      "selected_fixed_l2": 0.01,
+      "selected_tau": 0.02,
+      "teacher_target_path": "/code/DLF-mosei-arbiter-audit-v1/result/oracle_distillation_v1/mosei/targets/direction_B_teacher_targets.csv.gz",
+      "teacher_target_sha256": "7cafd3d892e883d13bee6f58bb467e52b65a46546199744b3426164c359c72cb",
+      "training_target_npz_path": "/code/DLF-mosei-arbiter-audit-v1/result/oracle_distillation_v1/mosei/targets/direction_B_training_targets.npz",
+      "training_target_npz_sha256": "c24f181e67e1a5af7b826c3a1a8e01874b603d7dbfa72f53d65e5a6f7e6f3077"
+    }
+  },
+  "outer_target_constructed": false,
+  "selection_roles": [
+    "inner_train",
+    "inner_valid"
+  ],
+  "stage": "Stage23C development target selection"
+}

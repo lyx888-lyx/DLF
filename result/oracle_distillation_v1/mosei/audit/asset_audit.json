@@ -1,0 +1,122 @@
+{
+  "all_experts_answer_same_sample_mode": true,
+  "binding_audit": [
+    {
+      "binding_pass": true,
+      "fold": 0,
+      "hierarchical_rows": 170640,
+      "join_non_both_rows": 0,
+      "max_abs_final_prediction_diff": 0.0,
+      "max_abs_label_diff": 0.0,
+      "oof_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v1/mosei/expert_oof/outer_fold0/oof_predictions.csv",
+      "oof_rows": 170640,
+      "oof_sha256": "79e8fce17b5926bcba66f0c698b576f8562633fe44746935d407ad7d98a97fff"
+    },
+    {
+      "binding_pass": true,
+      "fold": 1,
+      "hierarchical_rows": 155880,
+      "join_non_both_rows": 0,
+      "max_abs_final_prediction_diff": 0.0,
+      "max_abs_label_diff": 0.0,
+      "oof_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v1/mosei/expert_oof/outer_fold1/oof_predictions.csv",
+      "oof_rows": 155880,
+      "oof_sha256": "edd6e41ab40481c5229e1e84688bc631f19a561dd3c3773de53b869802d13a46"
+    }
+  ],
+  "branch": "experiment/mosei-soft-oracle-hierarchical-distillation-v1",
+  "completed_at": "2026-07-26T08:57:00.367210+00:00",
+  "experts": [
+    "uniform_kd_seed1111",
+    "moddrop_seed1111",
+    "moddrop_seed1114",
+    "cfcompat_seed1111",
+    "cfcompat_seed1114"
+  ],
+  "formal_training_processes_at_audit": [],
+  "frozen_conclusions": {
+    "Stage23A-v2a": "SIGNAL_AUDIT_FAIL",
+    "Stage23A-v2b": "LOCAL_COMPETENCE_WEAK"
+  },
+  "head": "213167bd24dfd9dac30a5952744400e4dcbd94ec",
+  "hierarchical_assets": {
+    "0": {
+      "path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/hierarchical/hierarchical_logits_fold0.csv.gz",
+      "rows": 170640,
+      "sha256": "b99b05c69777c2e2305758b4ccf7be7316219dea8cb4d4eb487f1065fb6a64ec"
+    },
+    "1": {
+      "path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/hierarchical/hierarchical_logits_fold1.csv.gz",
+      "rows": 155880,
+      "sha256": "8540f76308f809de30886ac539feb6e3d673fbc893cfd58f64e2215acbdf6850"
+    }
+  },
+  "hierarchical_heads": [
+    "output_logit",
+    "logits_c",
+    "logits_l_hetero",
+    "logits_a_hetero",
+    "logits_v_hetero"
+  ],
+  "locked_test_access_count": 0,
+  "official_valid_access_count": 0,
+  "outer_evaluation_access_count": 0,
+  "outer_oracle_target_constructed": false,
+  "protocol_manifest_sha256": "6598762a3d6b65b23ec85bebe9636f775c66cd35aca263126c1e83020fe2ecbf",
+  "role_counts": [
+    {
+      "direction": "A",
+      "meta_rows": 29752,
+      "modes": "L|LA|LAV|LV",
+      "role": "inner_train",
+      "samples": 7438,
+      "sources": 1007
+    },
+    {
+      "direction": "A",
+      "meta_rows": 4376,
+      "modes": "L|LA|LAV|LV",
+      "role": "inner_valid",
+      "samples": 1094,
+      "sources": 130
+    },
+    {
+      "direction": "A",
+      "meta_rows": 31176,
+      "modes": "L|LA|LAV|LV",
+      "role": "outer_evaluation",
+      "samples": 7794,
+      "sources": 1112
+    },
+    {
+      "direction": "B",
+      "meta_rows": 27732,
+      "modes": "L|LA|LAV|LV",
+      "role": "inner_train",
+      "samples": 6933,
+      "sources": 980
+    },
+    {
+      "direction": "B",
+      "meta_rows": 3444,
+      "modes": "L|LA|LAV|LV",
+      "role": "inner_valid",
+      "samples": 861,
+      "sources": 132
+    },
+    {
+      "direction": "B",
+      "meta_rows": 34128,
+      "modes": "L|LA|LAV|LV",
+      "role": "outer_evaluation",
+      "samples": 8532,
+      "sources": 1137
+    }
+  ],
+  "sample_binding_pass": true,
+  "stage": "Stage23C read-only asset and target audit",
+  "status": "PASS",
+  "student_modality_advantage_over_experts": false,
+  "total_meta_rows": 65304,
+  "total_samples": 16326
+}
