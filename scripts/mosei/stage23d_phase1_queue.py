@@ -187,8 +187,12 @@ def main():
             if completed(fold, expert):
                 print(f"[{utc_now()}] SKIP complete {key}", flush=True)
                 continue
-            # Re-check at every boundary in case Stage23C launched a new train.
-            wait_for_safe_start()
+            # In the default protocol, re-check at every boundary in case
+            # Stage23C launched a new train.  The explicitly frozen isolated
+            # protocol is already constrained to one nice=19 CPU and idle I/O,
+            # so it must not fall back to the global Stage23C wait here.
+            if not isolated_concurrent:
+                wait_for_safe_start()
             write_state("RUNNING", key)
             for phase in ("select", "evaluate"):
                 print(f"[{utc_now()}] START {key} {phase}", flush=True)
