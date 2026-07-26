@@ -864,12 +864,28 @@ def evaluate(cli):
     )
     selection_path = output_dir / "frozen_inner_valid_selection.json"
     result_path = output_dir / "outer_evaluation_manifest.json"
+    access_lock_path = output_dir / "outer_evaluation_access_lock.json"
     if result_path.exists():
         print(result_path.read_text(encoding="utf-8"))
         return
+    if access_lock_path.exists():
+        raise RuntimeError(
+            "Outer evaluation access was already claimed; refusing a second access"
+        )
     selection = json.loads(selection_path.read_text(encoding="utf-8"))
     if selection["outer_evaluation_access_count"] != 0:
         raise RuntimeError("Outer labels already opened")
+    atomic_json(
+        access_lock_path,
+        {
+            "stage": "Stage23D-A one-shot outer label access lock",
+            "checkpoint_fold": cli.checkpoint_fold,
+            "expert_id": cli.expert_id,
+            "outer_evaluation_access_count": 1,
+            "status": "CLAIMED_BEFORE_LABEL_FILE_OPEN",
+            "claimed_at": utc_now(),
+        },
+    )
     metric_rows = []
     coverage_rows = []
     calibration_rows = []
