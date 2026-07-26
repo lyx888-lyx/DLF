@@ -1,0 +1,23 @@
+{
+  "a2_policy": "fusion/LFA raw tensors remain SHA-bound and replayable but do not enter PCA coordinates; their scalar summaries enter R2 directly",
+  "created_at": "2026-07-26T14:13:48.472311+00:00",
+  "frozen_before_any_phase1_outer_evaluation": true,
+  "nested_candidate_dimensions": [
+    16,
+    32,
+    64
+  ],
+  "outer_fit_or_selection": false,
+  "pca_core_dimensions": {
+    "L": 550,
+    "LA": 650,
+    "LAV": 750,
+    "LV": 650
+  },
+  "pca_core_layout": "first 450 coordinates (final_fused=300, shared_fused=150) plus final 100 coordinates per active modality (specific=50, aligned_shared=50)",
+  "pca_fit_role": "self-risk inner_train only",
+  "raw_artifact_layout": "final_fused, shared_fused, replayable A2 fusion/LFA blocks, then one specific+aligned-shared pair per active modality",
+  "reason": "avoid padded time-coordinate and sequence-length shortcuts while retaining all head-driving A1 representations",
+  "selection_role": "self-risk inner_valid only",
+  "stage": "Stage23D-A train-only PCA input schema"
+}

@@ -32,6 +32,7 @@ from sklearn.preprocessing import StandardScaler
 
 from stage23d_self_risk_common import (
     EXPERTS,
+    MODE_MASKS,
     MODES,
     OUT,
     PCA_DIMS,
@@ -73,6 +74,16 @@ EXCLUDED_NUMERIC = {
     "train_index",
     "checkpoint_fold",
     "label",
+}
+# PCA uses the core A1 head-driving representations. The much larger replayable
+# A2 LFA/cross-attention tensors remain preserved in the raw artifact, while
+# their train-safe scalar summaries enter R2 directly. This prevents padded
+# sequence coordinates from turning the probe into a length detector.
+PCA_CORE_DIMS = {
+    "LAV": 750,
+    "LA": 650,
+    "LV": 650,
+    "L": 550,
 }
 
 
@@ -177,7 +188,23 @@ def load_mode(fold, expert, mode):
         raw["row_binding_sha256"].astype(str),
     ):
         raise RuntimeError("Raw/scalar row SHA mismatch")
-    return frame, raw["features"].astype(np.float64)
+    raw_features = raw["features"].astype(np.float32, copy=False)
+    active_modalities = int(sum(MODE_MASKS[mode]))
+    specific_tail_dimensions = 100 * active_modalities
+    core = np.concatenate(
+        [
+            raw_features[:, :450],
+            raw_features[:, -specific_tail_dimensions:],
+        ],
+        axis=1,
+    )
+    core_dimensions = PCA_CORE_DIMS[mode]
+    if core.shape[1] != core_dimensions:
+        raise RuntimeError(
+            f"Recovered core width {core.shape[1]} differs from expected "
+            f"{core_dimensions} for {mode}"
+        )
+    return frame, core
 
 
 def label_paths(fold, expert, mode):
