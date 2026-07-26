@@ -369,7 +369,9 @@ def risk_labels(frame, fixed_error_threshold=1.0):
             raise RuntimeError(f"Too few inner-train rows for {mode}")
         error80 = float(train["abs_error"].quantile(0.80))
         error90 = float(train["abs_error"].quantile(0.90))
+        uncertainty20 = float(train["raw_uncertainty"].quantile(0.20))
         uncertainty30 = float(train["raw_uncertainty"].quantile(0.30))
+        uncertainty40 = float(train["raw_uncertainty"].quantile(0.40))
         mask = result["mode"] == mode
         result.loc[mask, "bad20"] = (
             result.loc[mask, "abs_error"] >= error80
@@ -389,7 +391,9 @@ def risk_labels(frame, fixed_error_threshold=1.0):
                 "mode": mode,
                 "error_top20_threshold": error80,
                 "error_top10_threshold": error90,
+                "uncertainty_bottom20_threshold": uncertainty20,
                 "uncertainty_bottom30_threshold": uncertainty30,
+                "uncertainty_bottom40_threshold": uncertainty40,
                 "fixed_error_threshold": fixed_error_threshold,
                 "fit_role": "inner_train",
             }

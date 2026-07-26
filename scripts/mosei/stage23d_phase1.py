@@ -562,6 +562,12 @@ def build_mode_selection(fold, expert, mode, output_dir):
                 "logistic",
                 1.0,
             ),
+            "confident_wrong": fit_classifier(
+                values[train_mask],
+                targets.loc[train_mask, "confident_wrong"].to_numpy(),
+                "logistic",
+                1.0,
+            ),
             "values": values,
         }
     rng = np.random.RandomState(23091 + fold)
@@ -579,6 +585,12 @@ def build_mode_selection(fold, expert, mode, output_dir):
         "bad20": fit_classifier(
             gaussian[train_mask],
             targets.loc[train_mask, "bad20"].to_numpy(),
+            "logistic",
+            1.0,
+        ),
+        "confident_wrong": fit_classifier(
+            gaussian[train_mask],
+            targets.loc[train_mask, "confident_wrong"].to_numpy(),
             "logistic",
             1.0,
         ),
@@ -602,6 +614,12 @@ def build_mode_selection(fold, expert, mode, output_dir):
                 "logistic",
                 1.0,
             ),
+            "confident_wrong": fit_classifier(
+                shuffled_train,
+                targets.loc[train_mask, "confident_wrong"].to_numpy(),
+                "logistic",
+                1.0,
+            ),
             "values": features,
         }
     prediction = frame[
@@ -614,6 +632,16 @@ def build_mode_selection(fold, expert, mode, output_dir):
         ]
     ].copy()
     prediction["raw_uncertainty"] = targets["raw_uncertainty"].to_numpy()
+    for proxy in (
+        "active_head_std",
+        "submode_prediction_variance",
+        "hidden_centroid_distance",
+        "hidden_diagonal_mahalanobis",
+        "hidden_knn30_distance",
+        "hidden_nearest_source_distance",
+    ):
+        if proxy in chosen["features"]:
+            prediction[f"proxy__{proxy}"] = chosen["features"][proxy].to_numpy()
     prediction["R0_expected_abs_error"] = float(
         targets.loc[train_mask, "abs_error"].mean()
     )
@@ -629,6 +657,12 @@ def build_mode_selection(fold, expert, mode, output_dir):
         prediction[f"{name}_P_confident_wrong"] = predict_probability(
             cw_model, values
         )
+    for suffix in (
+        "expected_abs_error",
+        "P_bad20",
+        "P_confident_wrong",
+    ):
+        prediction[f"N3_output_only_{suffix}"] = prediction[f"R1_{suffix}"]
     for name, control in controls.items():
         values = control["values"]
         predicted_log = predict_model(control["regression"], values)
@@ -637,6 +671,9 @@ def build_mode_selection(fold, expert, mode, output_dir):
         )
         prediction[f"{name}_P_bad20"] = predict_probability(
             control["bad20"], values
+        )
+        prediction[f"{name}_P_confident_wrong"] = predict_probability(
+            control["confident_wrong"], values
         )
     quantiles = {}
     for quantile in (0.5, 0.8, 0.9):
@@ -686,7 +723,14 @@ def build_mode_selection(fold, expert, mode, output_dir):
             "R2_bad20": r2_bad,
             "R2_confident_wrong": r2_cw,
             "quantiles": quantiles,
-            "controls": controls,
+            "controls": {
+                name: {
+                    key: value
+                    for key, value in control.items()
+                    if key != "values"
+                }
+                for name, control in controls.items()
+            },
         },
         bundle_path,
     )
@@ -794,6 +838,8 @@ def evaluate(cli):
     metric_rows = []
     coverage_rows = []
     calibration_rows = []
+    proxy_rows = []
+    sensitivity_rows = []
     for mode in MODES:
         frame, _ = load_mode(cli.checkpoint_fold, cli.expert_id, mode)
         _, sealed_label_path = label_paths(
@@ -836,6 +882,7 @@ def evaluate(cli):
             "R0",
             "R1",
             "R2",
+            "N3_output_only",
             "N2_length_mask_only",
             "N5_label_bin_prior",
             "N1_matched_gaussian",
@@ -904,8 +951,63 @@ def evaluate(cli):
                     mode,
                 )
             )
+        for column in [
+            column
+            for column in joined.columns
+            if column.startswith("proxy__")
+        ]:
+            proxy = joined[column].to_numpy(dtype=float)
+            proxy_rows.append(
+                {
+                    "checkpoint_fold": cli.checkpoint_fold,
+                    "expert_id": cli.expert_id,
+                    "mode": mode,
+                    "proxy": column.removeprefix("proxy__"),
+                    "Error_Spearman": safe_spearman(proxy, actual),
+                    "Error_Pearson": safe_pearson(proxy, actual),
+                    "bad20_AUROC": safe_auc(bad20, proxy),
+                    "bad10_AUROC": safe_auc(bad10, proxy),
+                    "confident_wrong_AUROC": safe_auc(
+                        confident_wrong, proxy
+                    ),
+                }
+            )
+        for confidence_percent in (20, 30, 40):
+            confidence_threshold = float(
+                thresholds[f"uncertainty_bottom{confidence_percent}_threshold"]
+            )
+            for error_percent, error_threshold in (
+                (10, float(thresholds["error_top10_threshold"])),
+                (20, float(thresholds["error_top20_threshold"])),
+            ):
+                event = (
+                    joined["raw_uncertainty"].to_numpy()
+                    <= confidence_threshold
+                ) & (actual >= error_threshold)
+                probability = joined["R2_P_confident_wrong"].to_numpy()
+                sensitivity_rows.append(
+                    {
+                        "checkpoint_fold": cli.checkpoint_fold,
+                        "expert_id": cli.expert_id,
+                        "mode": mode,
+                        "confidence_bottom_percent": confidence_percent,
+                        "error_top_percent": error_percent,
+                        "event_count": int(event.sum()),
+                        "event_prevalence": float(event.mean()),
+                        "R2_AUROC": safe_auc(event, probability),
+                        "R2_AUPRC": safe_auprc(event, probability),
+                        "R2_recall_at_precision_0p8": fixed_precision_recall(
+                            event, probability
+                        ),
+                    }
+                )
         for quantile in (50, 80, 90):
             predicted = joined[f"R2_q{quantile}_abs_error"].to_numpy()
+            interval_width = np.maximum(
+                joined["R2_q90_abs_error"].to_numpy()
+                - joined["R2_q50_abs_error"].to_numpy(),
+                0.0,
+            )
             alpha = quantile / 100.0
             residual = actual - predicted
             pinball = np.mean(
@@ -920,14 +1022,23 @@ def evaluate(cli):
                     "empirical_coverage": float(np.mean(actual <= predicted)),
                     "pinball_loss": float(pinball),
                     "mean_predicted_quantile": float(np.mean(predicted)),
+                    "mean_q90_minus_q50_interval_width": float(
+                        np.mean(interval_width)
+                    ),
                 }
             )
     metrics = pd.DataFrame(metric_rows)
     coverage = pd.DataFrame(coverage_rows)
     calibration = pd.DataFrame(calibration_rows)
+    proxies = pd.DataFrame(proxy_rows)
+    sensitivity = pd.DataFrame(sensitivity_rows)
     atomic_tsv(metrics, output_dir / "outer_metrics.tsv")
     atomic_tsv(coverage, output_dir / "risk_coverage.tsv")
     atomic_tsv(calibration, output_dir / "quantile_calibration.tsv")
+    atomic_tsv(proxies, output_dir / "individual_proxy_metrics.tsv")
+    atomic_tsv(
+        sensitivity, output_dir / "confident_wrong_sensitivity.tsv"
+    )
     result = {
         "stage": "Stage23D-A one-shot Risk Head outer evaluation",
         "status": "COMPLETED",
@@ -943,6 +1054,12 @@ def evaluate(cli):
         ),
         "calibration_sha256": sha256_file(
             output_dir / "quantile_calibration.tsv"
+        ),
+        "individual_proxy_metrics_sha256": sha256_file(
+            output_dir / "individual_proxy_metrics.tsv"
+        ),
+        "confident_wrong_sensitivity_sha256": sha256_file(
+            output_dir / "confident_wrong_sensitivity.tsv"
         ),
         "outer_evaluation_access_count": 1,
         "official_valid_access_count": 0,
