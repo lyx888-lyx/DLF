@@ -1,0 +1,19 @@
+{
+  "application_scope": "freeze selected candidate and weights before one-shot outer evaluation",
+  "candidate_methods": [
+    "equal_average",
+    "per_mode_constrained_fixed_stacking"
+  ],
+  "experts": [
+    "uniform_kd_seed1111",
+    "moddrop_seed1111",
+    "moddrop_seed1114",
+    "cfcompat_seed1111",
+    "cfcompat_seed1114"
+  ],
+  "gain_definition": "oracle_expert_selection_J - strong_static_J; negative is better",
+  "name": "strong_static",
+  "outer_evaluation_used_for_selection": false,
+  "selection_scope": "for each Direction, choose one candidate using inner-valid J only",
+  "stacking_objective": "per-mode inner-train MAE under nonnegative simplex weights summing to one"
+}

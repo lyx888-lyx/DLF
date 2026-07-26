@@ -1,15 +1,16 @@
 {
-  "expert_checkpoint_modified": false,
-  "frozen_protocol_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/frozen_protocol_manifest.json",
-  "frozen_protocol_sha256": "ba4226714ba0f19e7ec75715a68891f6baaf61ef7d1829ba422d2d81d2bcfa3f",
-  "implementation_authorized": false,
+  "authorization_manifest_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/v2a_authorization_manifest.json",
+  "authorization_manifest_sha256": "5ec4248f0b9f77bf32f53089d545782f9e18f6e1515e766e6c772ec0fc7d8b97",
+  "feature_extraction_authorized": true,
+  "implementation_authorized": true,
   "judge_training_authorized": false,
   "locked_test_access_count": 0,
   "official_valid_access_count": 0,
-  "phase": "FROZEN_WAITING_FOR_USER_CONFIRMATION",
-  "stage": "Stage23A-v2 protocol validation",
-  "status": "READY_FOR_FEATURE_IMPLEMENTATION_NOT_AUTHORIZED",
-  "student_trained": false,
-  "test_loader_constructed": false,
-  "updated_at": "2026-07-25T13:22:14.439474+00:00"
+  "official_valid_authorized": false,
+  "signal_audit_authorized": true,
+  "stage": "Stage23A-v2a",
+  "status": "AUTHORIZED_FOR_FEATURE_EXTRACTION_AND_SIGNAL_AUDIT_ONLY",
+  "student_training_authorized": false,
+  "test_authorized": false,
+  "updated_at": "2026-07-26T05:05:25.522670+00:00"
 }

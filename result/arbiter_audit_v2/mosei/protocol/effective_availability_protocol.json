@@ -1,0 +1,13 @@
+{
+  "all_zero_vision_clip_count_expected": 482,
+  "all_zero_vision_policy": {
+    "effective_availability_mask": "vision bit is mode availability AND vision_effective_available",
+    "mode_one_hot": "unchanged",
+    "raw_vision_summary": "all zeros",
+    "vision_effective_available": 0,
+    "vision_pca_after_transform": "force all zeros",
+    "vision_scaler_pca_fit": "exclude ineffective clips"
+  },
+  "text_audio_policy": "same effective-availability rule; expected no all-zero Train clips",
+  "vision_effective_available_rule": "vision has at least one finite nonzero timestep"
+}

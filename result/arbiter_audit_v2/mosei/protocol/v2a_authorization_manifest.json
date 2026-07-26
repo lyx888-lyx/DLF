@@ -1,0 +1,72 @@
+{
+  "created_at": "2026-07-26T05:05:25.488988+00:00",
+  "effective_availability_protocol": {
+    "all_zero_vision_clip_count_expected": 482,
+    "all_zero_vision_policy": {
+      "effective_availability_mask": "vision bit is mode availability AND vision_effective_available",
+      "mode_one_hot": "unchanged",
+      "raw_vision_summary": "all zeros",
+      "vision_effective_available": 0,
+      "vision_pca_after_transform": "force all zeros",
+      "vision_scaler_pca_fit": "exclude ineffective clips"
+    },
+    "text_audio_policy": "same effective-availability rule; expected no all-zero Train clips",
+    "vision_effective_available_rule": "vision has at least one finite nonzero timestep"
+  },
+  "effective_availability_protocol_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/effective_availability_protocol.json",
+  "effective_availability_protocol_sha256": "faccb75a5d645cab612b3cd3aabf0a655cf27b2719c9023281d9f94421abf82e",
+  "expert_checkpoint_modified": false,
+  "feature_extraction_authorized": true,
+  "forbidden_actions": [
+    "formal dual-head Judge training",
+    "Official Valid access",
+    "Test access",
+    "Student training",
+    "Expert checkpoint modification or retraining",
+    "feature or hyperparameter selection using outer evaluation"
+  ],
+  "git_head_at_authorization": "c889cf6220c51fdec44407cc469471b4d6b99386",
+  "implementation_authorized": true,
+  "judge_training_authorized": false,
+  "judge_training_started": false,
+  "locked_test_access_count": 0,
+  "next_action": "extract frozen hierarchical outputs and Train-only content summaries",
+  "official_valid_access_count": 0,
+  "official_valid_authorized": false,
+  "parent_frozen_manifest_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/frozen_protocol_manifest.json",
+  "parent_frozen_manifest_sha256": "ba4226714ba0f19e7ec75715a68891f6baaf61ef7d1829ba422d2d81d2bcfa3f",
+  "permitted_actions": [
+    "frozen Expert hierarchical-head extraction",
+    "Train-only fixed input content summaries",
+    "Direction-specific Train-only normalization and PCA",
+    "frozen 57D meta-feature construction",
+    "leakage-free signal audits and simple probes"
+  ],
+  "signal_audit_authorized": true,
+  "stage": "Stage23A-v2a Feature Extraction and Signal Audit",
+  "status": "AUTHORIZED_FOR_FEATURE_EXTRACTION_AND_SIGNAL_AUDIT_ONLY",
+  "strong_static_protocol": {
+    "application_scope": "freeze selected candidate and weights before one-shot outer evaluation",
+    "candidate_methods": [
+      "equal_average",
+      "per_mode_constrained_fixed_stacking"
+    ],
+    "experts": [
+      "uniform_kd_seed1111",
+      "moddrop_seed1111",
+      "moddrop_seed1114",
+      "cfcompat_seed1111",
+      "cfcompat_seed1114"
+    ],
+    "gain_definition": "oracle_expert_selection_J - strong_static_J; negative is better",
+    "name": "strong_static",
+    "outer_evaluation_used_for_selection": false,
+    "selection_scope": "for each Direction, choose one candidate using inner-valid J only",
+    "stacking_objective": "per-mode inner-train MAE under nonnegative simplex weights summing to one"
+  },
+  "strong_static_protocol_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/strong_static_protocol.json",
+  "strong_static_protocol_sha256": "a5e32b0f6bd54993418fe9a5e131c032e8f4b109dc77db0b1eb410311f57b430",
+  "student_trained": false,
+  "student_training_authorized": false,
+  "test_authorized": false
+}
