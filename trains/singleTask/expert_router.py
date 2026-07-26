@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import optim
+from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
 from .expert_analysis import extract_expert_logits, normalize_batch_ids
@@ -85,16 +86,14 @@ def _safe_metrics(metrics_fn, prediction, target):
     }
 
 
-def _collect_predictions(model, router, dataloader, device):
+def _cache_expert_outputs(model, dataloader, device, split_name):
+    """Run the frozen DLF once and cache only its five scalar predictions."""
     model.eval()
-    router.eval()
     matrices = []
     labels_all = []
     ids_all = []
-    gains_all = []
-    benefit_all = []
-    scores_all = []
 
+    logger.info('Caching frozen DLF expert outputs for %s split.', split_name)
     with torch.no_grad():
         for batch_data in tqdm(dataloader):
             vision = batch_data['vision'].to(device)
@@ -102,23 +101,29 @@ def _collect_predictions(model, router, dataloader, device):
             text = batch_data['text'].to(device)
             labels = batch_data['labels']['M'].to(device).view(-1, 1)
             model_output = model(text, audio, vision)
-            expert_matrix = _stack_experts(model_output)
-            router_output = router(expert_matrix)
-
-            matrices.append(expert_matrix.cpu())
+            matrices.append(_stack_experts(model_output).cpu())
             labels_all.append(labels.cpu())
-            gains_all.append(router_output['gain'].cpu())
-            benefit_all.append(torch.sigmoid(router_output['benefit_logit']).cpu())
-            scores_all.append(router_output['score'].cpu())
             ids_all.extend(normalize_batch_ids(batch_data.get('id')))
 
     return {
         'expert_matrix': torch.cat(matrices, dim=0),
         'labels': torch.cat(labels_all, dim=0),
-        'predicted_gain': torch.cat(gains_all, dim=0),
-        'benefit_probability': torch.cat(benefit_all, dim=0),
-        'score': torch.cat(scores_all, dim=0),
         'sample_ids': ids_all,
+    }
+
+
+def _score_cached(router, cached, device):
+    router.eval()
+    with torch.no_grad():
+        expert_matrix = cached['expert_matrix'].to(device)
+        output = router(expert_matrix)
+    return {
+        'expert_matrix': cached['expert_matrix'],
+        'labels': cached['labels'],
+        'predicted_gain': output['gain'].cpu(),
+        'benefit_probability': torch.sigmoid(output['benefit_logit']).cpu(),
+        'score': output['score'].cpu(),
+        'sample_ids': cached['sample_ids'],
     }
 
 
@@ -199,10 +204,14 @@ def train_router(
     soft_route_loss_weight=0.2,
     temperature=0.1,
     thresholds=None,
+    router_batch_size=128,
 ):
     """Train a frozen-backbone, fusion-anchored conservative router."""
     if thresholds is None:
-        thresholds = [0.0, 0.01, 0.02, 0.03, 0.05, 0.08, 0.10, 0.15, 0.20]
+        thresholds = [
+            0.0, 0.01, 0.02, 0.03, 0.05,
+            0.08, 0.10, 0.15, 0.20, 1e6,
+        ]
 
     save_dir = Path(save_dir)
     save_dir.mkdir(parents=True, exist_ok=True)
@@ -211,6 +220,25 @@ def train_router(
     model.eval()
     for parameter in model.parameters():
         parameter.requires_grad = False
+
+    cached = {
+        split: _cache_expert_outputs(
+            model,
+            dataloader[split],
+            device,
+            split,
+        )
+        for split in ('train', 'valid', 'test')
+    }
+    train_dataset = TensorDataset(
+        cached['train']['expert_matrix'],
+        cached['train']['labels'],
+    )
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=router_batch_size,
+        shuffle=True,
+    )
 
     router = ConservativeExpertRouter(
         hidden_dim=hidden_dim,
@@ -236,16 +264,10 @@ def train_router(
         total_rank_loss = 0.0
         total_soft_route_loss = 0.0
 
-        for batch_data in tqdm(dataloader['train']):
-            vision = batch_data['vision'].to(device)
-            audio = batch_data['audio'].to(device)
-            text = batch_data['text'].to(device)
-            labels = batch_data['labels']['M'].to(device).view(-1, 1)
-
-            with torch.no_grad():
-                model_output = model(text, audio, vision)
-                expert_matrix = _stack_experts(model_output).detach()
-                true_gain = _true_gains(expert_matrix, labels)
+        for expert_matrix, labels in train_loader:
+            expert_matrix = expert_matrix.to(device)
+            labels = labels.to(device)
+            true_gain = _true_gains(expert_matrix, labels)
 
             optimizer.zero_grad()
             output = router(expert_matrix)
@@ -291,10 +313,9 @@ def train_router(
             total_rank_loss += rank_loss.item()
             total_soft_route_loss += soft_route_loss.item()
 
-        valid_collected = _collect_predictions(
-            model,
+        valid_collected = _score_cached(
             router,
-            dataloader['valid'],
+            cached['valid'],
             device,
         )
         valid_choice = choose_validation_threshold(
@@ -303,7 +324,7 @@ def train_router(
             thresholds,
         )
         valid_mae = valid_choice['metrics']['MAE']
-        batch_count = max(1, len(dataloader['train']))
+        batch_count = max(1, len(train_loader))
         epoch_record = {
             'epoch': epoch,
             'loss': total_loss / batch_count,
@@ -353,10 +374,9 @@ def train_router(
     router.load_state_dict(best_state)
     pd.DataFrame(history).to_csv(save_dir / 'router_history.csv', index=False)
 
-    test_collected = _collect_predictions(
-        model,
+    test_collected = _score_cached(
         router,
-        dataloader['test'],
+        cached['test'],
         device,
     )
     summary = save_router_report(
