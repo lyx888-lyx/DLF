@@ -428,6 +428,31 @@ def main():
     ANALYSIS.mkdir(parents=True, exist_ok=True)
     FINAL.mkdir(parents=True, exist_ok=True)
     atomic_tsv(metrics, ANALYSIS / "per_expert_mode_metrics.tsv")
+    r2_rows = metrics.loc[metrics["model"] == "R2"].copy()
+    replication_summary = (
+        r2_rows.groupby(["expert_id", "checkpoint_fold"], as_index=False)
+        .agg(
+            Error_Spearman=("Error_Spearman", "mean"),
+            Error_Pearson=("Error_Pearson", "mean"),
+            Risk_MAE=("Risk_MAE", "mean"),
+            bad20_AUROC=("bad20_AUROC", "mean"),
+            confident_wrong_AUROC=("confident_wrong_AUROC", "mean"),
+        )
+    )
+    atomic_tsv(replication_summary, ANALYSIS / "replication_summary.tsv")
+    expert_summary = (
+        replication_summary.groupby("expert_id", as_index=False)
+        .agg(
+            two_fold_mean_Error_Spearman=("Error_Spearman", "mean"),
+            worst_fold_Error_Spearman=("Error_Spearman", "min"),
+            two_fold_mean_bad20_AUROC=("bad20_AUROC", "mean"),
+            two_fold_mean_confident_wrong_AUROC=(
+                "confident_wrong_AUROC",
+                "mean",
+            ),
+        )
+    )
+    atomic_tsv(expert_summary, ANALYSIS / "expert_summary.tsv")
     atomic_tsv(
         metrics.groupby(["model", "mode"], as_index=False).mean(numeric_only=True),
         ANALYSIS / "per_mode_metrics.tsv",
@@ -445,7 +470,7 @@ def main():
     atomic_tsv(comparable, ANALYSIS / "cross_expert_comparability.tsv")
     atomic_tsv(gate, ANALYSIS / "phase1_gate.tsv")
     atomic_json(ANALYSIS / "phase1_gate.json", details)
-    r2 = metrics.loc[metrics["model"] == "R2"].copy()
+    r2 = r2_rows
     markdown, conclusion = report_markdown(
         details, r2, proxies, identity, comparable
     )
