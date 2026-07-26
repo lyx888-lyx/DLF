@@ -1,0 +1,25 @@
+{
+  "expert_retraining_count": 0,
+  "formal_arbiter_training_count": 0,
+  "locked_test_access_count": 0,
+  "official_valid_access_count": 0,
+  "official_valid_authorized": false,
+  "phase1_outer_access_counts": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "stage": "Stage23D-A",
+  "stage23c_modification_count": 0,
+  "status": "OFFICIAL_VALID_AND_TEST_LOCKED",
+  "student_training_count": 0,
+  "test_authorized": false,
+  "updated_at": "2026-07-26T15:55:44.875367+00:00"
+}

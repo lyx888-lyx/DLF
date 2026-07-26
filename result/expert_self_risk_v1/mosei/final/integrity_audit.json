@@ -1,0 +1,33 @@
+{
+  "a5_authorization": "limited_pilot",
+  "a5_pilot_completed": false,
+  "artifact_sha_failures": 0,
+  "checkpoint_audits": 10,
+  "checkpoint_sha_failures": 0,
+  "cpu_unit_tests_passed": 10,
+  "feature_extraction_audits_passed": 10,
+  "feature_nan_inf_count": 0,
+  "inactive_head_leakage_count": 0,
+  "locked_test_access_count": 0,
+  "official_valid_access_count": 0,
+  "phase1_decision": "WEAK",
+  "phase1_outer_access_count_per_audit": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "prediction_replay_max_abs_diff": 5.000000413701855e-10,
+  "sample_binding_duplicate_count": 0,
+  "sample_binding_missing_count": 0,
+  "source_leakage_count": 0,
+  "stage23c_head_after": "5319cad7fe5fa518f22dbee6c9159eaf723a4e08",
+  "stage23c_head_before": "5319cad7fe5fa518f22dbee6c9159eaf723a4e08",
+  "stage23c_modification_count": 0
+}

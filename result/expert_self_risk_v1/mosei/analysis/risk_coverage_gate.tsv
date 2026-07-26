@@ -1,0 +1,5 @@
+mode	downward_adjacent_steps	mean_improvement_vs_random_below_full_coverage	pass
+LAV	0	0.1329624002	True
+LA	0	0.1315278461	True
+LV	0	0.1289895505	True
+L	0	0.1378520559	True

@@ -1,0 +1,2 @@
+mode	error_top20_threshold	error_top10_threshold	uncertainty_bottom20_threshold	uncertainty_bottom30_threshold	uncertainty_bottom40_threshold	fixed_error_threshold	fit_role
+LA	0.9381316885	1.254334307	-0.5025218723	-0.4065926856	-0.3041786154	1	inner_train

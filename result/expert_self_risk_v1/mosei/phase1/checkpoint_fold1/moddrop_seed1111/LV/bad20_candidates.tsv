@@ -1,0 +1,5 @@
+algorithm	parameter	inner_valid_AUROC	inner_valid_AUPRC
+logistic	10.0	0.5872251635	0.265027162
+logistic	1.0	0.5854873871	0.2665929805
+logistic	0.1	0.5823793211	0.2680697565
+hgb	fixed	0.5754344441	0.243283649

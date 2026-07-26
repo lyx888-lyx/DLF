@@ -1,0 +1,106 @@
+{
+  "arbiter_trained": false,
+  "checkpoint_fold": 0,
+  "checkpoint_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v1/mosei/expert_oof/outer_fold0/experts/uniform_kd_seed1111/best_inner_train_only.pth",
+  "checkpoint_sha256": "37111ecab57fd1a5b5bb61160a0f313fdc553c3ffc595e81a3219e1fe0786b05",
+  "completed_at": "2026-07-26T14:03:17.997897+00:00",
+  "duplicates": 0,
+  "expert_id": "uniform_kd_seed1111",
+  "expert_retrained": false,
+  "feature_artifacts": {
+    "L": {
+      "columns": 92,
+      "contains_label": false,
+      "development_label_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/features/checkpoint_fold0/uniform_kd_seed1111/development_risk_labels_L.csv.gz",
+      "development_label_sha256": "75a6e959af18bddce5aeffa3955a20496a57e7d3b9813d4a904c8b68fe721a7d",
+      "path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/features/checkpoint_fold0/uniform_kd_seed1111/static_internal_features_L.csv.gz",
+      "rows": 8532,
+      "sealed_outer_label_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/features/checkpoint_fold0/uniform_kd_seed1111/sealed_outer_labels/outer_labels_L.csv.gz",
+      "sealed_outer_label_sha256": "e1c390a2fe5e604bbc2c2111782af920dce2667ccb27d10aa0dae5ee1da549cd",
+      "sha256": "c17c40abe0f44f671072498304bbc11c2811ae81ab9b79e0b7079666aecafbc9"
+    },
+    "LA": {
+      "columns": 138,
+      "contains_label": false,
+      "development_label_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/features/checkpoint_fold0/uniform_kd_seed1111/development_risk_labels_LA.csv.gz",
+      "development_label_sha256": "63fd384bab56ad47da4e18b59f399efe19cf8011c9c9d296272b8546b7d7d79a",
+      "path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/features/checkpoint_fold0/uniform_kd_seed1111/static_internal_features_LA.csv.gz",
+      "rows": 8532,
+      "sealed_outer_label_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/features/checkpoint_fold0/uniform_kd_seed1111/sealed_outer_labels/outer_labels_LA.csv.gz",
+      "sealed_outer_label_sha256": "cb336914b10475111d58ba2da86698d6ef388943dc85cec9b1cdff64b967af36",
+      "sha256": "cfa5bde5a86e5f3a8779dc1522dcede8fc0a41a4187c4eacc7d6976403a2f786"
+    },
+    "LAV": {
+      "columns": 187,
+      "contains_label": false,
+      "development_label_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/features/checkpoint_fold0/uniform_kd_seed1111/development_risk_labels_LAV.csv.gz",
+      "development_label_sha256": "8ac2e9a43f631d0cf4aaea8c2cea8db49754e94325355fe8d7b65a2c097c82f5",
+      "path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/features/checkpoint_fold0/uniform_kd_seed1111/static_internal_features_LAV.csv.gz",
+      "rows": 8532,
+      "sealed_outer_label_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/features/checkpoint_fold0/uniform_kd_seed1111/sealed_outer_labels/outer_labels_LAV.csv.gz",
+      "sealed_outer_label_sha256": "cdd85019df938a09313505d0ebbd92f102119f5202e21c22e837b000878fb465",
+      "sha256": "ffe863ddc41d42293be284f939a882671b7f1128e2d0ed89f7016df215675146"
+    },
+    "LV": {
+      "columns": 138,
+      "contains_label": false,
+      "development_label_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/features/checkpoint_fold0/uniform_kd_seed1111/development_risk_labels_LV.csv.gz",
+      "development_label_sha256": "d18a2cc21e8038cf93a106b2baca549b01b7c5349f21d85b6bfa30a5911e2ede",
+      "path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/features/checkpoint_fold0/uniform_kd_seed1111/static_internal_features_LV.csv.gz",
+      "rows": 8532,
+      "sealed_outer_label_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/features/checkpoint_fold0/uniform_kd_seed1111/sealed_outer_labels/outer_labels_LV.csv.gz",
+      "sealed_outer_label_sha256": "8e2bb6207432150ae5247096e1e38cebb389baaa2309c57819b7e5bc561ef74d",
+      "sha256": "24fc1894df569e4bd440e1f4ccafceb1d73658973be4b5de763d5b51e5dcbef7"
+    }
+  },
+  "feature_binding_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/features/checkpoint_fold0/uniform_kd_seed1111/feature_binding_ledger.csv.gz",
+  "feature_binding_sha256": "15f2a58d4e0bf88918d563b7b1ec8c32905c4b75789797ab2ad71c164f9d5b33",
+  "feature_schema_version": 2,
+  "gpu_id": 3,
+  "hook_prediction_max_abs_diff": 0.0,
+  "inactive_head_leakage": 0,
+  "locked_test_access_count": 0,
+  "max_abs_final_replay_diff": 5.000000413701855e-10,
+  "missing": 0,
+  "modes": [
+    "LAV",
+    "LA",
+    "LV",
+    "L"
+  ],
+  "nan_inf_count": 0,
+  "official_valid_access_count": 0,
+  "raw_vector_artifacts": {
+    "L": {
+      "dimensions": 900,
+      "path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/features/checkpoint_fold0/uniform_kd_seed1111/raw_internal_vectors_L.npz",
+      "rows": 8532,
+      "sha256": "141a11758097ac50ff42e17df673d8061b6aa14d4d88db81746a4f5ffe157de0"
+    },
+    "LA": {
+      "dimensions": 5850,
+      "path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/features/checkpoint_fold0/uniform_kd_seed1111/raw_internal_vectors_LA.npz",
+      "rows": 8532,
+      "sha256": "d7449edf9962917a1f5470281eb96547e4339c3a1dd1e9c845a43ab5db8f6f3d"
+    },
+    "LAV": {
+      "dimensions": 10800,
+      "path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/features/checkpoint_fold0/uniform_kd_seed1111/raw_internal_vectors_LAV.npz",
+      "rows": 8532,
+      "sha256": "6c9e59a71a572fde21ca776f0ba85cf027879e27e8925e9694f5fabfa77ec77c"
+    },
+    "LV": {
+      "dimensions": 5850,
+      "path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/features/checkpoint_fold0/uniform_kd_seed1111/raw_internal_vectors_LV.npz",
+      "rows": 8532,
+      "sha256": "8d426e5f4ba2e98d78ae9a9b074e63fff18dc93c3bb1be77c7ed3c06d74b7847"
+    }
+  },
+  "rows": 34128,
+  "run_manifest_sha256": "75fba135591e488a43039e3addeebf9766c6fda9b3bdb86fde84365d1904b714",
+  "samples": 8532,
+  "source_split_sha256": "cf5981550d48323b5ae8cd1684c363a67e0012961161ab091b5b4bba872e0490",
+  "stage": "Stage23D-A frozen Expert static internal-state extraction",
+  "status": "COMPLETED",
+  "student_trained": false
+}

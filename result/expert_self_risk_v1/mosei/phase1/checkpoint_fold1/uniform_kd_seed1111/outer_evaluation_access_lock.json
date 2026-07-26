@@ -1,0 +1,8 @@
+{
+  "checkpoint_fold": 1,
+  "claimed_at": "2026-07-26T15:37:23.713719+00:00",
+  "expert_id": "uniform_kd_seed1111",
+  "outer_evaluation_access_count": 1,
+  "stage": "Stage23D-A one-shot outer label access lock",
+  "status": "CLAIMED_BEFORE_LABEL_FILE_OPEN"
+}

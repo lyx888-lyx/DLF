@@ -1,0 +1,11 @@
+checkpoint_fold	expert_id	feature_schema_version	samples	rows	max_abs_final_replay_diff	hook_prediction_max_abs_diff	duplicates	missing	source_leakage	row_binding_mismatch	artifact_sha_mismatch	raw_binding_mismatch	label_leakage	inactive_head_leakage	nan_inf_count	a2_lfa_fusion_missing	pass
+0	uniform_kd_seed1111	2	8532	34128	5.000000414e-10	0	0	0	0	0	0	0	0	0	0	0	True
+0	moddrop_seed1111	2	8532	34128	4.999389791e-10	0	0	0	0	0	0	0	0	0	0	0	True
+0	moddrop_seed1114	2	8532	34128	4.998779168e-10	0	0	0	0	0	0	0	0	0	0	0	True
+0	cfcompat_seed1111	2	8532	34128	5.000000414e-10	0	0	0	0	0	0	0	0	0	0	0	True
+0	cfcompat_seed1114	2	8532	34128	4.999389791e-10	0	0	0	0	0	0	0	0	0	0	0	True
+1	uniform_kd_seed1111	2	7794	31176	5.000000414e-10	0	0	0	0	0	0	0	0	0	0	0	True
+1	moddrop_seed1111	2	7794	31176	5.000000414e-10	0	0	0	0	0	0	0	0	0	0	0	True
+1	moddrop_seed1114	2	7794	31176	5.000000414e-10	0	0	0	0	0	0	0	0	0	0	0	True
+1	cfcompat_seed1111	2	7794	31176	4.998779168e-10	0	0	0	0	0	0	0	0	0	0	0	True
+1	cfcompat_seed1114	2	7794	31176	5.000000414e-10	0	0	0	0	0	0	0	0	0	0	0	True

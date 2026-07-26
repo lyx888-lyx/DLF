@@ -1,0 +1,226 @@
+{
+  "checkpoint_fold": 1,
+  "expert_id": "uniform_kd_seed1111",
+  "frozen_at": "2026-07-26T15:37:22.354952+00:00",
+  "locked_test_access_count": 0,
+  "modes": {
+    "L": {
+      "R1_primary_probe_parameter_count": 2725,
+      "R2_primary_probe_parameter_count": 3452,
+      "bundle_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/phase1/checkpoint_fold1/uniform_kd_seed1111/L/frozen_probe_bundle.joblib",
+      "bundle_sha256": "b73bd11bb7cfa97801b203a13d4d77a2ff687eee2a40a77c01ded9c2d9bb6b3e",
+      "frozen_static_feature_contains_label": false,
+      "frozen_static_feature_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/phase1/checkpoint_fold1/uniform_kd_seed1111/L/frozen_static_probe_features_label_free.csv.gz",
+      "frozen_static_feature_sha256": "1b6f99270ca94ee3023e7786c8fcc89893878b18e94b7caf427c09fa96be01a2",
+      "mode": "L",
+      "outer_labels_in_prediction": false,
+      "outer_prediction_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/phase1/checkpoint_fold1/uniform_kd_seed1111/L/outer_risk_predictions_label_free.csv.gz",
+      "outer_prediction_rows": 1297,
+      "outer_prediction_sha256": "026b5ba7aa339dd3dd9aa4781d9f2426fdfe486d421c1b507809f4c974f23223",
+      "selected_R1_regression": {
+        "algorithm": "hgb",
+        "inner_valid_MAE": 0.3496862275993884,
+        "inner_valid_spearman": 0.15557714130375583,
+        "parameter": "fixed"
+      },
+      "selected_R2_bad20": {
+        "algorithm": "logistic",
+        "inner_valid_AUPRC": 0.2850426082792147,
+        "inner_valid_AUROC": 0.6205173427395649,
+        "parameter": 1.0
+      },
+      "selected_R2_confident_wrong": {
+        "algorithm": "hgb",
+        "inner_valid_AUPRC": 0.15291467239457046,
+        "inner_valid_AUROC": 0.869209489872468,
+        "parameter": "fixed"
+      },
+      "selected_R2_regression": {
+        "algorithm": "ridge",
+        "inner_valid_MAE": 0.34551092792195665,
+        "inner_valid_spearman": 0.20109360692412978,
+        "parameter": 10.0
+      },
+      "selected_pca_dimension": 16,
+      "uncertainty_parameters": {
+        "active_head_std": {
+          "mean": 0.014528478517815524,
+          "std": 0.013723224364212876
+        },
+        "hidden_centroid_distance": {
+          "mean": 19.490108489990234,
+          "std": 12.843045234680176
+        },
+        "submode_prediction_variance": {
+          "mean": 0.0,
+          "std": 1.0
+        }
+      }
+    },
+    "LA": {
+      "R1_primary_probe_parameter_count": 4064,
+      "R2_primary_probe_parameter_count": 3596,
+      "bundle_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/phase1/checkpoint_fold1/uniform_kd_seed1111/LA/frozen_probe_bundle.joblib",
+      "bundle_sha256": "d59f14d8137e3cdf61270eccbb4e139e4ba7d24b25c083cb7be9219c1df232a6",
+      "frozen_static_feature_contains_label": false,
+      "frozen_static_feature_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/phase1/checkpoint_fold1/uniform_kd_seed1111/LA/frozen_static_probe_features_label_free.csv.gz",
+      "frozen_static_feature_sha256": "5a4dbffd03bb302bd79e7288e535bca9eee0cf563648cc0db2c1b6c5450c4a74",
+      "mode": "LA",
+      "outer_labels_in_prediction": false,
+      "outer_prediction_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/phase1/checkpoint_fold1/uniform_kd_seed1111/LA/outer_risk_predictions_label_free.csv.gz",
+      "outer_prediction_rows": 1297,
+      "outer_prediction_sha256": "7a8ffa08da4c53c5132cd13b1e36324ffe0e5273fdd1d6148020204595db0115",
+      "selected_R1_regression": {
+        "algorithm": "hgb",
+        "inner_valid_MAE": 0.3482268199253899,
+        "inner_valid_spearman": 0.17312058891646245,
+        "parameter": "fixed"
+      },
+      "selected_R2_bad20": {
+        "algorithm": "logistic",
+        "inner_valid_AUPRC": 0.27400337475452313,
+        "inner_valid_AUROC": 0.6163164760565878,
+        "parameter": 10.0
+      },
+      "selected_R2_confident_wrong": {
+        "algorithm": "hgb",
+        "inner_valid_AUPRC": 0.2729078644764577,
+        "inner_valid_AUROC": 0.882991452991453,
+        "parameter": "fixed"
+      },
+      "selected_R2_regression": {
+        "algorithm": "ridge",
+        "inner_valid_MAE": 0.34384483192041976,
+        "inner_valid_spearman": 0.22177205498204577,
+        "parameter": 1.0
+      },
+      "selected_pca_dimension": 64,
+      "uncertainty_parameters": {
+        "active_head_std": {
+          "mean": 0.020171219465708785,
+          "std": 0.02004030344425643
+        },
+        "hidden_centroid_distance": {
+          "mean": 22.05925941467285,
+          "std": 11.890503883361816
+        },
+        "submode_prediction_variance": {
+          "mean": 4.427721441296537e-05,
+          "std": 9.187626061130927e-05
+        }
+      }
+    },
+    "LAV": {
+      "R1_primary_probe_parameter_count": 4064,
+      "R2_primary_probe_parameter_count": 3860,
+      "bundle_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/phase1/checkpoint_fold1/uniform_kd_seed1111/LAV/frozen_probe_bundle.joblib",
+      "bundle_sha256": "eda1ce0c26c3515f52df363893c94e80b1bcf531f12f659757078d92f04dd981",
+      "frozen_static_feature_contains_label": false,
+      "frozen_static_feature_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/phase1/checkpoint_fold1/uniform_kd_seed1111/LAV/frozen_static_probe_features_label_free.csv.gz",
+      "frozen_static_feature_sha256": "2ce0d8593dad357b0f8c7870f00fbf0af0672e83d0f7e1d1a848c9ebca54a3e7",
+      "mode": "LAV",
+      "outer_labels_in_prediction": false,
+      "outer_prediction_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/phase1/checkpoint_fold1/uniform_kd_seed1111/LAV/outer_risk_predictions_label_free.csv.gz",
+      "outer_prediction_rows": 1297,
+      "outer_prediction_sha256": "af58e319be4a5236211128544fb4507b827ff50bd5ed4b851d3f63e3251a76f7",
+      "selected_R1_regression": {
+        "algorithm": "hgb",
+        "inner_valid_MAE": 0.3452774881472496,
+        "inner_valid_spearman": 0.19933038418056692,
+        "parameter": "fixed"
+      },
+      "selected_R2_bad20": {
+        "algorithm": "logistic",
+        "inner_valid_AUPRC": 0.29170517050846556,
+        "inner_valid_AUROC": 0.6281431334622823,
+        "parameter": 10.0
+      },
+      "selected_R2_confident_wrong": {
+        "algorithm": "logistic",
+        "inner_valid_AUPRC": 0.1786722441996127,
+        "inner_valid_AUROC": 0.8710253807106598,
+        "parameter": 0.1
+      },
+      "selected_R2_regression": {
+        "algorithm": "hgb",
+        "inner_valid_MAE": 0.3439650332717068,
+        "inner_valid_spearman": 0.22912075548523286,
+        "parameter": "fixed"
+      },
+      "selected_pca_dimension": 16,
+      "uncertainty_parameters": {
+        "active_head_std": {
+          "mean": 0.024439888187479497,
+          "std": 0.019071587099687613
+        },
+        "hidden_centroid_distance": {
+          "mean": 23.8955135345459,
+          "std": 11.557171821594238
+        },
+        "submode_prediction_variance": {
+          "mean": 0.00014661523305453824,
+          "std": 0.00023473159621683983
+        }
+      }
+    },
+    "LV": {
+      "R1_primary_probe_parameter_count": 3996,
+      "R2_primary_probe_parameter_count": 3480,
+      "bundle_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/phase1/checkpoint_fold1/uniform_kd_seed1111/LV/frozen_probe_bundle.joblib",
+      "bundle_sha256": "978b0ec810e4c37dcafd7e2c19899732d346a5068ee2dacda13f78372556efe5",
+      "frozen_static_feature_contains_label": false,
+      "frozen_static_feature_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/phase1/checkpoint_fold1/uniform_kd_seed1111/LV/frozen_static_probe_features_label_free.csv.gz",
+      "frozen_static_feature_sha256": "beccc0c0c3edfcf4c6a40b752d1f1c479d06eb08bdef15582d1fc753bd38dffd",
+      "mode": "LV",
+      "outer_labels_in_prediction": false,
+      "outer_prediction_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/phase1/checkpoint_fold1/uniform_kd_seed1111/LV/outer_risk_predictions_label_free.csv.gz",
+      "outer_prediction_rows": 1297,
+      "outer_prediction_sha256": "2b39e1761a1aab91bd2fdd13e60c3de68188f0ce44b7fc5d0ebbfe7d9453570d",
+      "selected_R1_regression": {
+        "algorithm": "hgb",
+        "inner_valid_MAE": 0.3456419118319467,
+        "inner_valid_spearman": 0.19152998964738413,
+        "parameter": "fixed"
+      },
+      "selected_R2_bad20": {
+        "algorithm": "logistic",
+        "inner_valid_AUPRC": 0.2826131545485179,
+        "inner_valid_AUROC": 0.6186405258558456,
+        "parameter": 10.0
+      },
+      "selected_R2_confident_wrong": {
+        "algorithm": "hgb",
+        "inner_valid_AUPRC": 0.2060786991214533,
+        "inner_valid_AUROC": 0.8818811212428233,
+        "parameter": "fixed"
+      },
+      "selected_R2_regression": {
+        "algorithm": "ridge",
+        "inner_valid_MAE": 0.3414641337439038,
+        "inner_valid_spearman": 0.22054579418131692,
+        "parameter": 1.0
+      },
+      "selected_pca_dimension": 16,
+      "uncertainty_parameters": {
+        "active_head_std": {
+          "mean": 0.022630310549264187,
+          "std": 0.018586911878728626
+        },
+        "hidden_centroid_distance": {
+          "mean": 22.188108444213867,
+          "std": 11.47707462310791
+        },
+        "submode_prediction_variance": {
+          "mean": 0.00010058603545231537,
+          "std": 0.00021233523592179362
+        }
+      }
+    }
+  },
+  "official_valid_access_count": 0,
+  "outer_evaluation_access_count": 0,
+  "outer_prediction_count": 4,
+  "selection_scope": "self-risk inner-train/inner-valid only",
+  "stage": "Stage23D-A inner-valid frozen self-risk probe selection",
+  "status": "FROZEN_OUTER_LABELS_NOT_OPENED"
+}

@@ -1,0 +1,22 @@
+{
+  "completed": [
+    "fold0/uniform_kd_seed1111",
+    "fold0/moddrop_seed1111",
+    "fold0/moddrop_seed1114",
+    "fold0/cfcompat_seed1111",
+    "fold0/cfcompat_seed1114",
+    "fold1/uniform_kd_seed1111",
+    "fold1/moddrop_seed1111",
+    "fold1/moddrop_seed1114",
+    "fold1/cfcompat_seed1111",
+    "fold1/cfcompat_seed1114"
+  ],
+  "current": null,
+  "locked_test_access_count": 0,
+  "note": "Phase-1 WEAK; limited A5 pilot authorized but no eligible GPU",
+  "official_valid_access_count": 0,
+  "pending_count": 0,
+  "stage": "Stage23D-A Phase-1 static self-risk probes",
+  "status": "READY_WAITING_FOR_FREE_GPU",
+  "updated_at": "2026-07-26T15:55:44.875367+00:00"
+}

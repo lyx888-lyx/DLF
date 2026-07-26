@@ -1,0 +1,20 @@
+diff --git a/runtime/stage23d_a/state.json b/runtime/stage23d_a/state.json
+index 9bf57b5..232c755 100644
+--- a/runtime/stage23d_a/state.json
++++ b/runtime/stage23d_a/state.json
+@@ -1,10 +1,11 @@
+ {
+   "locked_test_access_count": 0,
+   "official_valid_access_count": 0,
+-  "protocol_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/protocol/frozen_protocol_manifest.json",
+-  "protocol_sha256": "8dbab9336dd3f1d6d70ee58256eccff04571100d91171fbef839721230eb153b",
++  "phase1_decision": "WEAK",
++  "report_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/analysis/stage23d_a_self_risk_audit.md",
++  "report_sha256": "560c6eba336d44e52dc111de8d033631f375d7c5f2ac8f1550e7a6d1677e9b87",
+   "stage": "Stage23D-A",
+   "stage23c_modification_count": 0,
+-  "status": "PROTOCOL_FROZEN_GPU_AVAILABILITY_NOT_YET_CHECKED",
+-  "updated_at": "2026-07-26T12:59:55.940861+00:00"
++  "status": "PHASE1_COMPLETE_A5_ACTION_REQUIRED",
++  "updated_at": "2026-07-26T15:50:42.088690+00:00"
+ }

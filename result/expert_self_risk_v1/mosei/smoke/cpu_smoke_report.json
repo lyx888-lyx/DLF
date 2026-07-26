@@ -1,0 +1,60 @@
+{
+  "classification_candidates": [
+    {
+      "algorithm": "logistic",
+      "inner_valid_AUPRC": 0.7064814814814815,
+      "inner_valid_AUROC": 0.8359788359788359,
+      "parameter": 0.1
+    },
+    {
+      "algorithm": "hgb",
+      "inner_valid_AUPRC": 0.751164093555398,
+      "inner_valid_AUROC": 0.8306878306878307,
+      "parameter": "fixed"
+    },
+    {
+      "algorithm": "logistic",
+      "inner_valid_AUPRC": 0.6440476190476192,
+      "inner_valid_AUROC": 0.82010582010582,
+      "parameter": 10.0
+    },
+    {
+      "algorithm": "logistic",
+      "inner_valid_AUPRC": 0.6419278252611587,
+      "inner_valid_AUROC": 0.8148148148148148,
+      "parameter": 1.0
+    }
+  ],
+  "completed_at": "2026-07-26T13:12:50.839495+00:00",
+  "feature_dimensions": 24,
+  "nan_inf_count": 0,
+  "regression_candidates": [
+    {
+      "algorithm": "ridge",
+      "inner_valid_MAE": 0.26389775211221705,
+      "inner_valid_spearman": 0.3828698553948832,
+      "parameter": 1.0
+    },
+    {
+      "algorithm": "hgb",
+      "inner_valid_MAE": 0.2571651128604376,
+      "inner_valid_spearman": 0.2502780867630701,
+      "parameter": "fixed"
+    }
+  ],
+  "risk_thresholds": [
+    {
+      "error_top10_threshold": 0.618668136717162,
+      "error_top20_threshold": 0.4800265013302685,
+      "fit_role": "inner_train",
+      "fixed_error_threshold": 1.0,
+      "mode": "LAV",
+      "uncertainty_bottom30_threshold": -0.33302609445786047
+    }
+  ],
+  "samples": 270,
+  "source_leakage": 0,
+  "sources": 90,
+  "stage": "Stage23D-A synthetic CPU smoke",
+  "status": "PASS"
+}

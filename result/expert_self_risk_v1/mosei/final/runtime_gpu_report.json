@@ -1,0 +1,56 @@
+{
+  "captured_at": "2026-07-26T15:55:44.875367+00:00",
+  "eligible_gpu_ids": [
+    3
+  ],
+  "snapshot": [
+    {
+      "eligible_for_stage23d": false,
+      "gpu_id": 0,
+      "memory_total_mib": 22528,
+      "memory_used_mib": 12,
+      "name": "NVIDIA GeForce RTX 2080 Ti",
+      "pstate": "P8",
+      "reserved_by_stage23c": true,
+      "utilization_percent": 0
+    },
+    {
+      "eligible_for_stage23d": false,
+      "gpu_id": 1,
+      "memory_total_mib": 22528,
+      "memory_used_mib": 5806,
+      "name": "NVIDIA GeForce RTX 2080 Ti",
+      "pstate": "P2",
+      "reserved_by_stage23c": true,
+      "utilization_percent": 93
+    },
+    {
+      "eligible_for_stage23d": false,
+      "gpu_id": 2,
+      "memory_total_mib": 22528,
+      "memory_used_mib": 3726,
+      "name": "NVIDIA GeForce RTX 2080 Ti",
+      "pstate": "P2",
+      "reserved_by_stage23c": true,
+      "utilization_percent": 43
+    },
+    {
+      "eligible_for_stage23d": false,
+      "gpu_id": 3,
+      "memory_total_mib": 22528,
+      "memory_used_mib": 8808,
+      "name": "NVIDIA GeForce RTX 2080 Ti",
+      "pstate": "P2",
+      "reserved_by_stage23c": false,
+      "utilization_percent": 76
+    }
+  ],
+  "stage": "Stage23D-A",
+  "stage23c_gpu_ids_reserved": [
+    0,
+    1,
+    2
+  ],
+  "stage23d_a5_gpu_processes_started": 0,
+  "status": "A5_PILOT_WAITING_FOR_FREE_GPU"
+}

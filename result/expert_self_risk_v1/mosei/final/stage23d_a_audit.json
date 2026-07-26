@@ -1,0 +1,94 @@
+{
+  "a5_authorized": "limited_pilot",
+  "a5_gpu_processes_started": 0,
+  "a5_pilot_completed": false,
+  "artifact_count": 612,
+  "artifact_manifest_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/final/artifact_manifest.tsv",
+  "artifact_manifest_sha256": "a57be1cbbf6465328973edb7be18b85992789cd0843abc57d1d586076400f465",
+  "artifact_sha_failures": 0,
+  "base_commit": "99d18cc49c52b799c83a65af2ed308264d8c649c",
+  "branch": "audit/mosei-expert-self-risk-signal-v1",
+  "checkpoint_audits": 10,
+  "code_head_at_aggregation": "f53a71935e60e8d3293f493aab54c1b0736f300b",
+  "completed_at": "2026-07-26T15:50:14.474924+00:00",
+  "conclusion": "READY_WAITING_FOR_FREE_GPU",
+  "expert_ids": [
+    "uniform_kd_seed1111",
+    "moddrop_seed1111",
+    "moddrop_seed1114",
+    "cfcompat_seed1111",
+    "cfcompat_seed1114"
+  ],
+  "expert_retraining_count": 0,
+  "formal_arbiter_training_count": 0,
+  "gate": {
+    "R2_minus_references": {
+      "N2_length_mask_only": {
+        "Error_Spearman": 0.215617484215775,
+        "bad20_AUROC": 0.11373070708,
+        "confident_wrong_AUROC": 0.3354023300455118
+      },
+      "N5_label_bin_prior": {
+        "Error_Spearman": 0.059721107797500006,
+        "bad20_AUROC": 0.053996331315000035,
+        "confident_wrong_AUROC": 0.16963181167071606
+      },
+      "R1": {
+        "Error_Spearman": 0.034432853467500024,
+        "bad20_AUROC": 0.01855076987999993,
+        "confident_wrong_AUROC": 0.04854365322956422
+      }
+    },
+    "R2_minus_strongest_shuffle_Error_Spearman": 0.23446514574135002,
+    "R2_minus_strongest_shuffle_bad20_AUROC": 0.12675413928749996,
+    "coverage_pass": true,
+    "decision": "WEAK",
+    "fold_mean_Error_Spearman": {
+      "0": 0.24763800545999998,
+      "1": 0.233257028805
+    },
+    "mean_Error_Spearman": 0.2404475171325,
+    "mean_bad20_AUROC": 0.6239642002,
+    "mean_confident_wrong_AUROC": 0.8856878877490123,
+    "missing_modes_positive": 3,
+    "passed_conditions": 8,
+    "positive_both_fold_expert_configs": 5,
+    "strongest_shuffle": {
+      "Error_Spearman": 0.005982371391149998,
+      "bad20_AUROC": 0.49721006091250003,
+      "confident_wrong_AUROC": 0.5406706756474551,
+      "model": "N0_shuffle_seed23071"
+    },
+    "total_conditions": 10
+  },
+  "gpu_free_count": 0,
+  "locked_test_access_count": 0,
+  "modes": [
+    "LAV",
+    "LA",
+    "LV",
+    "L"
+  ],
+  "official_valid_access_count": 0,
+  "outer_evaluation_access_counts": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "phase1_conclusion": "SELF_RISK_SIGNAL_WEAK",
+  "phase1_decision": "WEAK",
+  "report_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/analysis/stage23d_a_self_risk_audit.md",
+  "report_sha256": "6cf5a85eb453654071996af9912df376ffaa203e8f51188e1301eb7546902070",
+  "stage": "Stage23D-A Expert Self-Risk Signal Audit",
+  "stage23c_modification_count": 0,
+  "status": "READY_WAITING_FOR_FREE_GPU",
+  "student_training_count": 0,
+  "updated_at": "2026-07-26T15:55:58.603021+00:00"
+}
