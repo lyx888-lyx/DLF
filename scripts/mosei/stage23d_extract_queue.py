@@ -49,6 +49,7 @@ def is_complete(path):
         return False
     return (
         payload.get("status") == "COMPLETED"
+        and payload.get("feature_schema_version") == 2
         and payload.get("duplicates") == 0
         and payload.get("missing") == 0
         and payload.get("nan_inf_count") == 0

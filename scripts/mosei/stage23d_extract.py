@@ -147,6 +147,23 @@ def representation_features(mode, position, captured, output, batch_size):
     shared_fused = batch_flat(captured["shared_fused"], batch_size)[position]
     result.update(summary_features("final_fused", final_fused))
     result.update(summary_features("shared_fused", shared_fused))
+    result.update(
+        summary_features(
+            "fusion_input",
+            batch_flat(output["fusion_input"], batch_size)[position],
+        )
+    )
+    lfa_names = ["lfa_l"]
+    if available[1]:
+        lfa_names.extend(["lfa_a", "lfa_cross_a", "lfa_ffn_a"])
+    if available[2]:
+        lfa_names.extend(["lfa_v", "lfa_cross_v", "lfa_ffn_v"])
+    for name in lfa_names:
+        result.update(
+            summary_features(
+                name, batch_flat(output[name], batch_size)[position]
+            )
+        )
     specific = {}
     aligned_shared = {}
     for name, flag in zip(("l", "a", "v"), available):
@@ -213,7 +230,23 @@ def raw_vector(mode, position, captured, output, batch_size):
     vectors = [
         batch_flat(captured["final_fused"], batch_size)[position],
         batch_flat(captured["shared_fused"], batch_size)[position],
+        batch_flat(output["fusion_input"], batch_size)[position],
+        batch_flat(output["lfa_l"], batch_size)[position],
     ]
+    if available[1]:
+        vectors.extend(
+            [
+                batch_flat(output[name], batch_size)[position]
+                for name in ("lfa_a", "lfa_cross_a", "lfa_ffn_a")
+            ]
+        )
+    if available[2]:
+        vectors.extend(
+            [
+                batch_flat(output[name], batch_size)[position]
+                for name in ("lfa_v", "lfa_cross_v", "lfa_ffn_v")
+            ]
+        )
     for name, flag in zip(("l", "a", "v"), available):
         if not flag:
             continue
@@ -530,6 +563,7 @@ def main():
     extraction_manifest = {
         "stage": "Stage23D-A frozen Expert static internal-state extraction",
         "status": "COMPLETED",
+        "feature_schema_version": 2,
         "checkpoint_fold": cli.checkpoint_fold,
         "expert_id": cli.expert_id,
         "checkpoint_path": str(checkpoint.resolve()),
