@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "mosei"))
 
 from stage23d_aggregate import gate_table, markdown_table
-from stage23d_phase1 import core_pca_features
+from stage23d_phase1 import core_pca_features, cross_source_shuffle
 from stage23d_self_risk_common import EXPERTS, MODES
 
 
@@ -81,6 +81,13 @@ class Stage23DGateTests(unittest.TestCase):
         self.assertEqual(core.shape, (1, 550))
         self.assertEqual(core[0, 449], 449)
         self.assertEqual(core[0, 450], 1100)
+
+    def test_shuffle_control_never_uses_same_source(self):
+        sources = pd.Series(["a", "a", "b", "b", "c", "c"]).to_numpy()
+        values = pd.DataFrame({"a": [0, 0, 1, 1, 2, 2]}).to_numpy()
+        shuffled = cross_source_shuffle(values, sources, 23071).reshape(-1)
+        original = values.reshape(-1)
+        self.assertTrue((shuffled != original).all())
 
 
 if __name__ == "__main__":

@@ -423,7 +423,9 @@ def cross_source_shuffle(values, sources, seed):
     permuted = unique.copy()
     rng.shuffle(permuted)
     if len(permuted) > 1 and np.any(permuted == unique):
-        permuted = np.roll(permuted, 1)
+        # A cyclic shift of the sorted unique source list is a guaranteed
+        # derangement, unlike shifting an arbitrary permutation.
+        permuted = np.roll(unique, 1)
     mapping = dict(zip(unique, permuted))
     indices_by_source = {
         source: np.flatnonzero(np.asarray(sources) == source) for source in unique
