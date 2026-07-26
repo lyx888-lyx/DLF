@@ -1,6 +1,6 @@
 {
   "authorization_manifest_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/v2a_authorization_manifest.json",
-  "authorization_manifest_sha256": "5ec4248f0b9f77bf32f53089d545782f9e18f6e1515e766e6c772ec0fc7d8b97",
+  "authorization_manifest_sha256": "520758dfdc61ebdfd34faade76941316d3dec8d889de25fbc791f170bd4928ec",
   "feature_extraction_authorized": true,
   "implementation_authorized": true,
   "judge_training_authorized": false,
@@ -12,5 +12,5 @@
   "status": "AUTHORIZED_FOR_FEATURE_EXTRACTION_AND_SIGNAL_AUDIT_ONLY",
   "student_training_authorized": false,
   "test_authorized": false,
-  "updated_at": "2026-07-26T05:05:25.522670+00:00"
+  "updated_at": "2026-07-26T05:23:17.698615+00:00"
 }

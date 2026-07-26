@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-07-26T05:05:25.488988+00:00",
+  "created_at": "2026-07-26T05:23:17.671896+00:00",
   "effective_availability_protocol": {
     "all_zero_vision_clip_count_expected": 482,
     "all_zero_vision_policy": {
@@ -25,7 +25,7 @@
     "Expert checkpoint modification or retraining",
     "feature or hyperparameter selection using outer evaluation"
   ],
-  "git_head_at_authorization": "c889cf6220c51fdec44407cc469471b4d6b99386",
+  "git_head_at_authorization": "76005840cb7e6d53f6690b67a10a35b4763034d3",
   "implementation_authorized": true,
   "judge_training_authorized": false,
   "judge_training_started": false,
@@ -58,14 +58,14 @@
       "cfcompat_seed1111",
       "cfcompat_seed1114"
     ],
-    "gain_definition": "oracle_expert_selection_J - strong_static_J; negative is better",
+    "gain_definition": "strong_static_J - oracle_expert_selection_J; positive is better",
     "name": "strong_static",
     "outer_evaluation_used_for_selection": false,
     "selection_scope": "for each Direction, choose one candidate using inner-valid J only",
     "stacking_objective": "per-mode inner-train MAE under nonnegative simplex weights summing to one"
   },
   "strong_static_protocol_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/strong_static_protocol.json",
-  "strong_static_protocol_sha256": "a5e32b0f6bd54993418fe9a5e131c032e8f4b109dc77db0b1eb410311f57b430",
+  "strong_static_protocol_sha256": "66021accae70b4eda5651b1c3692b772b4da9fbaeefa40e4926ec7d9ed68581d",
   "student_trained": false,
   "student_training_authorized": false,
   "test_authorized": false

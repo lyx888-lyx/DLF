@@ -30,7 +30,7 @@ def main():
         "selection_scope": "for each Direction, choose one candidate using inner-valid J only",
         "application_scope": "freeze selected candidate and weights before one-shot outer evaluation",
         "outer_evaluation_used_for_selection": False,
-        "gain_definition": "oracle_expert_selection_J - strong_static_J; negative is better",
+        "gain_definition": "strong_static_J - oracle_expert_selection_J; positive is better",
         "experts": [
             "uniform_kd_seed1111",
             "moddrop_seed1111",
