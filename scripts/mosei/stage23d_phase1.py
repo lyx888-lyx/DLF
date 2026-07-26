@@ -448,10 +448,25 @@ def build_mode_selection(fold, expert, mode, output_dir):
     scalar = scalar_numeric(frame)
     candidate_rows = []
     candidates = {}
+    # Fit one train-only 64-D PCA and use nested prefixes for the preregistered
+    # 16/32/64 candidates. This preserves a common coordinate basis and avoids
+    # repeating the expensive source-disjoint neighbor search three times.
+    geometry_max, raw_scaler, pca = geometry_features(
+        raw,
+        frame["video_id"].astype(str).to_numpy(),
+        train_mask,
+        max(PCA_DIMS),
+    )
+    geometry_columns = [
+        column for column in geometry_max.columns if not column.startswith("pca_")
+    ]
     for dimension in PCA_DIMS:
-        geometry, raw_scaler, pca = geometry_features(
-            raw, frame["video_id"].astype(str).to_numpy(), train_mask, dimension
-        )
+        nested_pca_columns = [
+            column
+            for column in geometry_max.columns
+            if column.startswith("pca_")
+        ][: int(dimension)]
+        geometry = geometry_max[geometry_columns + nested_pca_columns]
         all_features = pd.concat(
             [scalar.reset_index(drop=True), geometry.reset_index(drop=True)],
             axis=1,
