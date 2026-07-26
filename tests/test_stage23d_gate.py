@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "mosei"))
 
 from stage23d_aggregate import gate_table, markdown_table
+from stage23d_phase1 import core_pca_features
 from stage23d_self_risk_common import EXPERTS, MODES
 
 
@@ -73,6 +74,13 @@ class Stage23DGateTests(unittest.TestCase):
         rendered = markdown_table(pd.DataFrame({"a": [1], "b": [0.25]}))
         self.assertIn("| a | b |", rendered)
         self.assertIn("0.2500", rendered)
+
+    def test_core_pca_layout_excludes_middle_a2_blocks(self):
+        raw = pd.DataFrame([range(1200)]).to_numpy(dtype="float32")
+        core = core_pca_features(raw, "L")
+        self.assertEqual(core.shape, (1, 550))
+        self.assertEqual(core[0, 449], 449)
+        self.assertEqual(core[0, 450], 1100)
 
 
 if __name__ == "__main__":

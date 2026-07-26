@@ -174,6 +174,26 @@ def feature_paths(fold, expert, mode):
     )
 
 
+def core_pca_features(raw_features, mode):
+    raw_features = np.asarray(raw_features, dtype=np.float32)
+    active_modalities = int(sum(MODE_MASKS[mode]))
+    specific_tail_dimensions = 100 * active_modalities
+    core = np.concatenate(
+        [
+            raw_features[:, :450],
+            raw_features[:, -specific_tail_dimensions:],
+        ],
+        axis=1,
+    )
+    expected = PCA_CORE_DIMS[mode]
+    if core.shape[1] != expected:
+        raise RuntimeError(
+            f"Recovered core width {core.shape[1]} differs from expected "
+            f"{expected} for {mode}"
+        )
+    return core
+
+
 def load_mode(fold, expert, mode):
     scalar_path, raw_path = feature_paths(fold, expert, mode)
     if not scalar_path.exists() or not raw_path.exists():
@@ -189,22 +209,7 @@ def load_mode(fold, expert, mode):
     ):
         raise RuntimeError("Raw/scalar row SHA mismatch")
     raw_features = raw["features"].astype(np.float32, copy=False)
-    active_modalities = int(sum(MODE_MASKS[mode]))
-    specific_tail_dimensions = 100 * active_modalities
-    core = np.concatenate(
-        [
-            raw_features[:, :450],
-            raw_features[:, -specific_tail_dimensions:],
-        ],
-        axis=1,
-    )
-    core_dimensions = PCA_CORE_DIMS[mode]
-    if core.shape[1] != core_dimensions:
-        raise RuntimeError(
-            f"Recovered core width {core.shape[1]} differs from expected "
-            f"{core_dimensions} for {mode}"
-        )
-    return frame, core
+    return frame, core_pca_features(raw_features, mode)
 
 
 def label_paths(fold, expert, mode):
