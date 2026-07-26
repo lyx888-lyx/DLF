@@ -1,0 +1,67 @@
+{
+  "captured_at": "2026-07-26T05:57:40.920151+00:00",
+  "cuda_available": true,
+  "dependency_install_or_upgrade_performed": false,
+  "expert_training_performed": false,
+  "git_branch": "audit/mosei-feature-rich-meta-judge-v2a-signal-audit",
+  "git_diff_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/analysis_v2a/git_diff_from_v2_protocol.patch",
+  "git_diff_sha256": "30e6465724b6f312e56691404bca36ca4191dc899602aab4284f6a1fde51df28",
+  "git_head": "2fa454b9e262a6da48b078daab430d84beb7e02e",
+  "git_status_short": "M runtime/stage23a_v2/state.json",
+  "gpu_allocation": {
+    "content_feature_and_probes": "CPU",
+    "hierarchical_fold0": "physical GPU 0 via CUDA_VISIBLE_DEVICES=0",
+    "hierarchical_fold1": "physical GPU 2 via CUDA_VISIBLE_DEVICES=2",
+    "physical_GPU_1": "not used; external process present",
+    "physical_GPU_3": "not used; external process present"
+  },
+  "judge_training_performed": false,
+  "locked_test_access_count": 0,
+  "numpy": "1.21.5",
+  "nvidia_smi_gpu_snapshot": [
+    "0, NVIDIA GeForce RTX 2080 Ti, 12 MiB, 22528 MiB, 0 %",
+    "1, NVIDIA GeForce RTX 2080 Ti, 1470 MiB, 22528 MiB, 92 %",
+    "2, NVIDIA GeForce RTX 2080 Ti, 4 MiB, 22528 MiB, 0 %",
+    "3, NVIDIA GeForce RTX 2080 Ti, 21906 MiB, 22528 MiB, 100 %"
+  ],
+  "official_valid_access_count": 0,
+  "pandas": "1.4.4",
+  "python": "3.9.13",
+  "runtime_logs": {
+    "authorization_update.log": {
+      "bytes": 722,
+      "modified_at_utc": "2026-07-26T05:23:17.704090+00:00",
+      "path": "/code/DLF-mosei-arbiter-audit-v1/runtime/stage23a_v2a/authorization_update.log",
+      "sha256": "5c5198b6fcfb00658c54c0bf25fce52242ddc8e060d41802a51d8e941ffd40de"
+    },
+    "content.log": {
+      "bytes": 4154,
+      "modified_at_utc": "2026-07-26T05:24:05.249133+00:00",
+      "path": "/code/DLF-mosei-arbiter-audit-v1/runtime/stage23a_v2a/content.log",
+      "sha256": "f15cdab785101de04e514fec9de29672776d206374c6ca0e5c06d9a48d7d2275"
+    },
+    "hierarchical_fold0.log": {
+      "bytes": 2628,
+      "modified_at_utc": "2026-07-26T05:53:14.711510+00:00",
+      "path": "/code/DLF-mosei-arbiter-audit-v1/runtime/stage23a_v2a/hierarchical_fold0.log",
+      "sha256": "21e78b5b4784ee38f70217a2821db8bd75cb7dd15527402de49260036cdfe8e9"
+    },
+    "hierarchical_fold1.log": {
+      "bytes": 2624,
+      "modified_at_utc": "2026-07-26T05:52:20.881329+00:00",
+      "path": "/code/DLF-mosei-arbiter-audit-v1/runtime/stage23a_v2a/hierarchical_fold1.log",
+      "sha256": "8e9c5e22d399fc74deac31c866847cfeadabb0ddedb11e8cf821484a26f489a9"
+    },
+    "runtime_capture.log": {
+      "bytes": 0,
+      "modified_at_utc": "2026-07-26T05:57:39.946870+00:00",
+      "path": "/code/DLF-mosei-arbiter-audit-v1/runtime/stage23a_v2a/runtime_capture.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "scipy": "1.9.1",
+  "sklearn": "1.0.2",
+  "stage": "Stage23A-v2a runtime/environment snapshot",
+  "student_training_performed": false,
+  "torch": "1.13.0+cu117"
+}

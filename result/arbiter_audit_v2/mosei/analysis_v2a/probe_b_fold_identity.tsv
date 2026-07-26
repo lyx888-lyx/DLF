@@ -1,0 +1,7 @@
+probe	role	selected_C_inner_valid_only	samples	sources	balanced_accuracy	AUROC	log_loss	outer_evaluation_run	reason_no_outer
+content_only	inner_train	1	57484	1987	0.5007808965	0.5032118026	0.693145959	False	both folds are required to fit fold identity; opposite Direction outer rows are the same samples and cannot be independent
+content_only	inner_valid	1	7820	262	0.491442341	0.4727462328	0.6931768518	False	both folds are required to fit fold identity; opposite Direction outer rows are the same samples and cannot be independent
+consistency_only	inner_train	10	57484	1987	0.7407520589	0.8164596709	0.5337071298	False	both folds are required to fit fold identity; opposite Direction outer rows are the same samples and cannot be independent
+consistency_only	inner_valid	10	7820	262	0.7275480554	0.8070683562	0.5418800566	False	both folds are required to fit fold identity; opposite Direction outer rows are the same samples and cannot be independent
+content_plus_consistency	inner_train	0.1	57484	1987	0.7441581185	0.819808821	0.5305391475	False	both folds are required to fit fold identity; opposite Direction outer rows are the same samples and cannot be independent
+content_plus_consistency	inner_valid	0.1	7820	262	0.734324406	0.8101744655	0.540431589	False	both folds are required to fit fold identity; opposite Direction outer rows are the same samples and cannot be independent

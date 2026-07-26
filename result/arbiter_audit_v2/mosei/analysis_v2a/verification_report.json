@@ -1,0 +1,244 @@
+{
+  "assertion_count": 47,
+  "assertions": [
+    {
+      "assertion": "parent_manifest_sha_unchanged",
+      "detail": "ba4226714ba0f19e7ec75715a68891f6baaf61ef7d1829ba422d2d81d2bcfa3f",
+      "pass": true
+    },
+    {
+      "assertion": "feature_authorized",
+      "detail": "true",
+      "pass": true
+    },
+    {
+      "assertion": "judge_training_authorized_locked",
+      "detail": "False",
+      "pass": true
+    },
+    {
+      "assertion": "official_valid_authorized_locked",
+      "detail": "False",
+      "pass": true
+    },
+    {
+      "assertion": "test_authorized_locked",
+      "detail": "False",
+      "pass": true
+    },
+    {
+      "assertion": "student_training_authorized_locked",
+      "detail": "False",
+      "pass": true
+    },
+    {
+      "assertion": "frozen_expert_pool_sha_unchanged",
+      "detail": "7ea2f7cfcb64725f246039f1050774e761b4f541fe093ceb115e98f8034cdced",
+      "pass": true
+    },
+    {
+      "assertion": "exact_five_frozen_experts",
+      "detail": "cfcompat_seed1111|cfcompat_seed1114|moddrop_seed1111|moddrop_seed1114|uniform_kd_seed1111",
+      "pass": true
+    },
+    {
+      "assertion": "fold0_hierarchical_status",
+      "detail": "PASS",
+      "pass": true
+    },
+    {
+      "assertion": "fold0_preferred_replay",
+      "detail": "5.000000413701855e-10",
+      "pass": true
+    },
+    {
+      "assertion": "fold0_rows",
+      "detail": "170640",
+      "pass": true
+    },
+    {
+      "assertion": "fold0_duplicates",
+      "detail": "0",
+      "pass": true
+    },
+    {
+      "assertion": "fold0_missing",
+      "detail": "0",
+      "pass": true
+    },
+    {
+      "assertion": "fold0_artifact_sha",
+      "detail": "b99b05c69777c2e2305758b4ccf7be7316219dea8cb4d4eb487f1065fb6a64ec",
+      "pass": true
+    },
+    {
+      "assertion": "fold1_hierarchical_status",
+      "detail": "PASS",
+      "pass": true
+    },
+    {
+      "assertion": "fold1_preferred_replay",
+      "detail": "5.000000413701855e-10",
+      "pass": true
+    },
+    {
+      "assertion": "fold1_rows",
+      "detail": "155880",
+      "pass": true
+    },
+    {
+      "assertion": "fold1_duplicates",
+      "detail": "0",
+      "pass": true
+    },
+    {
+      "assertion": "fold1_missing",
+      "detail": "0",
+      "pass": true
+    },
+    {
+      "assertion": "fold1_artifact_sha",
+      "detail": "8540f76308f809de30886ac539feb6e3d673fbc893cfd58f64e2215acbdf6850",
+      "pass": true
+    },
+    {
+      "assertion": "hierarchical_total_rows",
+      "detail": "326520",
+      "pass": true
+    },
+    {
+      "assertion": "hierarchical_unique_keys",
+      "detail": "0",
+      "pass": true
+    },
+    {
+      "assertion": "hierarchical_all_samples",
+      "detail": "16326",
+      "pass": true
+    },
+    {
+      "assertion": "hierarchical_fold_sample_overlap_zero",
+      "detail": "0",
+      "pass": true
+    },
+    {
+      "assertion": "content_train_only",
+      "detail": "['train']",
+      "pass": true
+    },
+    {
+      "assertion": "vision_ineffective_482",
+      "detail": "482",
+      "pass": true
+    },
+    {
+      "assertion": "direction_A_labels_not_inputs",
+      "detail": "true",
+      "pass": true
+    },
+    {
+      "assertion": "direction_A_vision_zero",
+      "detail": "true",
+      "pass": true
+    },
+    {
+      "assertion": "A_inner_train_shape",
+      "detail": "(29752, 57)",
+      "pass": true
+    },
+    {
+      "assertion": "A_inner_train_finite",
+      "detail": "finite",
+      "pass": true
+    },
+    {
+      "assertion": "A_inner_valid_shape",
+      "detail": "(4376, 57)",
+      "pass": true
+    },
+    {
+      "assertion": "A_inner_valid_finite",
+      "detail": "finite",
+      "pass": true
+    },
+    {
+      "assertion": "A_outer_evaluation_shape",
+      "detail": "(31176, 57)",
+      "pass": true
+    },
+    {
+      "assertion": "A_outer_evaluation_finite",
+      "detail": "finite",
+      "pass": true
+    },
+    {
+      "assertion": "direction_B_labels_not_inputs",
+      "detail": "true",
+      "pass": true
+    },
+    {
+      "assertion": "direction_B_vision_zero",
+      "detail": "true",
+      "pass": true
+    },
+    {
+      "assertion": "B_inner_train_shape",
+      "detail": "(27732, 57)",
+      "pass": true
+    },
+    {
+      "assertion": "B_inner_train_finite",
+      "detail": "finite",
+      "pass": true
+    },
+    {
+      "assertion": "B_inner_valid_shape",
+      "detail": "(3444, 57)",
+      "pass": true
+    },
+    {
+      "assertion": "B_inner_valid_finite",
+      "detail": "finite",
+      "pass": true
+    },
+    {
+      "assertion": "B_outer_evaluation_shape",
+      "detail": "(34128, 57)",
+      "pass": true
+    },
+    {
+      "assertion": "B_outer_evaluation_finite",
+      "detail": "finite",
+      "pass": true
+    },
+    {
+      "assertion": "signal_status_valid",
+      "detail": "SIGNAL_AUDIT_FAIL",
+      "pass": true
+    },
+    {
+      "assertion": "locked_test_zero",
+      "detail": "0",
+      "pass": true
+    },
+    {
+      "assertion": "official_valid_zero",
+      "detail": "0",
+      "pass": true
+    },
+    {
+      "assertion": "student_not_trained",
+      "detail": "False",
+      "pass": true
+    },
+    {
+      "assertion": "judge_not_started",
+      "detail": "False",
+      "pass": true
+    }
+  ],
+  "locked_test_access_count": 0,
+  "official_valid_access_count": 0,
+  "stage": "Stage23A-v2a independent artifact verification",
+  "status": "PASS"
+}

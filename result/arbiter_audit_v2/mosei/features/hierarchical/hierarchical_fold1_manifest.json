@@ -1,0 +1,77 @@
+{
+  "completed_at": "2026-07-26T05:52:20.730712+00:00",
+  "dataset_partition": "Train outer-fold held-out samples only",
+  "duplicates": 0,
+  "expected_rows": 155880,
+  "expert_retrained": false,
+  "experts": [
+    "uniform_kd_seed1111",
+    "moddrop_seed1111",
+    "moddrop_seed1114",
+    "cfcompat_seed1111",
+    "cfcompat_seed1114"
+  ],
+  "finite_logits": true,
+  "gpu_id": 0,
+  "hard_replay_gate_pass": true,
+  "head_columns": [
+    "output_logit",
+    "logits_c",
+    "logits_l_hetero",
+    "logits_a_hetero",
+    "logits_v_hetero"
+  ],
+  "judge_training_started": false,
+  "locked_test_access_count": 0,
+  "max_abs_final_replay_diff": 5.000000413701855e-10,
+  "maximum_cases_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/hierarchical/hierarchical_replay_fold1_maximum_cases.csv",
+  "maximum_cases_sha256": "b8d1fd23eee9c368d091a52ed0a9f70aadf7666f1fe018cf0ce59ff32db3e941",
+  "mean_abs_final_replay_diff": 7.5769171519954e-11,
+  "missing_values": 0,
+  "mode_active_heads": {
+    "L": [
+      "output_logit",
+      "logits_c",
+      "logits_l_hetero"
+    ],
+    "LA": [
+      "output_logit",
+      "logits_c",
+      "logits_l_hetero",
+      "logits_a_hetero"
+    ],
+    "LAV": [
+      "output_logit",
+      "logits_c",
+      "logits_l_hetero",
+      "logits_a_hetero",
+      "logits_v_hetero"
+    ],
+    "LV": [
+      "output_logit",
+      "logits_c",
+      "logits_l_hetero",
+      "logits_v_hetero"
+    ]
+  },
+  "modes": [
+    "LAV",
+    "LA",
+    "LV",
+    "L"
+  ],
+  "official_valid_access_count": 0,
+  "outer_fold": 1,
+  "output_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/hierarchical/hierarchical_logits_fold1.csv.gz",
+  "output_sha256": "8540f76308f809de30886ac539feb6e3d673fbc893cfd58f64e2215acbdf6850",
+  "preferred_replay_gate_pass": true,
+  "row_binding_sha_verified": true,
+  "rows": 155880,
+  "sample_binding_sha_verified": true,
+  "samples": 7794,
+  "stage": "Stage23A-v2a hierarchical frozen Expert extraction",
+  "stats_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/hierarchical/hierarchical_replay_fold1_stats.csv",
+  "stats_sha256": "adc5dbd280e5954f3eb6fb776af6f8cd5e720eeeb25483f7e1cc561e07370446",
+  "status": "PASS",
+  "student_trained": false
+}

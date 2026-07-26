@@ -1,0 +1,16 @@
+{
+  "stage": "Stage23A-v2a",
+  "status": "AUTHORIZED_FOR_FEATURE_EXTRACTION_AND_SIGNAL_AUDIT_ONLY",
+  "authorization_manifest_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/v2a_authorization_manifest.json",
+  "authorization_manifest_sha256": "520758dfdc61ebdfd34faade76941316d3dec8d889de25fbc791f170bd4928ec",
+  "implementation_authorized": true,
+  "feature_extraction_authorized": true,
+  "signal_audit_authorized": true,
+  "judge_training_authorized": false,
+  "official_valid_authorized": false,
+  "test_authorized": false,
+  "student_training_authorized": false,
+  "official_valid_access_count": 0,
+  "locked_test_access_count": 0,
+  "updated_at": "2026-07-26T05:23:17.698615+00:00"
+}

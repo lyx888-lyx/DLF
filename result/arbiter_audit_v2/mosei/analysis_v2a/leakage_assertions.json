@@ -1,0 +1,16 @@
+{
+  "direction_specific_preprocessors_fit_inner_train_only": true,
+  "expert_checkpoint_modified_or_retrained": false,
+  "feature_dimension": 57,
+  "fold_identity_probe_outer_omitted_to_avoid_train_eval_sample_reuse": true,
+  "formal_dual_head_judge_trained": false,
+  "ground_truth_used_as_probe_target_and_metrics_only": true,
+  "labels_sources_folds_absent_from_feature_names": true,
+  "locked_test_access_count": 0,
+  "official_valid_access_count": 0,
+  "outer_evaluation_used_for_fit_or_selection": false,
+  "probe_hyperparameters_selected_inner_valid_only": true,
+  "status": "PASS",
+  "strong_static_selected_inner_valid_only": true,
+  "student_trained": false
+}

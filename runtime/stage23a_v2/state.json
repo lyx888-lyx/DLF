@@ -1,16 +1,20 @@
 {
-  "authorization_manifest_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/protocol/v2a_authorization_manifest.json",
-  "authorization_manifest_sha256": "520758dfdc61ebdfd34faade76941316d3dec8d889de25fbc791f170bd4928ec",
-  "feature_extraction_authorized": true,
-  "implementation_authorized": true,
+  "analysis_report_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/analysis_v2a/stage23a_v2a_signal_audit.json",
+  "analysis_report_sha256": "2f495c423cffd6c4ef11573f9d5f3369236fe9289fff3c4de0fcdef2cc7ebbec",
+  "expert_checkpoint_modified_or_retrained": false,
   "judge_training_authorized": false,
+  "judge_training_started": false,
   "locked_test_access_count": 0,
+  "markdown_report_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/analysis_v2a/stage23a_v2a_signal_audit.md",
+  "markdown_report_sha256": "fbdeee85eccf405c564651bf2a26860fa32bf2e57173e956dda532a73fa3d0f8",
+  "next_action": "stop; await explicit user decision; formal Judge remains unauthorized",
   "official_valid_access_count": 0,
   "official_valid_authorized": false,
-  "signal_audit_authorized": true,
   "stage": "Stage23A-v2a",
-  "status": "AUTHORIZED_FOR_FEATURE_EXTRACTION_AND_SIGNAL_AUDIT_ONLY",
+  "status": "SIGNAL_AUDIT_FAIL",
+  "student_trained": false,
   "student_training_authorized": false,
   "test_authorized": false,
-  "updated_at": "2026-07-26T05:23:17.698615+00:00"
+  "test_loader_constructed": false,
+  "updated_at": "2026-07-26T05:55:36.452026+00:00"
 }

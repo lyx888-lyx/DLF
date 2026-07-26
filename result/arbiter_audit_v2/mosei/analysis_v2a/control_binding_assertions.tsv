@@ -1,0 +1,13 @@
+direction	control	seed	train_cross_source_collisions	valid_outer_content_application	max_active_coordinate_mean_difference	max_active_coordinate_std_difference
+A	cross_source_shuffle	23021	0	normally paired		
+A	cross_source_shuffle	23022	0	normally paired		
+A	cross_source_shuffle	23023	0	normally paired		
+A	matched_noise	23121		hash-keyed label-free matched noise	0.05457399222	0.1043142097
+A	matched_noise	23122		hash-keyed label-free matched noise	0.08050345741	0.03194919471
+A	matched_noise	23123		hash-keyed label-free matched noise	0.0912644715	0.09605957452
+B	cross_source_shuffle	23021	0	normally paired		
+B	cross_source_shuffle	23022	0	normally paired		
+B	cross_source_shuffle	23023	0	normally paired		
+B	matched_noise	23121		hash-keyed label-free matched noise	0.03945323073	0.04487768567
+B	matched_noise	23122		hash-keyed label-free matched noise	0.0630992476	0.06612518436
+B	matched_noise	23123		hash-keyed label-free matched noise	0.1050953696	0.0620974495

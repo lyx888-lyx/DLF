@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="420" viewBox="0 0 760 420">
+<rect width="100%" height="100%" fill="white"/>
+<text x="380.0" y="28" text-anchor="middle" font-family="Arial" font-size="18">Direction B outer best-to-second Expert error margin</text>
+<line x1="70" y1="55" x2="70" y2="355" stroke="#222"/>
+<line x1="70" y1="355" x2="740" y2="355" stroke="#222"/>
+<rect x="70.00" y="55.00" width="15.75" height="300.00" fill="#4C78A8"/>
+<rect x="86.75" y="172.25" width="15.75" height="182.75" fill="#4C78A8"/>
+<rect x="103.50" y="236.34" width="15.75" height="118.66" fill="#4C78A8"/>
+<rect x="120.25" y="282.10" width="15.75" height="72.90" fill="#4C78A8"/>
+<rect x="137.00" y="312.20" width="15.75" height="42.80" fill="#4C78A8"/>
+<rect x="153.75" y="329.60" width="15.75" height="25.40" fill="#4C78A8"/>
+<rect x="170.50" y="339.98" width="15.75" height="15.02" fill="#4C78A8"/>
+<rect x="187.25" y="344.48" width="15.75" height="10.52" fill="#4C78A8"/>
+<rect x="204.00" y="348.54" width="15.75" height="6.46" fill="#4C78A8"/>
+<rect x="220.75" y="350.90" width="15.75" height="4.10" fill="#4C78A8"/>
+<rect x="237.50" y="352.31" width="15.75" height="2.69" fill="#4C78A8"/>
+<rect x="254.25" y="352.24" width="15.75" height="2.76" fill="#4C78A8"/>
+<rect x="271.00" y="352.78" width="15.75" height="2.22" fill="#4C78A8"/>
+<rect x="287.75" y="354.26" width="15.75" height="0.74" fill="#4C78A8"/>
+<rect x="304.50" y="354.56" width="15.75" height="0.44" fill="#4C78A8"/>
+<rect x="321.25" y="354.14" width="15.75" height="0.86" fill="#4C78A8"/>
+<rect x="338.00" y="354.58" width="15.75" height="0.42" fill="#4C78A8"/>
+<rect x="354.75" y="354.51" width="15.75" height="0.49" fill="#4C78A8"/>
+<rect x="371.50" y="354.75" width="15.75" height="0.25" fill="#4C78A8"/>
+<rect x="388.25" y="354.84" width="15.75" height="0.16" fill="#4C78A8"/>
+<rect x="405.00" y="354.75" width="15.75" height="0.25" fill="#4C78A8"/>
+<rect x="421.75" y="354.84" width="15.75" height="0.16" fill="#4C78A8"/>
+<rect x="438.50" y="354.81" width="15.75" height="0.19" fill="#4C78A8"/>
+<rect x="455.25" y="355.00" width="15.75" height="0.00" fill="#4C78A8"/>
+<rect x="472.00" y="354.95" width="15.75" height="0.05" fill="#4C78A8"/>
+<rect x="488.75" y="354.93" width="15.75" height="0.07" fill="#4C78A8"/>
+<rect x="505.50" y="354.88" width="15.75" height="0.12" fill="#4C78A8"/>
+<rect x="522.25" y="354.98" width="15.75" height="0.02" fill="#4C78A8"/>
+<rect x="539.00" y="354.98" width="15.75" height="0.02" fill="#4C78A8"/>
+<rect x="555.75" y="355.00" width="15.75" height="0.00" fill="#4C78A8"/>
+<rect x="572.50" y="355.00" width="15.75" height="0.00" fill="#4C78A8"/>
+<rect x="589.25" y="355.00" width="15.75" height="0.00" fill="#4C78A8"/>
+<rect x="606.00" y="355.00" width="15.75" height="0.00" fill="#4C78A8"/>
+<rect x="622.75" y="355.00" width="15.75" height="0.00" fill="#4C78A8"/>
+<rect x="639.50" y="355.00" width="15.75" height="0.00" fill="#4C78A8"/>
+<rect x="656.25" y="354.91" width="15.75" height="0.09" fill="#4C78A8"/>
+<rect x="673.00" y="354.91" width="15.75" height="0.09" fill="#4C78A8"/>
+<rect x="689.75" y="355.00" width="15.75" height="0.00" fill="#4C78A8"/>
+<rect x="706.50" y="355.00" width="15.75" height="0.00" fill="#4C78A8"/>
+<rect x="723.25" y="354.91" width="15.75" height="0.09" fill="#4C78A8"/>
+<text x="70" y="378" font-family="Arial" font-size="12">4.172e-07</text>
+<text x="740" y="378" text-anchor="end" font-family="Arial" font-size="12">1.471</text>
+<text x="380.0" y="408" text-anchor="middle" font-family="Arial" font-size="13">second-best absolute error − best absolute error</text>
+<text x="18" y="210.0" transform="rotate(-90 18 210.0)" text-anchor="middle" font-family="Arial" font-size="13">count</text>
+</svg>

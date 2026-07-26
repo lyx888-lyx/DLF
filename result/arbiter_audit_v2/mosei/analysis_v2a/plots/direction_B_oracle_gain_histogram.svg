@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="420" viewBox="0 0 760 420">
+<rect width="100%" height="100%" fill="white"/>
+<text x="380.0" y="28" text-anchor="middle" font-family="Arial" font-size="18">Direction B outer Oracle gain distribution</text>
+<line x1="70" y1="55" x2="70" y2="355" stroke="#222"/>
+<line x1="70" y1="355" x2="740" y2="355" stroke="#222"/>
+<rect x="70.00" y="354.88" width="15.75" height="0.12" fill="#4C78A8"/>
+<rect x="86.75" y="354.93" width="15.75" height="0.07" fill="#4C78A8"/>
+<rect x="103.50" y="354.90" width="15.75" height="0.10" fill="#4C78A8"/>
+<rect x="120.25" y="354.95" width="15.75" height="0.05" fill="#4C78A8"/>
+<rect x="137.00" y="354.83" width="15.75" height="0.17" fill="#4C78A8"/>
+<rect x="153.75" y="354.54" width="15.75" height="0.46" fill="#4C78A8"/>
+<rect x="170.50" y="352.78" width="15.75" height="2.22" fill="#4C78A8"/>
+<rect x="187.25" y="330.66" width="15.75" height="24.34" fill="#4C78A8"/>
+<rect x="204.00" y="211.11" width="15.75" height="143.89" fill="#4C78A8"/>
+<rect x="220.75" y="55.00" width="15.75" height="300.00" fill="#4C78A8"/>
+<rect x="237.50" y="153.96" width="15.75" height="201.04" fill="#4C78A8"/>
+<rect x="254.25" y="269.99" width="15.75" height="85.01" fill="#4C78A8"/>
+<rect x="271.00" y="317.49" width="15.75" height="37.51" fill="#4C78A8"/>
+<rect x="287.75" y="338.31" width="15.75" height="16.69" fill="#4C78A8"/>
+<rect x="304.50" y="346.64" width="15.75" height="8.36" fill="#4C78A8"/>
+<rect x="321.25" y="349.77" width="15.75" height="5.23" fill="#4C78A8"/>
+<rect x="338.00" y="351.21" width="15.75" height="3.79" fill="#4C78A8"/>
+<rect x="354.75" y="353.58" width="15.75" height="1.42" fill="#4C78A8"/>
+<rect x="371.50" y="353.90" width="15.75" height="1.10" fill="#4C78A8"/>
+<rect x="388.25" y="354.46" width="15.75" height="0.54" fill="#4C78A8"/>
+<rect x="405.00" y="354.66" width="15.75" height="0.34" fill="#4C78A8"/>
+<rect x="421.75" y="354.71" width="15.75" height="0.29" fill="#4C78A8"/>
+<rect x="438.50" y="354.83" width="15.75" height="0.17" fill="#4C78A8"/>
+<rect x="455.25" y="354.73" width="15.75" height="0.27" fill="#4C78A8"/>
+<rect x="472.00" y="354.76" width="15.75" height="0.24" fill="#4C78A8"/>
+<rect x="488.75" y="354.90" width="15.75" height="0.10" fill="#4C78A8"/>
+<rect x="505.50" y="354.93" width="15.75" height="0.07" fill="#4C78A8"/>
+<rect x="522.25" y="354.98" width="15.75" height="0.02" fill="#4C78A8"/>
+<rect x="539.00" y="354.88" width="15.75" height="0.12" fill="#4C78A8"/>
+<rect x="555.75" y="354.95" width="15.75" height="0.05" fill="#4C78A8"/>
+<rect x="572.50" y="355.00" width="15.75" height="0.00" fill="#4C78A8"/>
+<rect x="589.25" y="355.00" width="15.75" height="0.00" fill="#4C78A8"/>
+<rect x="606.00" y="355.00" width="15.75" height="0.00" fill="#4C78A8"/>
+<rect x="622.75" y="355.00" width="15.75" height="0.00" fill="#4C78A8"/>
+<rect x="639.50" y="355.00" width="15.75" height="0.00" fill="#4C78A8"/>
+<rect x="656.25" y="355.00" width="15.75" height="0.00" fill="#4C78A8"/>
+<rect x="673.00" y="355.00" width="15.75" height="0.00" fill="#4C78A8"/>
+<rect x="689.75" y="355.00" width="15.75" height="0.00" fill="#4C78A8"/>
+<rect x="706.50" y="354.95" width="15.75" height="0.05" fill="#4C78A8"/>
+<rect x="723.25" y="354.95" width="15.75" height="0.05" fill="#4C78A8"/>
+<text x="70" y="378" font-family="Arial" font-size="12">-0.6188</text>
+<text x="740" y="378" text-anchor="end" font-family="Arial" font-size="12">2.428</text>
+<text x="380.0" y="408" text-anchor="middle" font-family="Arial" font-size="13">strong-static absolute error − oracle absolute error (positive is better)</text>
+<text x="18" y="210.0" transform="rotate(-90 18 210.0)" text-anchor="middle" font-family="Arial" font-size="13">count</text>
+</svg>

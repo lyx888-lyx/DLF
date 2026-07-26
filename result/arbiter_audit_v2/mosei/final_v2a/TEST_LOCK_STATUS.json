@@ -1,0 +1,14 @@
+{
+  "expert_checkpoint_modified_or_retrained": false,
+  "judge_training_authorized": false,
+  "judge_training_started": false,
+  "locked_test_access_count": 0,
+  "official_valid_access_count": 0,
+  "official_valid_authorized": false,
+  "stage": "Stage23A-v2a",
+  "status": "SIGNAL_AUDIT_FAIL",
+  "student_trained": false,
+  "student_training_authorized": false,
+  "test_authorized": false,
+  "test_loader_constructed": false
+}

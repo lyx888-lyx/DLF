@@ -1,0 +1,16 @@
+{
+  "artifact_count_excluding_manifest_files": 89,
+  "artifact_tsv_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/analysis_v2a/artifact_manifest.tsv",
+  "artifact_tsv_sha256": "37630f20b6238caec0d2e86b5e1bf381b79bb44811c2e45341bf1fb8f2810044",
+  "authorization_manifest_sha256": "520758dfdc61ebdfd34faade76941316d3dec8d889de25fbc791f170bd4928ec",
+  "created_at": "2026-07-26T05:57:41.974928+00:00",
+  "formal_judge_trained": false,
+  "git_head": "2fa454b9e262a6da48b078daab430d84beb7e02e",
+  "locked_test_access_count": 0,
+  "official_valid_access_count": 0,
+  "parent_frozen_manifest_sha256": "ba4226714ba0f19e7ec75715a68891f6baaf61ef7d1829ba422d2d81d2bcfa3f",
+  "stage": "Stage23A-v2a final artifact ledger",
+  "status": "SIGNAL_AUDIT_FAIL",
+  "student_trained": false,
+  "total_bytes": 200186372
+}

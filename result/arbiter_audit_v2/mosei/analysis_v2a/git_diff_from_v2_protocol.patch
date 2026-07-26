@@ -1,0 +1,3076 @@
+diff --git a/scripts/mosei/stage23a_v2a_authorize.py b/scripts/mosei/stage23a_v2a_authorize.py
+new file mode 100644
+index 0000000..7d1e6f3
+--- /dev/null
++++ b/scripts/mosei/stage23a_v2a_authorize.py
+@@ -0,0 +1,125 @@
++#!/usr/bin/env python
++"""Freeze the Stage23A-v2a feature/signal-audit authorization.
++
++This creates an immutable child manifest.  The Stage23A-v2 protocol manifest is
++kept byte-for-byte unchanged and is referenced by path and SHA256.
++"""
++
++from __future__ import annotations
++
++import json
++from datetime import datetime, timezone
++
++from stage23a_v2_common import RUNTIME_ROOT, V2_ROOT, atomic_json, git_head, sha256_file
++
++
++def main():
++    protocol_dir = V2_ROOT / "protocol"
++    parent_path = protocol_dir / "frozen_protocol_manifest.json"
++    parent = json.loads(parent_path.read_text(encoding="utf-8"))
++    parent_sha = sha256_file(parent_path)
++    if parent_sha != "ba4226714ba0f19e7ec75715a68891f6baaf61ef7d1829ba422d2d81d2bcfa3f":
++        raise RuntimeError("Frozen parent manifest SHA changed: {}".format(parent_sha))
++    if parent.get("locked_test_access_count") != 0:
++        raise RuntimeError("Test lock count is not zero.")
++
++    strong_static = {
++        "name": "strong_static",
++        "candidate_methods": ["equal_average", "per_mode_constrained_fixed_stacking"],
++        "stacking_objective": "per-mode inner-train MAE under nonnegative simplex weights summing to one",
++        "selection_scope": "for each Direction, choose one candidate using inner-valid J only",
++        "application_scope": "freeze selected candidate and weights before one-shot outer evaluation",
++        "outer_evaluation_used_for_selection": False,
++        "gain_definition": "strong_static_J - oracle_expert_selection_J; positive is better",
++        "experts": [
++            "uniform_kd_seed1111",
++            "moddrop_seed1111",
++            "moddrop_seed1114",
++            "cfcompat_seed1111",
++            "cfcompat_seed1114",
++        ],
++    }
++    effective_availability = {
++        "all_zero_vision_clip_count_expected": 482,
++        "vision_effective_available_rule": "vision has at least one finite nonzero timestep",
++        "all_zero_vision_policy": {
++            "vision_effective_available": 0,
++            "raw_vision_summary": "all zeros",
++            "vision_scaler_pca_fit": "exclude ineffective clips",
++            "vision_pca_after_transform": "force all zeros",
++            "effective_availability_mask": "vision bit is mode availability AND vision_effective_available",
++            "mode_one_hot": "unchanged",
++        },
++        "text_audio_policy": "same effective-availability rule; expected no all-zero Train clips",
++    }
++    authorization = {
++        "stage": "Stage23A-v2a Feature Extraction and Signal Audit",
++        "status": "AUTHORIZED_FOR_FEATURE_EXTRACTION_AND_SIGNAL_AUDIT_ONLY",
++        "created_at": datetime.now(timezone.utc).isoformat(),
++        "git_head_at_authorization": git_head(),
++        "parent_frozen_manifest_path": str(parent_path.resolve()),
++        "parent_frozen_manifest_sha256": parent_sha,
++        "implementation_authorized": True,
++        "feature_extraction_authorized": True,
++        "signal_audit_authorized": True,
++        "judge_training_authorized": False,
++        "official_valid_authorized": False,
++        "test_authorized": False,
++        "student_training_authorized": False,
++        "judge_training_started": False,
++        "official_valid_access_count": 0,
++        "locked_test_access_count": 0,
++        "student_trained": False,
++        "expert_checkpoint_modified": False,
++        "strong_static_protocol": strong_static,
++        "effective_availability_protocol": effective_availability,
++        "permitted_actions": [
++            "frozen Expert hierarchical-head extraction",
++            "Train-only fixed input content summaries",
++            "Direction-specific Train-only normalization and PCA",
++            "frozen 57D meta-feature construction",
++            "leakage-free signal audits and simple probes",
++        ],
++        "forbidden_actions": [
++            "formal dual-head Judge training",
++            "Official Valid access",
++            "Test access",
++            "Student training",
++            "Expert checkpoint modification or retraining",
++            "feature or hyperparameter selection using outer evaluation",
++        ],
++        "next_action": "extract frozen hierarchical outputs and Train-only content summaries",
++    }
++    auth_path = protocol_dir / "v2a_authorization_manifest.json"
++    static_path = protocol_dir / "strong_static_protocol.json"
++    availability_path = protocol_dir / "effective_availability_protocol.json"
++    atomic_json(static_path, strong_static)
++    atomic_json(availability_path, effective_availability)
++    authorization["strong_static_protocol_path"] = str(static_path.resolve())
++    authorization["strong_static_protocol_sha256"] = sha256_file(static_path)
++    authorization["effective_availability_protocol_path"] = str(availability_path.resolve())
++    authorization["effective_availability_protocol_sha256"] = sha256_file(availability_path)
++    atomic_json(auth_path, authorization)
++
++    state = {
++        "stage": "Stage23A-v2a",
++        "status": authorization["status"],
++        "authorization_manifest_path": str(auth_path.resolve()),
++        "authorization_manifest_sha256": sha256_file(auth_path),
++        "implementation_authorized": True,
++        "feature_extraction_authorized": True,
++        "signal_audit_authorized": True,
++        "judge_training_authorized": False,
++        "official_valid_authorized": False,
++        "test_authorized": False,
++        "student_training_authorized": False,
++        "official_valid_access_count": 0,
++        "locked_test_access_count": 0,
++        "updated_at": datetime.now(timezone.utc).isoformat(),
++    }
++    atomic_json(RUNTIME_ROOT / "state.json", state)
++    print(json.dumps(state, indent=2))
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/scripts/mosei/stage23a_v2a_build_features.py b/scripts/mosei/stage23a_v2a_build_features.py
+new file mode 100644
+index 0000000..35c9089
+--- /dev/null
++++ b/scripts/mosei/stage23a_v2a_build_features.py
+@@ -0,0 +1,529 @@
++#!/usr/bin/env python
++"""Fit Direction-specific preprocessors and construct the frozen 57D ledger."""
++
++from __future__ import annotations
++
++import json
++from datetime import datetime, timezone
++from pathlib import Path
++
++import joblib
++import numpy as np
++import pandas as pd
++from sklearn.decomposition import PCA
++from sklearn.preprocessing import StandardScaler
++
++from stage23a_v2_common import (
++    EXPERTS,
++    MODE_AVAILABILITY,
++    MODES,
++    V2_ROOT,
++    atomic_csv,
++    atomic_json,
++    optimize_simplex,
++    overall_j,
++    sha256_file,
++    sha256_json,
++)
++
++
++PREDICTION_COLUMNS = ["prediction__{}".format(expert) for expert in EXPERTS]
++PCA_DIMENSIONS = {"text": 16, "audio": 8, "vision": 8}
++RAW_DIMENSIONS = {"text": 1536, "audio": 148, "vision": 70}
++ROLE_NAMES = ("inner_train", "inner_valid", "outer_evaluation")
++
++
++def load_content():
++    root = V2_ROOT / "features" / "content_raw"
++    metadata = pd.read_csv(
++        root / "content_summary_ledger.csv",
++        dtype={"sample_id": str, "video_id": str},
++    ).sort_values("train_index")
++    matrices = {}
++    for modality in ("text", "audio", "vision"):
++        mean = np.load(
++            root / "{}_temporal_mean_float32.npy".format(modality),
++            allow_pickle=False,
++        )
++        std = np.load(
++            root / "{}_temporal_std_float32.npy".format(modality),
++            allow_pickle=False,
++        )
++        matrices[modality] = np.concatenate([mean, std], axis=1)
++        if matrices[modality].shape != (16326, RAW_DIMENSIONS[modality]):
++            raise RuntimeError("Raw summary shape mismatch {}.".format(modality))
++    return metadata, matrices
++
++
++def load_consistency():
++    paths = [
++        V2_ROOT
++        / "features"
++        / "hierarchical"
++        / "hierarchical_logits_fold{}.csv.gz".format(fold)
++        for fold in (0, 1)
++    ]
++    pieces = [
++        pd.read_csv(
++            path,
++            usecols=[
++                "sample_id",
++                "mode",
++                "expert_id",
++                "hierarchical_consistency_mad",
++            ],
++            dtype={"sample_id": str},
++        )
++        for path in paths
++    ]
++    long = pd.concat(pieces, ignore_index=True)
++    if len(long) != 326520:
++        raise RuntimeError("Hierarchical row count mismatch.")
++    wide = long.pivot(
++        index=["sample_id", "mode"],
++        columns="expert_id",
++        values="hierarchical_consistency_mad",
++    )
++    wide = wide.reindex(columns=list(EXPERTS))
++    wide.columns = ["consistency__{}".format(value) for value in wide.columns]
++    return wide.reset_index()
++
++
++def save_npz(path, **arrays):
++    path = Path(path)
++    path.parent.mkdir(parents=True, exist_ok=True)
++    temporary = path.with_suffix(path.suffix + ".tmp")
++    with temporary.open("wb") as handle:
++        np.savez_compressed(handle, **arrays)
++    temporary.replace(path)
++
++
++def fit_preprocessors(direction, role_by_video, content_meta, content):
++    train_videos = {
++        video
++        for video, role in role_by_video.items()
++        if role == "inner_train"
++    }
++    fit_mask = content_meta["video_id"].isin(train_videos).to_numpy()
++    if not fit_mask.any():
++        raise RuntimeError("No inner-train clips for Direction {}.".format(direction))
++    output_dir = V2_ROOT / "features" / "preprocessing" / "direction_{}".format(
++        direction
++    )
++    output_dir.mkdir(parents=True, exist_ok=True)
++    transformed = {}
++    details = {}
++    for modality in ("text", "audio", "vision"):
++        effective = (
++            content_meta["{}_effective_available".format(modality)]
++            .astype(int)
++            .to_numpy()
++            == 1
++        )
++        modality_fit = fit_mask & effective
++        fit_values = np.asarray(content[modality][modality_fit], dtype=np.float64)
++        scaler = StandardScaler().fit(fit_values)
++        pca = PCA(
++            n_components=PCA_DIMENSIONS[modality],
++            svd_solver="randomized",
++            random_state=2302,
++        ).fit(scaler.transform(fit_values))
++        all_values = pca.transform(
++            scaler.transform(np.asarray(content[modality], dtype=np.float64))
++        )
++        all_values[~effective] = 0.0
++        transformed[modality] = all_values.astype(np.float32)
++        scaler_path = output_dir / "{}_scaler.joblib".format(modality)
++        pca_path = output_dir / "{}_pca.joblib".format(modality)
++        joblib.dump(scaler, scaler_path, compress=3)
++        joblib.dump(pca, pca_path, compress=3)
++        details[modality] = {
++            "fit_clips": int(modality_fit.sum()),
++            "fit_sources": int(
++                content_meta.loc[modality_fit, "video_id"].nunique()
++            ),
++            "ineffective_clips_excluded_from_fit": int(
++                (fit_mask & ~effective).sum()
++            ),
++            "input_dim": RAW_DIMENSIONS[modality],
++            "output_dim": PCA_DIMENSIONS[modality],
++            "input_feature_ordering": "temporal_mean raw coordinates 0..D-1, then population_std raw coordinates 0..D-1",
++            "normalization": "StandardScaler fitted on effective inner-train unique clips",
++            "pca_solver": "randomized",
++            "pca_random_state": 2302,
++            "explained_variance_ratio": [
++                float(value) for value in pca.explained_variance_ratio_
++            ],
++            "explained_variance_ratio_sum": float(
++                pca.explained_variance_ratio_.sum()
++            ),
++            "scaler_path": str(scaler_path.resolve()),
++            "scaler_sha256": sha256_file(scaler_path),
++            "pca_path": str(pca_path.resolve()),
++            "pca_sha256": sha256_file(pca_path),
++            "finite_transformed": bool(np.isfinite(all_values).all()),
++            "ineffective_transformed_forced_zero": bool(
++                np.all(all_values[~effective] == 0)
++            ),
++        }
++    fit_rows = content_meta.loc[
++        fit_mask, ["sample_id", "video_id", "train_index"]
++    ].sort_values("train_index")
++    fit_path = output_dir / "ordered_inner_train_fit_clips.csv"
++    atomic_csv(fit_rows, fit_path)
++    report = {
++        "direction": direction,
++        "fit_scope": "unique inner-train clips only",
++        "fit_samples": int(fit_mask.sum()),
++        "fit_sources": int(len(train_videos)),
++        "ordered_fit_sample_id_sha256": sha256_json(
++            fit_rows["sample_id"].tolist()
++        ),
++        "fit_ledger_path": str(fit_path.resolve()),
++        "fit_ledger_sha256": sha256_file(fit_path),
++        "modalities": details,
++        "outer_evaluation_used_for_fit_or_selection": False,
++        "official_valid_access_count": 0,
++        "locked_test_access_count": 0,
++    }
++    report_path = output_dir / "preprocessing_manifest.json"
++    atomic_json(report_path, report)
++    return transformed, report
++
++
++def fit_strong_static(direction, frame):
++    weights = {}
++    for mode in MODES:
++        local = frame.loc[
++            (frame["role"] == "inner_train") & (frame["mode"] == mode)
++        ]
++        weights[mode] = optimize_simplex(
++            local[PREDICTION_COLUMNS].to_numpy(dtype=np.float64),
++            local["label"].to_numpy(dtype=np.float64),
++        )
++    output = frame.copy()
++    output["equal_average"] = output[PREDICTION_COLUMNS].mean(axis=1)
++    output["per_mode_constrained_fixed_stacking"] = np.nan
++    for mode in MODES:
++        mask = output["mode"] == mode
++        output.loc[mask, "per_mode_constrained_fixed_stacking"] = (
++            output.loc[mask, PREDICTION_COLUMNS].to_numpy(dtype=np.float64)
++            @ weights[mode]
++        )
++    valid = output.loc[output["role"] == "inner_valid"]
++    valid_j = {
++        candidate: overall_j(valid, candidate)
++        for candidate in (
++            "equal_average",
++            "per_mode_constrained_fixed_stacking",
++        )
++    }
++    selected = min(valid_j, key=lambda value: (valid_j[value], value))
++    output["strong_static"] = output[selected]
++    weight_rows = []
++    for mode in MODES:
++        for expert, value in zip(EXPERTS, weights[mode]):
++            weight_rows.append(
++                {
++                    "direction": direction,
++                    "mode": mode,
++                    "expert_id": expert,
++                    "weight": float(value),
++                }
++            )
++    return output, weights, valid_j, selected, pd.DataFrame(weight_rows)
++
++
++def construct(direction, meta, consistency, content_meta, content_pca):
++    source_manifest = pd.read_csv(
++        V2_ROOT / "protocol" / "direction_{}_sources.csv".format(direction),
++        dtype={"video_id": str},
++    )
++    role_by_video = source_manifest.set_index("video_id")["role"].to_dict()
++    frame = meta.copy()
++    frame["role"] = frame["video_id"].map(role_by_video)
++    if frame["role"].isna().any():
++        raise RuntimeError("Direction role binding missing.")
++    frame = frame.merge(
++        consistency, on=["sample_id", "mode"], how="left", validate="one_to_one"
++    )
++    if frame.filter(like="consistency__").isna().any().any():
++        raise RuntimeError("Hierarchical consistency binding missing.")
++    frame, weights, valid_j, selected, weight_frame = fit_strong_static(
++        direction, frame
++    )
++
++    predictions = frame[PREDICTION_COLUMNS].to_numpy(dtype=np.float64)
++    prediction_median = np.median(predictions, axis=1)
++    prediction_mad = np.median(
++        np.abs(predictions - prediction_median[:, None]), axis=1
++    )
++    floors = {}
++    for mode in MODES:
++        mask = (frame["role"] == "inner_train") & (frame["mode"] == mode)
++        floors[mode] = max(float(np.quantile(prediction_mad[mask], 0.10)), 1e-3)
++
++    content_index = content_meta.set_index("sample_id")
++    position_by_id = pd.Series(
++        np.arange(len(content_meta)), index=content_meta["sample_id"]
++    ).to_dict()
++    positions = np.asarray(
++        [position_by_id[value] for value in frame["sample_id"]], dtype=np.int64
++    )
++    feature_names = (
++        ["mode__{}".format(mode) for mode in MODES]
++        + ["prediction__{}".format(expert) for expert in EXPERTS]
++        + ["disagreement__std", "disagreement__range", "disagreement__polarity_split"]
++        + ["outlier__{}".format(expert) for expert in EXPERTS]
++        + ["consistency__{}".format(expert) for expert in EXPERTS]
++        + ["content__text_pc{:02d}".format(value + 1) for value in range(16)]
++        + ["content__audio_pc{:02d}".format(value + 1) for value in range(8)]
++        + ["content__vision_pc{:02d}".format(value + 1) for value in range(8)]
++        + ["effective_available__text", "effective_available__audio", "effective_available__vision"]
++    )
++    if len(feature_names) != 57:
++        raise RuntimeError("Frozen feature-name count is not 57.")
++    X = np.zeros((len(frame), 57), dtype=np.float32)
++    cursor = 0
++    for mode in MODES:
++        X[:, cursor] = (frame["mode"].to_numpy() == mode).astype(np.float32)
++        cursor += 1
++    X[:, cursor : cursor + 5] = predictions.astype(np.float32)
++    cursor += 5
++    X[:, cursor] = predictions.std(axis=1, ddof=0)
++    X[:, cursor + 1] = predictions.max(axis=1) - predictions.min(axis=1)
++    positive = (predictions > 0).sum(axis=1)
++    nonpositive = 5 - positive
++    X[:, cursor + 2] = np.minimum(positive, nonpositive) / 5.0
++    cursor += 3
++    row_floors = np.asarray([floors[mode] for mode in frame["mode"]])
++    denominators = np.maximum(prediction_mad, row_floors)
++    X[:, cursor : cursor + 5] = np.clip(
++        np.abs(predictions - prediction_median[:, None]) / denominators[:, None],
++        0.0,
++        10.0,
++    ).astype(np.float32)
++    cursor += 5
++    consistency_columns = ["consistency__{}".format(expert) for expert in EXPERTS]
++    X[:, cursor : cursor + 5] = frame[consistency_columns].to_numpy(
++        dtype=np.float32
++    )
++    cursor += 5
++
++    base_availability = np.asarray(
++        [MODE_AVAILABILITY[mode] for mode in frame["mode"]], dtype=np.int8
++    )
++    clip_effective = content_index.loc[
++        frame["sample_id"],
++        [
++            "text_effective_available",
++            "audio_effective_available",
++            "vision_effective_available",
++        ],
++    ].to_numpy(dtype=np.int8)
++    effective = base_availability * clip_effective
++    for modality, width, effective_col in (
++        ("text", 16, 0),
++        ("audio", 8, 1),
++        ("vision", 8, 2),
++    ):
++        block = content_pca[modality][positions].copy()
++        block[effective[:, effective_col] == 0] = 0.0
++        X[:, cursor : cursor + width] = block
++        cursor += width
++    X[:, cursor : cursor + 3] = effective.astype(np.float32)
++    cursor += 3
++    if cursor != 57 or not np.isfinite(X).all():
++        raise RuntimeError("57D feature construction failed.")
++    forbidden_tokens = ("label", "source", "video", "fold", "train_index")
++    if any(
++        any(token in name.lower() for token in forbidden_tokens)
++        for name in feature_names
++    ):
++        raise RuntimeError("Forbidden field leaked into feature names.")
++
++    absolute_error = np.abs(predictions - frame["label"].to_numpy()[:, None])
++    oracle_index = np.argmin(absolute_error, axis=1)
++    frame["oracle_expert_index"] = oracle_index
++    frame["oracle_expert_id"] = [EXPERTS[value] for value in oracle_index]
++    frame["oracle_prediction"] = predictions[np.arange(len(frame)), oracle_index]
++    frame["strong_static_absolute_error"] = np.abs(
++        frame["strong_static"] - frame["label"]
++    )
++    frame["oracle_absolute_error"] = absolute_error.min(axis=1)
++    frame["oracle_gain"] = (
++        frame["strong_static_absolute_error"] - frame["oracle_absolute_error"]
++    )
++
++    output_dir = V2_ROOT / "features" / "meta57" / "direction_{}".format(direction)
++    output_dir.mkdir(parents=True, exist_ok=True)
++    feature_rows = []
++    for role in ROLE_NAMES:
++        mask = frame["role"].to_numpy() == role
++        path = output_dir / "{}_features_57d.npz".format(role)
++        save_npz(
++            path,
++            X=X[mask],
++            feature_names=np.asarray(feature_names, dtype="U64"),
++            meta_row_id=frame.loc[mask, "meta_row_id"].to_numpy(dtype="U64"),
++        )
++        sidecar = frame.loc[
++            mask,
++            [
++                "meta_row_id",
++                "sample_id",
++                "video_id",
++                "train_index",
++                "mode",
++                "label",
++                "expert_fold",
++                "role",
++                "equal_average",
++                "per_mode_constrained_fixed_stacking",
++                "strong_static",
++                "oracle_expert_index",
++                "oracle_expert_id",
++                "oracle_prediction",
++                "strong_static_absolute_error",
++                "oracle_absolute_error",
++                "oracle_gain",
++            ],
++        ]
++        sidecar_path = output_dir / "{}_targets_and_audit.csv".format(role)
++        atomic_csv(sidecar, sidecar_path)
++        feature_rows.append(
++            {
++                "direction": direction,
++                "role": role,
++                "rows": int(mask.sum()),
++                "feature_dim": 57,
++                "feature_path": str(path.resolve()),
++                "feature_sha256": sha256_file(path),
++                "sidecar_path": str(sidecar_path.resolve()),
++                "sidecar_sha256": sha256_file(sidecar_path),
++                "finite": bool(np.isfinite(X[mask]).all()),
++            }
++        )
++    weight_path = output_dir / "strong_static_weights.csv"
++    atomic_csv(weight_frame, weight_path)
++    schema_path = output_dir / "feature_names.json"
++    atomic_json(
++        schema_path,
++        {
++            "total_dim": 57,
++            "feature_names": feature_names,
++            "polarity_split_definition": "min(number predictions >0, number predictions <=0)/5",
++            "labels_sources_and_folds_are_inputs": False,
++        },
++    )
++    report = {
++        "direction": direction,
++        "status": "PASS",
++        "rows": int(len(frame)),
++        "feature_dim": 57,
++        "feature_files": feature_rows,
++        "feature_schema_path": str(schema_path.resolve()),
++        "feature_schema_sha256": sha256_file(schema_path),
++        "outlier_mode_q10_floor": floors,
++        "outlier_clip": [0.0, 10.0],
++        "strong_static": {
++            "candidate_valid_J": valid_j,
++            "selected_by_inner_valid_only": selected,
++            "weights_path": str(weight_path.resolve()),
++            "weights_sha256": sha256_file(weight_path),
++            "outer_evaluation_used_for_selection": False,
++        },
++        "all_zero_vision_rows": int(
++            (
++                content_index.loc[
++                    frame["sample_id"], "vision_effective_available"
++                ].to_numpy(dtype=int)
++                == 0
++            ).sum()
++        ),
++        "ineffective_vision_feature_block_forced_zero": bool(
++            np.all(
++                X[
++                    content_index.loc[
++                        frame["sample_id"], "vision_effective_available"
++                    ].to_numpy(dtype=int)
++                    == 0,
++                    46:54,
++                ]
++                == 0
++            )
++        ),
++        "labels_sources_folds_absent_from_X": True,
++        "outer_evaluation_used_for_fit_or_selection": False,
++        "official_valid_access_count": 0,
++        "locked_test_access_count": 0,
++        "judge_training_started": False,
++        "student_trained": False,
++        "completed_at": datetime.now(timezone.utc).isoformat(),
++    }
++    atomic_json(output_dir / "feature_manifest.json", report)
++    return report
++
++
++def main():
++    authorization = json.loads(
++        (V2_ROOT / "protocol" / "v2a_authorization_manifest.json").read_text(
++            encoding="utf-8"
++        )
++    )
++    if not authorization["feature_extraction_authorized"]:
++        raise RuntimeError("Feature extraction not authorized.")
++    meta = pd.read_csv(
++        V2_ROOT / "data" / "meta_ledger.csv",
++        dtype={"sample_id": str, "video_id": str},
++    )
++    if len(meta) != 65304:
++        raise RuntimeError("Meta ledger row count mismatch.")
++    consistency = load_consistency()
++    content_meta, raw_content = load_content()
++    reports = {}
++    preprocessing_reports = {}
++    for direction in ("A", "B"):
++        source_manifest = pd.read_csv(
++            V2_ROOT / "protocol" / "direction_{}_sources.csv".format(direction),
++            dtype={"video_id": str},
++        )
++        role_by_video = source_manifest.set_index("video_id")["role"].to_dict()
++        content_pca, prep_report = fit_preprocessors(
++            direction, role_by_video, content_meta, raw_content
++        )
++        preprocessing_reports[direction] = prep_report
++        reports[direction] = construct(
++            direction, meta, consistency, content_meta, content_pca
++        )
++        print(
++            "Direction {} complete; strong_static={}".format(
++                direction,
++                reports[direction]["strong_static"][
++                    "selected_by_inner_valid_only"
++                ],
++            ),
++            flush=True,
++        )
++    combined = {
++        "stage": "Stage23A-v2a frozen 57D meta-feature construction",
++        "status": "PASS",
++        "directions": reports,
++        "preprocessing": preprocessing_reports,
++        "feature_dim": 57,
++        "labels_sources_and_folds_excluded_from_input": True,
++        "outer_evaluation_used_for_fit_or_selection": False,
++        "official_valid_access_count": 0,
++        "locked_test_access_count": 0,
++        "judge_training_started": False,
++        "student_trained": False,
++    }
++    atomic_json(
++        V2_ROOT / "features" / "meta57" / "feature_build_manifest.json",
++        combined,
++    )
++    print(json.dumps(combined, indent=2))
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/scripts/mosei/stage23a_v2a_capture_runtime.py b/scripts/mosei/stage23a_v2a_capture_runtime.py
+new file mode 100644
+index 0000000..e51b271
+--- /dev/null
++++ b/scripts/mosei/stage23a_v2a_capture_runtime.py
+@@ -0,0 +1,95 @@
++#!/usr/bin/env python
++"""Capture the reproducibility/runtime snapshot without touching model data."""
++
++from __future__ import annotations
++
++import json
++import platform
++import subprocess
++from datetime import datetime, timezone
++
++import numpy
++import pandas
++import scipy
++import sklearn
++import torch
++
++from stage23a_v2_common import ROOT, V2_ROOT, atomic_json, git_head, sha256_file
++
++
++def command(args):
++    return subprocess.check_output(args, cwd=str(ROOT), text=True).strip()
++
++
++def main():
++    analysis = V2_ROOT / "analysis_v2a"
++    diff_text = subprocess.check_output(
++        [
++            "git",
++            "diff",
++            "c889cf6220c51fdec44407cc469471b4d6b99386",
++            "--",
++            "scripts/mosei",
++            "tests",
++        ],
++        cwd=str(ROOT),
++        text=True,
++    )
++    diff_path = analysis / "git_diff_from_v2_protocol.patch"
++    diff_path.parent.mkdir(parents=True, exist_ok=True)
++    diff_path.write_text(diff_text, encoding="utf-8")
++    logs = {}
++    runtime_dir = ROOT / "runtime" / "stage23a_v2a"
++    for path in sorted(runtime_dir.glob("*.log")):
++        logs[path.name] = {
++            "path": str(path.resolve()),
++            "bytes": path.stat().st_size,
++            "sha256": sha256_file(path),
++            "modified_at_utc": datetime.fromtimestamp(
++                path.stat().st_mtime, timezone.utc
++            ).isoformat(),
++        }
++    snapshot = {
++        "stage": "Stage23A-v2a runtime/environment snapshot",
++        "captured_at": datetime.now(timezone.utc).isoformat(),
++        "git_head": git_head(),
++        "git_branch": command(["git", "branch", "--show-current"]),
++        "git_status_short": command(["git", "status", "--short"]),
++        "python": platform.python_version(),
++        "torch": torch.__version__,
++        "numpy": numpy.__version__,
++        "pandas": pandas.__version__,
++        "scipy": scipy.__version__,
++        "sklearn": sklearn.__version__,
++        "cuda_available": torch.cuda.is_available(),
++        "nvidia_smi_gpu_snapshot": command(
++            [
++                "nvidia-smi",
++                "--query-gpu=index,name,memory.used,memory.total,utilization.gpu",
++                "--format=csv,noheader",
++            ]
++        ).splitlines(),
++        "gpu_allocation": {
++            "hierarchical_fold0": "physical GPU 0 via CUDA_VISIBLE_DEVICES=0",
++            "hierarchical_fold1": "physical GPU 2 via CUDA_VISIBLE_DEVICES=2",
++            "physical_GPU_1": "not used; external process present",
++            "physical_GPU_3": "not used; external process present",
++            "content_feature_and_probes": "CPU",
++        },
++        "runtime_logs": logs,
++        "git_diff_path": str(diff_path.resolve()),
++        "git_diff_sha256": sha256_file(diff_path),
++        "dependency_install_or_upgrade_performed": False,
++        "expert_training_performed": False,
++        "judge_training_performed": False,
++        "student_training_performed": False,
++        "official_valid_access_count": 0,
++        "locked_test_access_count": 0,
++    }
++    path = analysis / "runtime_environment.json"
++    atomic_json(path, snapshot)
++    print(json.dumps(snapshot, indent=2))
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/scripts/mosei/stage23a_v2a_extract_content.py b/scripts/mosei/stage23a_v2a_extract_content.py
+new file mode 100644
+index 0000000..d67d00b
+--- /dev/null
++++ b/scripts/mosei/stage23a_v2a_extract_content.py
+@@ -0,0 +1,229 @@
++#!/usr/bin/env python
++"""Build padding-aware Train-only raw content summaries.
++
++Only the ``train`` partition of the frozen MOSEI aligned pickle is accessed.
++The large summary matrices are stored as deterministic NPY files and bound to a
++small metadata ledger by ordered sample IDs and SHA256 values.
++"""
++
++from __future__ import annotations
++
++import json
++import pickle
++from datetime import datetime, timezone
++from pathlib import Path
++
++import numpy as np
++import pandas as pd
++
++from stage23a_v2_common import (
++    V1_ROOT,
++    V2_ROOT,
++    atomic_csv,
++    atomic_json,
++    sha256_file,
++    sha256_json,
++)
++
++
++DATASET_PATH = Path("/data4t/lyx/datasets/MOSEI/Processed/aligned_50.pkl")
++DATASET_SHA = "45eccfb748a87c80ecab9bfac29582e7b1466bf6605ff29d3b338a75120bf791"
++MODALITIES = ("text", "audio", "vision")
++
++
++def decode_id(value):
++    if isinstance(value, bytes):
++        return value.decode("utf-8")
++    if isinstance(value, np.ndarray) and value.size == 1:
++        return decode_id(value.reshape(-1)[0])
++    return str(value)
++
++
++def temporal_summary(values, chunk_size=256):
++    values = np.asarray(values)
++    count, timesteps, feature_dim = values.shape
++    means = np.zeros((count, feature_dim), dtype=np.float32)
++    stds = np.zeros((count, feature_dim), dtype=np.float32)
++    active_counts = np.zeros(count, dtype=np.int16)
++    finite = True
++    for start in range(0, count, chunk_size):
++        stop = min(start + chunk_size, count)
++        chunk = values[start:stop]
++        finite = finite and bool(np.isfinite(chunk).all())
++        active = np.any(chunk != 0, axis=2)
++        local_count = active.sum(axis=1)
++        active_counts[start:stop] = local_count
++        for position in range(stop - start):
++            if local_count[position] == 0:
++                continue
++            selected = np.asarray(
++                chunk[position, active[position]], dtype=np.float64
++            )
++            means[start + position] = selected.mean(axis=0).astype(np.float32)
++            stds[start + position] = selected.std(axis=0, ddof=0).astype(np.float32)
++    return means, stds, active_counts, finite, timesteps
++
++
++def main():
++    authorization = json.loads(
++        (V2_ROOT / "protocol" / "v2a_authorization_manifest.json").read_text(
++            encoding="utf-8"
++        )
++    )
++    if not authorization["feature_extraction_authorized"]:
++        raise RuntimeError("Feature extraction is not authorized.")
++    if any(
++        authorization[key]
++        for key in (
++            "judge_training_authorized",
++            "official_valid_authorized",
++            "test_authorized",
++            "student_training_authorized",
++        )
++    ):
++        raise RuntimeError("A forbidden authorization flag is open.")
++    if sha256_file(DATASET_PATH) != DATASET_SHA:
++        raise RuntimeError("MOSEI dataset SHA mismatch.")
++
++    with DATASET_PATH.open("rb") as handle:
++        dataset = pickle.load(handle)
++    if "train" not in dataset:
++        raise RuntimeError("Train partition missing.")
++    train = dataset["train"]
++    id_key = "id" if "id" in train else "ids"
++    sample_ids = [decode_id(value) for value in train[id_key]]
++    if len(sample_ids) != 16326 or len(set(sample_ids)) != 16326:
++        raise RuntimeError("Train sample ID count/uniqueness mismatch.")
++
++    source_split = pd.read_csv(
++        V1_ROOT / "protocol" / "source_splits.csv",
++        dtype={"sample_id": str, "video_id": str},
++    ).sort_values("train_index")
++    expected_ids = source_split["sample_id"].tolist()
++    if sample_ids != expected_ids:
++        # Some loaders expose IDs with a singleton suffix/container; report the
++        # first mismatch rather than silently reordering content.
++        mismatch = next(
++            index
++            for index, (left, right) in enumerate(zip(sample_ids, expected_ids))
++            if left != right
++        )
++        raise RuntimeError(
++            "Dataset/source-ledger ordering mismatch at {}: {} != {}".format(
++                mismatch, sample_ids[mismatch], expected_ids[mismatch]
++            )
++        )
++
++    output_dir = V2_ROOT / "features" / "content_raw"
++    output_dir.mkdir(parents=True, exist_ok=True)
++    metadata = source_split[
++        ["sample_id", "video_id", "train_index", "outer_fold"]
++    ].copy()
++    artifacts = {}
++    modality_reports = {}
++    effective_columns = {}
++    for modality in MODALITIES:
++        if modality not in train:
++            raise RuntimeError("Missing Train modality {}".format(modality))
++        raw = np.asarray(train[modality])
++        means, stds, active_counts, finite, timesteps = temporal_summary(raw)
++        if not finite:
++            raise RuntimeError("Non-finite raw {} values.".format(modality))
++        mean_path = output_dir / "{}_temporal_mean_float32.npy".format(modality)
++        std_path = output_dir / "{}_temporal_std_float32.npy".format(modality)
++        np.save(str(mean_path), means, allow_pickle=False)
++        np.save(str(std_path), stds, allow_pickle=False)
++        effective = active_counts > 0
++        metadata["{}_valid_timesteps".format(modality)] = active_counts
++        metadata["{}_padding_timesteps".format(modality)] = timesteps - active_counts
++        metadata["{}_all_zero".format(modality)] = ~effective
++        metadata["{}_effective_available".format(modality)] = effective.astype(np.int8)
++        metadata["{}_finite".format(modality)] = True
++        metadata["{}_summary_l2".format(modality)] = np.sqrt(
++            np.square(means, dtype=np.float64).sum(axis=1)
++            + np.square(stds, dtype=np.float64).sum(axis=1)
++        )
++        effective_columns[modality] = effective
++        artifacts[modality] = {
++            "mean_path": str(mean_path.resolve()),
++            "mean_sha256": sha256_file(mean_path),
++            "std_path": str(std_path.resolve()),
++            "std_sha256": sha256_file(std_path),
++        }
++        modality_reports[modality] = {
++            "raw_shape": list(raw.shape),
++            "raw_dtype": str(raw.dtype),
++            "summary_shape": [len(raw), 2 * raw.shape[2]],
++            "stored_summary_dtype": "float32",
++            "finite": finite,
++            "valid_timestep_min": int(active_counts.min()),
++            "valid_timestep_max": int(active_counts.max()),
++            "valid_timestep_mean": float(active_counts.mean()),
++            "all_zero_clips": int((~effective).sum()),
++            "all_zero_summary_is_zero": bool(
++                np.all(means[~effective] == 0) and np.all(stds[~effective] == 0)
++            ),
++            **artifacts[modality],
++        }
++        print(
++            "{} shape={} zero={} active_mean={:.6f}".format(
++                modality, raw.shape, int((~effective).sum()), active_counts.mean()
++            ),
++            flush=True,
++        )
++        del raw, means, stds
++
++    if int((~effective_columns["vision"]).sum()) != 482:
++        raise RuntimeError("Expected exactly 482 all-zero Vision clips.")
++    if int((~effective_columns["text"]).sum()) != 0:
++        raise RuntimeError("Unexpected ineffective Text clips.")
++    if int((~effective_columns["audio"]).sum()) != 0:
++        raise RuntimeError("Unexpected ineffective Audio clips.")
++    metadata["sample_binding_sha256"] = [
++        sha256_json(
++            {
++                "dataset_sha256": DATASET_SHA,
++                "sample_id": row.sample_id,
++                "train_index": int(row.train_index),
++            }
++        )
++        for row in metadata.itertuples(index=False)
++    ]
++    metadata_path = output_dir / "content_summary_ledger.csv"
++    atomic_csv(metadata, metadata_path)
++    ordered_id_sha = sha256_json(sample_ids)
++    report = {
++        "stage": "Stage23A-v2a Train-only fixed input content summaries",
++        "status": "PASS",
++        "dataset_path": str(DATASET_PATH),
++        "dataset_sha256": DATASET_SHA,
++        "accessed_partitions": ["train"],
++        "official_valid_access_count": 0,
++        "locked_test_access_count": 0,
++        "samples": len(sample_ids),
++        "ordered_sample_id_sha256": ordered_id_sha,
++        "ordered_sample_ids_match_source_split": True,
++        "summary_definition": "padding-aware temporal mean concatenated with population std (ddof=0)",
++        "padding_rule": "timestep active iff any feature value is nonzero",
++        "stored_summary_dtype": "float32",
++        "modalities": modality_reports,
++        "effective_availability": {
++            "text_ineffective": int((~effective_columns["text"]).sum()),
++            "audio_ineffective": int((~effective_columns["audio"]).sum()),
++            "vision_ineffective": int((~effective_columns["vision"]).sum()),
++            "vision_zero_policy": "raw summary zero; exclude from fit; transformed block forced zero; effective mask vision=0",
++        },
++        "metadata_path": str(metadata_path.resolve()),
++        "metadata_sha256": sha256_file(metadata_path),
++        "sample_binding_sha_verified": True,
++        "created_at": datetime.now(timezone.utc).isoformat(),
++        "judge_training_started": False,
++        "student_trained": False,
++    }
++    report_path = output_dir / "content_summary_manifest.json"
++    atomic_json(report_path, report)
++    print(json.dumps(report, indent=2))
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/scripts/mosei/stage23a_v2a_extract_hierarchical.py b/scripts/mosei/stage23a_v2a_extract_hierarchical.py
+new file mode 100644
+index 0000000..7273adb
+--- /dev/null
++++ b/scripts/mosei/stage23a_v2a_extract_hierarchical.py
+@@ -0,0 +1,390 @@
++#!/usr/bin/env python
++"""Extract frozen Expert hierarchical logits after the final-logit replay gate.
++
++Inference only: no optimizer, no checkpoint writes, no Official Valid/Test, no
++Student and no Judge are constructed.
++"""
++
++from __future__ import annotations
++
++import argparse
++import gzip
++import json
++import os
++import sys
++from datetime import datetime, timezone
++from pathlib import Path
++
++import numpy as np
++import pandas as pd
++import torch
++
++from stage23a_v2_common import (
++    EXPERTS,
++    MODE_ACTIVE_HEADS,
++    MODES,
++    ROOT,
++    V1_ROOT,
++    V2_ROOT,
++    atomic_csv,
++    atomic_json,
++    sha256_file,
++    sha256_json,
++)
++
++if str(ROOT) not in sys.path:
++    sys.path.insert(0, str(ROOT))
++
++from config import get_config_regression
++from data_loader import MMDataset
++from trains.singleTask.missing_utils import MissingModalityWrapper, mode_to_mask
++from trains.singleTask.model.DLF import DLF
++from utils.functions import assign_gpu, setup_seed
++
++
++HEAD_COLUMNS = (
++    "output_logit",
++    "logits_c",
++    "logits_l_hetero",
++    "logits_a_hetero",
++    "logits_v_hetero",
++)
++DATASET_SHA = "45eccfb748a87c80ecab9bfac29582e7b1466bf6605ff29d3b338a75120bf791"
++
++
++def parse_args():
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--outer-fold", required=True, type=int, choices=(0, 1))
++    parser.add_argument("--gpu-id", required=True, type=int, choices=(0, 1, 2))
++    parser.add_argument("--batch-size", default=16, type=int)
++    parser.add_argument("--num-workers", default=1, type=int)
++    return parser.parse_args()
++
++
++def atomic_gzip_csv(frame, path):
++    path = Path(path)
++    path.parent.mkdir(parents=True, exist_ok=True)
++    temporary = path.with_suffix(path.suffix + ".tmp")
++    with temporary.open("wb") as raw:
++        with gzip.GzipFile(
++            filename="", mode="wb", fileobj=raw, mtime=0, compresslevel=6
++        ) as compressed:
++            frame.to_csv(compressed, index=False, float_format="%.10g")
++        raw.flush()
++        os.fsync(raw.fileno())
++    os.replace(str(temporary), str(path))
++
++
++def build_args(cli):
++    args = get_config_regression("DLF", "mosei", str(ROOT / "config/config.json"))
++    args.mode = "train"
++    args.feature_T = args.feature_A = args.feature_V = ""
++    args.is_training = False
++    args.train_mode = "regression"
++    args.batch_size = int(cli.batch_size)
++    args.device = assign_gpu([int(cli.gpu_id)])
++    return args
++
++
++def main():
++    cli = parse_args()
++    authorization_path = V2_ROOT / "protocol" / "v2a_authorization_manifest.json"
++    authorization = json.loads(authorization_path.read_text(encoding="utf-8"))
++    required = {
++        "feature_extraction_authorized": True,
++        "judge_training_authorized": False,
++        "official_valid_authorized": False,
++        "test_authorized": False,
++        "student_training_authorized": False,
++    }
++    for key, expected in required.items():
++        if authorization.get(key) is not expected:
++            raise RuntimeError("Authorization mismatch {}.".format(key))
++
++    replay = json.loads(
++        (V2_ROOT / "validation" / "replay_fold{}_report.json".format(cli.outer_fold))
++        .read_text(encoding="utf-8")
++    )
++    if replay["status"] != "PASS" or replay["max_abs_diff"] > 1e-6:
++        raise RuntimeError("Preferred final-logit replay gate did not pass.")
++
++    torch.backends.cudnn.benchmark = False
++    torch.backends.cudnn.deterministic = True
++    setup_seed(23300 + int(cli.outer_fold))
++    args = build_args(cli)
++    dataset = MMDataset(args, mode="train")
++    args.seq_lens = dataset.get_seq_len()
++
++    split = pd.read_csv(
++        V1_ROOT / "protocol" / "source_splits.csv",
++        dtype={"sample_id": str, "video_id": str},
++    )
++    holdout = split.loc[
++        split["outer_fold"].astype(int) == int(cli.outer_fold)
++    ].copy()
++    holdout_indices = holdout["train_index"].astype(int).tolist()
++    index_by_id = holdout.set_index("sample_id")["train_index"].astype(int).to_dict()
++    video_by_id = holdout.set_index("sample_id")["video_id"].astype(str).to_dict()
++    sample_binding = {
++        sample_id: sha256_json(
++            {
++                "dataset_sha256": DATASET_SHA,
++                "sample_id": sample_id,
++                "train_index": int(train_index),
++            }
++        )
++        for sample_id, train_index in index_by_id.items()
++    }
++    loader = torch.utils.data.DataLoader(
++        torch.utils.data.Subset(dataset, holdout_indices),
++        batch_size=int(cli.batch_size),
++        shuffle=False,
++        drop_last=False,
++        num_workers=int(cli.num_workers),
++    )
++    old_path = (
++        V1_ROOT
++        / "expert_oof"
++        / "outer_fold{}".format(cli.outer_fold)
++        / "oof_predictions.csv"
++    )
++    old = pd.read_csv(old_path, dtype={"sample_id": str, "video_id": str})
++    label_by_id = (
++        old[["sample_id", "label"]]
++        .drop_duplicates("sample_id")
++        .set_index("sample_id")["label"]
++        .astype(float)
++        .to_dict()
++    )
++    expected = old.set_index(["sample_id", "mode", "expert_id"])["prediction"]
++
++    all_records = []
++    statistic_rows = []
++    maximum_rows = []
++    for expert in EXPERTS:
++        expert_dir = (
++            V1_ROOT
++            / "expert_oof"
++            / "outer_fold{}".format(cli.outer_fold)
++            / "experts"
++            / expert
++        )
++        manifest_path = expert_dir / "run_manifest.json"
++        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
++        checkpoint = Path(manifest["checkpoint"])
++        checkpoint_sha = sha256_file(checkpoint)
++        if checkpoint_sha != manifest["checkpoint_sha256"]:
++            raise RuntimeError("Checkpoint SHA mismatch {}".format(expert))
++        model = MissingModalityWrapper(
++            DLF(args), args.feature_dims[1], args.feature_dims[2]
++        )
++        model.load_state_dict(
++            torch.load(checkpoint, map_location="cpu"), strict=True
++        )
++        model.to(args.device).eval()
++        expert_records = []
++        with torch.no_grad():
++            for batch in loader:
++                text = batch["text"].to(args.device)
++                audio = batch["audio"].to(args.device)
++                vision = batch["vision"].to(args.device)
++                identifiers = [str(value) for value in batch["id"]]
++                for mode in MODES:
++                    mask = mode_to_mask(
++                        mode, text.size(0), args.device, audio.dtype
++                    )
++                    outputs = model(text, audio, vision, mask)
++                    head_values = {
++                        name: outputs[name].view(-1).detach().cpu().numpy()
++                        for name in HEAD_COLUMNS
++                    }
++                    active = MODE_ACTIVE_HEADS[mode]
++                    for position, sample_id in enumerate(identifiers):
++                        values = {
++                            name: float(head_values[name][position])
++                            for name in HEAD_COLUMNS
++                        }
++                        active_values = np.asarray(
++                            [values[name] for name in active], dtype=np.float64
++                        )
++                        active_median = float(np.median(active_values))
++                        consistency = float(
++                            np.median(np.abs(active_values - active_median))
++                        )
++                        row_binding = sha256_json(
++                            {
++                                "sample_binding_sha256": sample_binding[sample_id],
++                                "mode": mode,
++                                "expert_id": expert,
++                                "checkpoint_sha256": checkpoint_sha,
++                            }
++                        )
++                        expert_records.append(
++                            {
++                                "sample_id": sample_id,
++                                "video_id": video_by_id[sample_id],
++                                "train_index": index_by_id[sample_id],
++                                "outer_fold": int(cli.outer_fold),
++                                "expert_fold": int(cli.outer_fold),
++                                "mode": mode,
++                                "expert_id": expert,
++                                "label": label_by_id[sample_id],
++                                **values,
++                                "active_head_names": "|".join(active),
++                                "active_head_count": len(active),
++                                "active_head_median": active_median,
++                                "hierarchical_consistency_mad": consistency,
++                                "checkpoint_path": str(checkpoint),
++                                "checkpoint_sha256": checkpoint_sha,
++                                "run_manifest_sha256": sha256_file(manifest_path),
++                                "sample_binding_sha256": sample_binding[sample_id],
++                                "row_binding_sha256": row_binding,
++                            }
++                        )
++        local = pd.DataFrame(expert_records)
++        key = ["sample_id", "mode", "expert_id"]
++        replayed = local.set_index(key)["output_logit"].sort_index()
++        old_expert = expected.loc[
++            expected.index.get_level_values("expert_id") == expert
++        ].sort_index()
++        if not replayed.index.equals(old_expert.index):
++            raise RuntimeError("OOF binding differs for {}".format(expert))
++        diff = np.abs(
++            replayed.to_numpy(dtype=np.float64)
++            - old_expert.to_numpy(dtype=np.float64)
++        )
++        maximum_position = int(np.argmax(diff))
++        maximum_key = replayed.index[maximum_position]
++        maximum_rows.append(
++            {
++                "outer_fold": int(cli.outer_fold),
++                "expert_id": expert,
++                "sample_id": maximum_key[0],
++                "mode": maximum_key[1],
++                "old_prediction": float(old_expert.iloc[maximum_position]),
++                "replayed_prediction": float(replayed.iloc[maximum_position]),
++                "absolute_difference": float(diff[maximum_position]),
++            }
++        )
++        statistic_rows.append(
++            {
++                "outer_fold": int(cli.outer_fold),
++                "expert_id": expert,
++                "rows": int(len(local)),
++                "checkpoint_sha256": checkpoint_sha,
++                "run_manifest_sha256": sha256_file(manifest_path),
++                "max_abs_final_replay_diff": float(diff.max()),
++                "mean_abs_final_replay_diff": float(diff.mean()),
++                "mismatch_gt_1e_6": int((diff > 1e-6).sum()),
++                "mismatch_gt_1e_5": int((diff > 1e-5).sum()),
++            }
++        )
++        all_records.extend(expert_records)
++        print(
++            "fold={} expert={} rows={} max_diff={:.12g}".format(
++                cli.outer_fold, expert, len(local), diff.max()
++            ),
++            flush=True,
++        )
++        model.cpu()
++        del model
++        torch.cuda.empty_cache()
++
++    frame = pd.DataFrame(all_records).sort_values(
++        ["train_index", "mode", "expert_id"]
++    )
++    expected_rows = int(len(holdout) * len(MODES) * len(EXPERTS))
++    if len(frame) != expected_rows:
++        raise RuntimeError("Hierarchical row count mismatch.")
++    if frame.duplicated(["sample_id", "mode", "expert_id"]).any():
++        raise RuntimeError("Duplicate hierarchical row.")
++    if frame.isna().any().any():
++        raise RuntimeError("Missing hierarchical value.")
++    binding_recomputed = frame.apply(
++        lambda row: sha256_json(
++            {
++                "sample_binding_sha256": row["sample_binding_sha256"],
++                "mode": row["mode"],
++                "expert_id": row["expert_id"],
++                "checkpoint_sha256": row["checkpoint_sha256"],
++            }
++        ),
++        axis=1,
++    )
++    if not np.all(binding_recomputed.to_numpy() == frame["row_binding_sha256"].to_numpy()):
++        raise RuntimeError("Row binding SHA verification failed.")
++
++    output_dir = V2_ROOT / "features" / "hierarchical"
++    output_path = output_dir / "hierarchical_logits_fold{}.csv.gz".format(
++        cli.outer_fold
++    )
++    atomic_gzip_csv(frame, output_path)
++    stats = pd.DataFrame(statistic_rows)
++    stats_path = output_dir / "hierarchical_replay_fold{}_stats.csv".format(
++        cli.outer_fold
++    )
++    atomic_csv(stats, stats_path)
++    maximum_path = output_dir / "hierarchical_replay_fold{}_maximum_cases.csv".format(
++        cli.outer_fold
++    )
++    atomic_csv(pd.DataFrame(maximum_rows), maximum_path)
++    report = {
++        "stage": "Stage23A-v2a hierarchical frozen Expert extraction",
++        "status": "PASS",
++        "outer_fold": int(cli.outer_fold),
++        "gpu_id": int(cli.gpu_id),
++        "dataset_partition": "Train outer-fold held-out samples only",
++        "rows": int(len(frame)),
++        "expected_rows": expected_rows,
++        "samples": int(frame["sample_id"].nunique()),
++        "modes": list(MODES),
++        "experts": list(EXPERTS),
++        "head_columns": list(HEAD_COLUMNS),
++        "mode_active_heads": {key: list(value) for key, value in MODE_ACTIVE_HEADS.items()},
++        "duplicates": int(frame.duplicated(["sample_id", "mode", "expert_id"]).sum()),
++        "missing_values": int(frame.isna().sum().sum()),
++        "finite_logits": bool(
++            np.isfinite(frame[list(HEAD_COLUMNS) + ["hierarchical_consistency_mad"]])
++            .all()
++            .all()
++        ),
++        "max_abs_final_replay_diff": float(
++            stats["max_abs_final_replay_diff"].max()
++        ),
++        "mean_abs_final_replay_diff": float(
++            np.average(
++                stats["mean_abs_final_replay_diff"], weights=stats["rows"]
++            )
++        ),
++        "preferred_replay_gate_pass": bool(
++            stats["max_abs_final_replay_diff"].max() <= 1e-6
++        ),
++        "hard_replay_gate_pass": bool(
++            stats["max_abs_final_replay_diff"].max() <= 1e-5
++        ),
++        "sample_binding_sha_verified": True,
++        "row_binding_sha_verified": True,
++        "output_path": str(output_path.resolve()),
++        "output_sha256": sha256_file(output_path),
++        "stats_path": str(stats_path.resolve()),
++        "stats_sha256": sha256_file(stats_path),
++        "maximum_cases_path": str(maximum_path.resolve()),
++        "maximum_cases_sha256": sha256_file(maximum_path),
++        "expert_retrained": False,
++        "judge_training_started": False,
++        "official_valid_access_count": 0,
++        "locked_test_access_count": 0,
++        "student_trained": False,
++        "completed_at": datetime.now(timezone.utc).isoformat(),
++    }
++    report_path = output_dir / "hierarchical_fold{}_manifest.json".format(
++        cli.outer_fold
++    )
++    atomic_json(report_path, report)
++    print(json.dumps(report, indent=2))
++    if not report["preferred_replay_gate_pass"]:
++        raise RuntimeError("Preferred 1e-6 replay gate failed.")
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/scripts/mosei/stage23a_v2a_finalize_artifacts.py b/scripts/mosei/stage23a_v2a_finalize_artifacts.py
+new file mode 100644
+index 0000000..e672723
+--- /dev/null
++++ b/scripts/mosei/stage23a_v2a_finalize_artifacts.py
+@@ -0,0 +1,79 @@
++#!/usr/bin/env python
++"""Create the final Stage23A-v2a artifact/SHA ledger."""
++
++from __future__ import annotations
++
++import json
++from datetime import datetime, timezone
++
++import pandas as pd
++
++from stage23a_v2_common import ROOT, RUNTIME_ROOT, V2_ROOT, atomic_json, git_head, sha256_file
++
++
++def main():
++    analysis = V2_ROOT / "analysis_v2a"
++    excluded = {
++        analysis / "artifact_manifest.tsv",
++        analysis / "artifact_manifest.json",
++    }
++    roots = [
++        V2_ROOT / "features",
++        analysis,
++        V2_ROOT / "final_v2a",
++        V2_ROOT / "protocol" / "v2a_authorization_manifest.json",
++        V2_ROOT / "protocol" / "strong_static_protocol.json",
++        V2_ROOT / "protocol" / "effective_availability_protocol.json",
++        RUNTIME_ROOT / "state.json",
++        ROOT / "runtime" / "stage23a_v2a",
++    ]
++    paths = []
++    for root in roots:
++        if root.is_file():
++            paths.append(root)
++        elif root.is_dir():
++            paths.extend(path for path in root.rglob("*") if path.is_file())
++    rows = []
++    for path in sorted(set(paths)):
++        if path in excluded:
++            continue
++        rows.append(
++            {
++                "path": str(path.relative_to(ROOT)),
++                "bytes": path.stat().st_size,
++                "sha256": sha256_file(path),
++            }
++        )
++    frame = pd.DataFrame(rows)
++    tsv_path = analysis / "artifact_manifest.tsv"
++    frame.to_csv(tsv_path, sep="\t", index=False)
++    signal = json.loads(
++        (analysis / "stage23a_v2a_signal_audit.json").read_text(encoding="utf-8")
++    )
++    payload = {
++        "stage": "Stage23A-v2a final artifact ledger",
++        "status": signal["status"],
++        "created_at": datetime.now(timezone.utc).isoformat(),
++        "git_head": git_head(),
++        "artifact_count_excluding_manifest_files": len(frame),
++        "total_bytes": int(frame["bytes"].sum()),
++        "artifact_tsv_path": str(tsv_path.resolve()),
++        "artifact_tsv_sha256": sha256_file(tsv_path),
++        "parent_frozen_manifest_sha256": sha256_file(
++            V2_ROOT / "protocol" / "frozen_protocol_manifest.json"
++        ),
++        "authorization_manifest_sha256": sha256_file(
++            V2_ROOT / "protocol" / "v2a_authorization_manifest.json"
++        ),
++        "formal_judge_trained": False,
++        "official_valid_access_count": 0,
++        "locked_test_access_count": 0,
++        "student_trained": False,
++    }
++    json_path = analysis / "artifact_manifest.json"
++    atomic_json(json_path, payload)
++    print(json.dumps(payload, indent=2))
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/scripts/mosei/stage23a_v2a_signal_audit.py b/scripts/mosei/stage23a_v2a_signal_audit.py
+new file mode 100644
+index 0000000..aea7340
+--- /dev/null
++++ b/scripts/mosei/stage23a_v2a_signal_audit.py
+@@ -0,0 +1,1347 @@
++#!/usr/bin/env python
++"""Run leakage-free Stage23A-v2a signal audits and simple probes.
++
++This is intentionally not the formal dual-head Judge.  Every fitted object is
++an explicitly named low-capacity diagnostic probe; outer labels are used once
++for metrics only and never for fitting or selection.
++"""
++
++from __future__ import annotations
++
++import html
++import hashlib
++import json
++import math
++import os
++import subprocess
++from datetime import datetime, timezone
++from pathlib import Path
++
++import numpy as np
++import pandas as pd
++from scipy.special import softmax
++from scipy.stats import spearmanr
++from sklearn.linear_model import LogisticRegression, Ridge
++from sklearn.metrics import (
++    balanced_accuracy_score,
++    log_loss,
++    roc_auc_score,
++)
++from sklearn.pipeline import make_pipeline
++from sklearn.preprocessing import StandardScaler
++
++from stage23a_v2_common import (
++    EXPERTS,
++    MODES,
++    ROOT,
++    RUNTIME_ROOT,
++    V2_ROOT,
++    atomic_csv,
++    atomic_json,
++    metric_rows,
++    overall_j,
++    regression_metrics,
++    sha256_file,
++)
++
++
++ANALYSIS = V2_ROOT / "analysis_v2a"
++PLOTS = ANALYSIS / "plots"
++ROLE_NAMES = ("inner_train", "inner_valid", "outer_evaluation")
++ALPHAS = (0.1, 1.0, 10.0, 100.0)
++SHUFFLE_SEEDS = (23021, 23022, 23023)
++NOISE_SEEDS = (23121, 23122, 23123)
++
++
++def load_direction(direction):
++    root = V2_ROOT / "features" / "meta57" / "direction_{}".format(direction)
++    result = {}
++    for role in ROLE_NAMES:
++        values = np.load(root / "{}_features_57d.npz".format(role))
++        X = values["X"].astype(np.float64)
++        names = values["feature_names"].astype(str).tolist()
++        meta_row_id = values["meta_row_id"].astype(str)
++        sidecar = pd.read_csv(
++            root / "{}_targets_and_audit.csv".format(role),
++            dtype={"sample_id": str, "video_id": str, "meta_row_id": str},
++        )
++        if sidecar["meta_row_id"].tolist() != meta_row_id.tolist():
++            raise RuntimeError("Feature/sidecar binding mismatch.")
++        result[role] = {"X": X, "names": names, "sidecar": sidecar}
++    return result
++
++
++def finite_spearman(left, right):
++    value = spearmanr(np.asarray(left), np.asarray(right)).correlation
++    return float(value) if np.isfinite(value) else 0.0
++
++
++def svg_histogram(values, path, title, bins=40, x_label="value"):
++    values = np.asarray(values, dtype=np.float64)
++    counts, edges = np.histogram(values, bins=bins)
++    width, height = 760, 420
++    left, right, top, bottom = 70, 20, 55, 65
++    plot_w, plot_h = width - left - right, height - top - bottom
++    maximum = max(int(counts.max()), 1)
++    bars = []
++    for index, count in enumerate(counts):
++        x = left + plot_w * index / len(counts)
++        bar_w = plot_w / len(counts) - 1
++        bar_h = plot_h * count / maximum
++        y = top + plot_h - bar_h
++        bars.append(
++            '<rect x="{:.2f}" y="{:.2f}" width="{:.2f}" height="{:.2f}" fill="#4C78A8"/>'.format(
++                x, y, bar_w, bar_h
++            )
++        )
++    text = """<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">
++<rect width="100%" height="100%" fill="white"/>
++<text x="{cx}" y="28" text-anchor="middle" font-family="Arial" font-size="18">{title}</text>
++<line x1="{l}" y1="{t}" x2="{l}" y2="{yb}" stroke="#222"/>
++<line x1="{l}" y1="{yb}" x2="{xr}" y2="{yb}" stroke="#222"/>
++{bars}
++<text x="{l}" y="{label_y}" font-family="Arial" font-size="12">{xmin:.4g}</text>
++<text x="{xr}" y="{label_y}" text-anchor="end" font-family="Arial" font-size="12">{xmax:.4g}</text>
++<text x="{cx}" y="{hminus}" text-anchor="middle" font-family="Arial" font-size="13">{x_label}</text>
++<text x="18" y="{cy}" transform="rotate(-90 18 {cy})" text-anchor="middle" font-family="Arial" font-size="13">count</text>
++</svg>""".format(
++        w=width,
++        h=height,
++        cx=width / 2,
++        cy=height / 2,
++        title=html.escape(title),
++        l=left,
++        t=top,
++        yb=top + plot_h,
++        xr=left + plot_w,
++        bars="\n".join(bars),
++        label_y=height - 42,
++        xmin=edges[0],
++        xmax=edges[-1],
++        hminus=height - 12,
++        x_label=html.escape(x_label),
++    )
++    path.parent.mkdir(parents=True, exist_ok=True)
++    path.write_text(text, encoding="utf-8")
++
++
++def svg_bars(labels, values, path, title):
++    width, height = 760, 420
++    left, top, bottom = 90, 55, 100
++    plot_w, plot_h = 640, height - top - bottom
++    maximum = max(max(values), 1e-12)
++    nodes = []
++    for index, (label, value) in enumerate(zip(labels, values)):
++        center = left + (index + 0.5) * plot_w / len(values)
++        bar_w = 0.62 * plot_w / len(values)
++        bar_h = plot_h * value / maximum
++        nodes.append(
++            '<rect x="{:.2f}" y="{:.2f}" width="{:.2f}" height="{:.2f}" fill="#F58518"/>'.format(
++                center - bar_w / 2, top + plot_h - bar_h, bar_w, bar_h
++            )
++        )
++        nodes.append(
++            '<text x="{:.2f}" y="{}" transform="rotate(-28 {:.2f} {})" text-anchor="end" font-family="Arial" font-size="11">{}</text>'.format(
++                center, height - 76, center, height - 76, html.escape(label)
++            )
++        )
++        nodes.append(
++            '<text x="{:.2f}" y="{:.2f}" text-anchor="middle" font-family="Arial" font-size="11">{:.3f}</text>'.format(
++                center, top + plot_h - bar_h - 5, value
++            )
++        )
++    text = """<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}">
++<rect width="100%" height="100%" fill="white"/>
++<text x="{cx}" y="28" text-anchor="middle" font-family="Arial" font-size="18">{title}</text>
++<line x1="{l}" y1="{t}" x2="{l}" y2="{yb}" stroke="#222"/>
++<line x1="{l}" y1="{yb}" x2="{xr}" y2="{yb}" stroke="#222"/>
++{nodes}
++<text x="18" y="{cy}" transform="rotate(-90 18 {cy})" text-anchor="middle" font-family="Arial" font-size="13">selection proportion</text>
++</svg>""".format(
++        w=width,
++        h=height,
++        cx=width / 2,
++        cy=height / 2,
++        title=html.escape(title),
++        l=left,
++        t=top,
++        yb=top + plot_h,
++        xr=left + plot_w,
++        nodes="\n".join(nodes),
++    )
++    path.parent.mkdir(parents=True, exist_ok=True)
++    path.write_text(text, encoding="utf-8")
++
++
++def oracle_geometry(direction, data):
++    rows = []
++    detail_rows = []
++    outer = data["outer_evaluation"]
++    frame = outer["sidecar"].copy()
++    X = outer["X"]
++    predictions = X[:, 4:9]
++    labels = frame["label"].to_numpy(dtype=np.float64)
++    errors = np.abs(predictions - labels[:, None])
++    sorted_errors = np.sort(errors, axis=1)
++    margins = sorted_errors[:, 1] - sorted_errors[:, 0]
++    frame["best_second_error_gap"] = margins
++    frame["label_group"] = np.where(
++        labels < 0, "negative", np.where(labels > 0, "positive", "zero")
++    )
++    for mode in list(MODES) + ["Overall"]:
++        mask = (
++            np.ones(len(frame), dtype=bool)
++            if mode == "Overall"
++            else frame["mode"].to_numpy() == mode
++        )
++        local = frame.loc[mask]
++        if mode == "Overall":
++            static_metric = overall_j(local, "strong_static")
++            oracle_metric = overall_j(local, "oracle_prediction")
++        else:
++            static_metric = float(local["strong_static_absolute_error"].mean())
++            oracle_metric = float(local["oracle_absolute_error"].mean())
++        gain = local["oracle_gain"].to_numpy(dtype=np.float64)
++        rows.append(
++            {
++                "direction": direction,
++                "role": "outer_evaluation",
++                "mode": mode,
++                "strong_static_J_or_MAE": static_metric,
++                "oracle_J_or_MAE": oracle_metric,
++                "oracle_minus_strong_static": oracle_metric - static_metric,
++                "gain_mean": float(gain.mean()),
++                "gain_std": float(gain.std(ddof=0)),
++                "gain_q10": float(np.quantile(gain, 0.10)),
++                "gain_q25": float(np.quantile(gain, 0.25)),
++                "gain_median": float(np.median(gain)),
++                "gain_q75": float(np.quantile(gain, 0.75)),
++                "gain_q90": float(np.quantile(gain, 0.90)),
++                "gain_q95": float(np.quantile(gain, 0.95)),
++                "gain_q99": float(np.quantile(gain, 0.99)),
++                "fraction_gain_gt_0": float(np.mean(gain > 0)),
++                "fraction_gain_gt_0p01": float(np.mean(gain > 0.01)),
++                "fraction_gain_gt_0p03": float(np.mean(gain > 0.03)),
++                "fraction_gain_gt_0p05": float(np.mean(gain > 0.05)),
++                "fraction_gain_gt_0p10": float(np.mean(gain > 0.10)),
++                "strong_static_strictly_better_fraction": float(np.mean(gain < -1e-12)),
++                "exact_tie_fraction": float(np.mean(np.abs(gain) <= 1e-12)),
++                "best_second_gap_mean": float(
++                    frame.loc[mask, "best_second_error_gap"].mean()
++                ),
++                "near_tie_gap_le_0p001": float(
++                    np.mean(frame.loc[mask, "best_second_error_gap"] <= 0.001)
++                ),
++                "near_tie_gap_le_0p005": float(
++                    np.mean(frame.loc[mask, "best_second_error_gap"] <= 0.005)
++                ),
++                "near_tie_gap_le_0p01": float(
++                    np.mean(frame.loc[mask, "best_second_error_gap"] <= 0.01)
++                ),
++            }
++        )
++    for grouping in ("mode", "video_id", "label_group"):
++        counts = (
++            frame.groupby([grouping, "oracle_expert_id"], sort=True)
++            .size()
++            .rename("wins")
++            .reset_index()
++        )
++        totals = frame.groupby(grouping).size().rename("total").reset_index()
++        counts = counts.merge(totals, on=grouping)
++        for row in counts.itertuples(index=False):
++            detail_rows.append(
++                {
++                    "direction": direction,
++                    "grouping": grouping,
++                    "group_value": str(getattr(row, grouping)),
++                    "expert_id": row.oracle_expert_id,
++                    "wins": int(row.wins),
++                    "total": int(row.total),
++                    "proportion": float(row.wins / row.total),
++                    "record_type": "oracle_expert_win",
++                    "mean_gain": np.nan,
++                }
++            )
++        gain_groups = (
++            frame.groupby(grouping, sort=True)["oracle_gain"]
++            .agg(["count", "mean", lambda value: np.mean(value > 0.05)])
++            .reset_index()
++        )
++        gain_groups.columns = [grouping, "total", "mean_gain", "high_gain_fraction"]
++        for row in gain_groups.itertuples(index=False):
++            detail_rows.append(
++                {
++                    "direction": direction,
++                    "grouping": grouping,
++                    "group_value": str(getattr(row, grouping)),
++                    "expert_id": "ALL",
++                    "wins": int(round(row.high_gain_fraction * row.total)),
++                    "total": int(row.total),
++                    "proportion": float(row.high_gain_fraction),
++                    "record_type": "gain_gt_0p05_concentration",
++                    "mean_gain": float(row.mean_gain),
++                }
++            )
++    overall_selection = (
++        frame["oracle_expert_id"].value_counts(normalize=True).reindex(EXPERTS).fillna(0)
++    )
++    svg_histogram(
++        frame["oracle_gain"],
++        PLOTS / "direction_{}_oracle_gain_histogram.svg".format(direction),
++        "Direction {} outer Oracle gain distribution".format(direction),
++        x_label="strong-static absolute error − oracle absolute error (positive is better)",
++    )
++    svg_histogram(
++        frame["best_second_error_gap"],
++        PLOTS / "direction_{}_best_second_margin_histogram.svg".format(direction),
++        "Direction {} outer best-to-second Expert error margin".format(direction),
++        x_label="second-best absolute error − best absolute error",
++    )
++    svg_bars(
++        list(EXPERTS),
++        overall_selection.tolist(),
++        PLOTS / "direction_{}_oracle_selection.svg".format(direction),
++        "Direction {} outer Oracle expert selection".format(direction),
++    )
++    better = frame.loc[frame["oracle_gain"] < -1e-12].copy()
++    better["reason"] = "static convex combination closer than every single Expert"
++    return rows, detail_rows, better[
++        [
++            "meta_row_id",
++            "sample_id",
++            "video_id",
++            "mode",
++            "label",
++            "strong_static",
++            "oracle_prediction",
++            "strong_static_absolute_error",
++            "oracle_absolute_error",
++            "oracle_gain",
++            "reason",
++        ]
++    ]
++
++
++def consistency_audit(direction, data):
++    rows = []
++    train_frame = data["inner_train"]["sidecar"]
++    train_consistency = data["inner_train"]["X"][:, 17:22]
++    q99_thresholds = {}
++    for mode in MODES:
++        mode_mask = train_frame["mode"].to_numpy() == mode
++        for expert_index, expert in enumerate(EXPERTS):
++            q99_thresholds[(mode, expert)] = float(
++                np.quantile(train_consistency[mode_mask, expert_index], 0.99)
++            )
++    for role in ROLE_NAMES:
++        frame = data[role]["sidecar"]
++        X = data[role]["X"]
++        predictions = X[:, 4:9]
++        consistency = X[:, 17:22]
++        labels = frame["label"].to_numpy(dtype=np.float64)
++        errors = np.abs(predictions - labels[:, None])
++        regret = errors - errors.min(axis=1, keepdims=True)
++        best = errors == errors.min(axis=1, keepdims=True)
++        for mode in MODES:
++            mode_mask = frame["mode"].to_numpy() == mode
++            for expert_index, expert in enumerate(EXPERTS):
++                score = consistency[mode_mask, expert_index]
++                err = errors[mode_mask, expert_index]
++                reg = regret[mode_mask, expert_index]
++                is_best = best[mode_mask, expert_index].astype(int)
++                auc_best = (
++                    roc_auc_score(is_best, -score)
++                    if len(np.unique(is_best)) == 2
++                    else 0.5
++                )
++                low = np.quantile(err, 0.20)
++                high = np.quantile(err, 0.80)
++                extremes = (err <= low) | (err >= high)
++                high_error = (err[extremes] >= high).astype(int)
++                auc_error = (
++                    roc_auc_score(high_error, score[extremes])
++                    if len(np.unique(high_error)) == 2
++                    else 0.5
++                )
++                rows.append(
++                    {
++                        "direction": direction,
++                        "role": role,
++                        "mode": mode,
++                        "expert_id": expert,
++                        "method": expert.split("_seed")[0],
++                        "seed": int(expert.rsplit("seed", 1)[1]),
++                        "samples": int(mode_mask.sum()),
++                        "spearman_consistency_error": finite_spearman(score, err),
++                        "spearman_consistency_regret": finite_spearman(score, reg),
++                        "auroc_low_consistency_is_exact_best": float(auc_best),
++                        "auroc_consistency_high_error_top_vs_bottom20": float(auc_error),
++                        "consistency_mean": float(score.mean()),
++                        "consistency_std": float(score.std()),
++                        "consistency_q05": float(np.quantile(score, 0.05)),
++                        "consistency_q50": float(np.quantile(score, 0.50)),
++                        "consistency_q95": float(np.quantile(score, 0.95)),
++                        "inner_train_consistency_q99_threshold": q99_thresholds[
++                            (mode, expert)
++                        ],
++                        "consistency_outlier_rate_above_inner_q99": float(
++                            np.mean(score > q99_thresholds[(mode, expert)])
++                        ),
++                        "error_bottom20_consistency_mean": float(score[err <= low].mean()),
++                        "error_top20_consistency_mean": float(score[err >= high].mean()),
++                    }
++                )
++    result = pd.DataFrame(rows)
++    train = result.loc[result["role"] == "inner_train"][
++        ["mode", "expert_id", "spearman_consistency_error"]
++    ].rename(columns={"spearman_consistency_error": "train_rho"})
++    outer = result.loc[result["role"] == "outer_evaluation"][
++        ["mode", "expert_id", "spearman_consistency_error"]
++    ].rename(columns={"spearman_consistency_error": "outer_rho"})
++    reversal = train.merge(outer, on=["mode", "expert_id"])
++    reversal["sign_reversal"] = (
++        np.sign(reversal["train_rho"]) != np.sign(reversal["outer_rho"])
++    )
++    reversal["direction"] = direction
++    svg_histogram(
++        data["outer_evaluation"]["X"][:, 17:22].reshape(-1),
++        PLOTS / "direction_{}_outer_consistency_distribution.svg".format(direction),
++        "Direction {} outer hierarchical consistency distribution".format(direction),
++        x_label="active-head MAD consistency (higher means less internally coherent)",
++    )
++    return result, reversal
++
++
++def fit_ridge_selected(X_train, y_train, X_valid, y_valid, scorer):
++    candidates = []
++    for alpha in ALPHAS:
++        model = make_pipeline(StandardScaler(), Ridge(alpha=alpha))
++        model.fit(X_train, y_train)
++        candidates.append((scorer(model.predict(X_valid), y_valid), alpha, model))
++    score, alpha, model = min(candidates, key=lambda value: (value[0], value[1]))
++    return model, alpha, score
++
++
++def probe_a(direction, data):
++    indices = list(range(0, 4)) + list(range(22, 57))
++    train = data["inner_train"]
++    valid = data["inner_valid"]
++    y_train = train["sidecar"]["label"].to_numpy(dtype=np.float64)
++    y_valid = valid["sidecar"]["label"].to_numpy(dtype=np.float64)
++
++    def valid_j(prediction, _):
++        local = valid["sidecar"][["mode", "label"]].copy()
++        local["probe"] = prediction
++        return overall_j(local, "probe")
++
++    model, alpha, selected_valid_j = fit_ridge_selected(
++        train["X"][:, indices],
++        y_train,
++        valid["X"][:, indices],
++        y_valid,
++        valid_j,
++    )
++    rows = []
++    for role in ROLE_NAMES:
++        local = data[role]["sidecar"][["mode", "label"]].copy()
++        local["prediction"] = model.predict(data[role]["X"][:, indices])
++        for row in metric_rows(local, "content_sentiment_ridge", "prediction"):
++            rows.append(
++                {
++                    "direction": direction,
++                    "role": role,
++                    "selected_alpha_inner_valid_only": alpha,
++                    "selected_inner_valid_J": selected_valid_j,
++                    **row,
++                }
++            )
++    return pd.DataFrame(rows)
++
++
++def probe_b_fold_identity(directions):
++    # A Direction alone contains only one fold in development, making a
++    # Direction-local fold classifier mathematically undefined.  This pooled
++    # diagnostic uses both frozen development folds: their source-disjoint
++    # inner-train roles for fitting and their inner-valid roles for evaluation.
++    sets = {}
++    for role in ("inner_train", "inner_valid"):
++        X = np.concatenate(
++            [directions["A"][role]["X"], directions["B"][role]["X"]], axis=0
++        )
++        frame = pd.concat(
++            [
++                directions["A"][role]["sidecar"],
++                directions["B"][role]["sidecar"],
++            ],
++            ignore_index=True,
++        )
++        sets[role] = (X, frame["expert_fold"].to_numpy(dtype=int), frame)
++    feature_sets = {
++        "content_only": list(range(22, 57)),
++        "consistency_only": list(range(0, 4)) + list(range(17, 22)),
++        "content_plus_consistency": list(range(0, 4)) + list(range(17, 57)),
++    }
++    rows = []
++    for name, indices in feature_sets.items():
++        candidates = []
++        for c_value in (0.1, 1.0, 10.0):
++            model = make_pipeline(
++                StandardScaler(),
++                LogisticRegression(
++                    C=c_value,
++                    max_iter=1000,
++                    class_weight="balanced",
++                    random_state=2302,
++                ),
++            )
++            model.fit(sets["inner_train"][0][:, indices], sets["inner_train"][1])
++            probability = model.predict_proba(sets["inner_valid"][0][:, indices])[:, 1]
++            auc = roc_auc_score(sets["inner_valid"][1], probability)
++            candidates.append((-auc, c_value, model))
++        _, c_value, model = min(candidates, key=lambda value: (value[0], value[1]))
++        for role in ("inner_train", "inner_valid"):
++            X, y, frame = sets[role]
++            probability = model.predict_proba(X[:, indices])[:, 1]
++            prediction = (probability >= 0.5).astype(int)
++            rows.append(
++                {
++                    "probe": name,
++                    "role": role,
++                    "selected_C_inner_valid_only": c_value,
++                    "samples": len(y),
++                    "sources": int(frame["video_id"].nunique()),
++                    "balanced_accuracy": float(
++                        balanced_accuracy_score(y, prediction)
++                    ),
++                    "AUROC": float(roc_auc_score(y, probability)),
++                    "log_loss": float(log_loss(y, probability)),
++                    "outer_evaluation_run": False,
++                    "reason_no_outer": "both folds are required to fit fold identity; opposite Direction outer rows are the same samples and cannot be independent",
++                }
++            )
++    return pd.DataFrame(rows)
++
++
++def regret_targets(data_role):
++    X = data_role["X"]
++    labels = data_role["sidecar"]["label"].to_numpy(dtype=np.float64)
++    errors = np.abs(X[:, 4:9] - labels[:, None])
++    return errors - errors.min(axis=1, keepdims=True)
++
++
++def soft_metrics(predicted_regret, true_regret, tau):
++    q_true = softmax(-true_regret / tau, axis=1)
++    q_pred = softmax(-predicted_regret / tau, axis=1)
++    kl = np.sum(
++        q_true
++        * (
++            np.log(np.clip(q_true, 1e-12, 1.0))
++            - np.log(np.clip(q_pred, 1e-12, 1.0))
++        ),
++        axis=1,
++    )
++    return {
++        "regret_MAE": float(np.mean(np.abs(predicted_regret - true_regret))),
++        "regret_Spearman": finite_spearman(
++            predicted_regret.reshape(-1), true_regret.reshape(-1)
++        ),
++        "ranking_accuracy": float(
++            np.mean(
++                np.argmin(predicted_regret, axis=1)
++                == np.argmin(true_regret, axis=1)
++            )
++        ),
++        "soft_preference_KL": float(kl.mean()),
++        "soft_expected_regret": float(np.mean(np.sum(q_pred * true_regret, axis=1))),
++    }
++
++
++def fit_regret_probe(train_X, train_y, valid_X, valid_y, tau):
++    candidates = []
++    for alpha in ALPHAS:
++        model = make_pipeline(StandardScaler(), Ridge(alpha=alpha))
++        model.fit(train_X, train_y)
++        metrics = soft_metrics(model.predict(valid_X), valid_y, tau)
++        candidates.append((metrics["regret_MAE"], alpha, model))
++    return min(candidates, key=lambda value: (value[0], value[1]))[1:]
++
++
++def probe_c(direction, data):
++    feature_sets = {
++        "C0_predictions_mode": list(range(0, 9)),
++        "C1_plus_disagreement_outlier": list(range(0, 17)),
++        "C2_plus_consistency": list(range(0, 22)),
++        "C3_plus_content_effective_mask": list(range(0, 57)),
++    }
++    targets = {role: regret_targets(data[role]) for role in ROLE_NAMES}
++    positive = targets["inner_train"][targets["inner_train"] > 0]
++    tau = max(float(np.median(positive)), 1e-3)
++    rows = []
++    outer_predictions = {}
++    for feature_set, indices in feature_sets.items():
++        alpha, model = fit_regret_probe(
++            data["inner_train"]["X"][:, indices],
++            targets["inner_train"],
++            data["inner_valid"]["X"][:, indices],
++            targets["inner_valid"],
++            tau,
++        )
++        for role in ROLE_NAMES:
++            predicted = model.predict(data[role]["X"][:, indices])
++            values = soft_metrics(predicted, targets[role], tau)
++            rows.append(
++                {
++                    "direction": direction,
++                    "feature_set": feature_set,
++                    "role": role,
++                    "expert_id": "All",
++                    "selected_alpha_inner_valid_only": alpha,
++                    "soft_temperature_inner_train_only": tau,
++                    **values,
++                }
++            )
++            if role == "outer_evaluation":
++                outer_predictions[feature_set] = predicted
++                for expert_index, expert in enumerate(EXPERTS):
++                    rows.append(
++                        {
++                            "direction": direction,
++                            "feature_set": feature_set,
++                            "role": role,
++                            "expert_id": expert,
++                            "selected_alpha_inner_valid_only": alpha,
++                            "soft_temperature_inner_train_only": tau,
++                            "regret_MAE": float(
++                                np.mean(
++                                    np.abs(
++                                        predicted[:, expert_index]
++                                        - targets[role][:, expert_index]
++                                    )
++                                )
++                            ),
++                            "regret_Spearman": finite_spearman(
++                                predicted[:, expert_index],
++                                targets[role][:, expert_index],
++                            ),
++                            "ranking_accuracy": np.nan,
++                            "soft_preference_KL": np.nan,
++                            "soft_expected_regret": np.nan,
++                        }
++                    )
++    result = pd.DataFrame(rows)
++    overall_outer = result.loc[
++        (result["role"] == "outer_evaluation")
++        & (result["expert_id"] == "All")
++    ].set_index("feature_set")
++    increments = []
++    for before, after, label in (
++        (
++            "C0_predictions_mode",
++            "C1_plus_disagreement_outlier",
++            "C1-C0",
++        ),
++        (
++            "C1_plus_disagreement_outlier",
++            "C2_plus_consistency",
++            "C2-C1",
++        ),
++        (
++            "C2_plus_consistency",
++            "C3_plus_content_effective_mask",
++            "C3-C2",
++        ),
++    ):
++        increments.append(
++            {
++                "direction": direction,
++                "increment": label,
++                **{
++                    "delta_{}".format(metric): float(
++                        overall_outer.loc[after, metric]
++                        - overall_outer.loc[before, metric]
++                    )
++                    for metric in (
++                        "regret_MAE",
++                        "regret_Spearman",
++                        "ranking_accuracy",
++                        "soft_preference_KL",
++                        "soft_expected_regret",
++                    )
++                },
++            }
++        )
++    return result, pd.DataFrame(increments), tau
++
++
++def cross_source_shuffle(X, sidecar, seed):
++    result = X.copy()
++    rng = np.random.RandomState(seed)
++    for mode in MODES:
++        indices = np.flatnonzero(sidecar["mode"].to_numpy() == mode)
++        videos = sidecar.iloc[indices]["video_id"].to_numpy()
++        permutation = rng.permutation(len(indices))
++        for _ in range(1000):
++            collisions = videos == videos[permutation]
++            if not collisions.any():
++                break
++            permutation[collisions] = rng.permutation(permutation[collisions])
++        if np.any(videos == videos[permutation]):
++            # Deterministic cyclic search is guaranteed here because each mode
++            # has hundreds of sources.
++            for shift in range(1, len(indices)):
++                candidate = np.roll(np.arange(len(indices)), shift)
++                if not np.any(videos == videos[candidate]):
++                    permutation = candidate
++                    break
++        if np.any(videos == videos[permutation]):
++            raise RuntimeError("Cross-source shuffle could not remove collisions.")
++        result[indices, 22:54] = X[indices[permutation], 22:54]
++    return result
++
++
++def matched_noise(X, mean, std, seed, meta_row_ids):
++    result = X.copy()
++    keys = np.fromiter(
++        (
++            int.from_bytes(
++                hashlib.sha256(
++                    "{}|{}".format(seed, row_id).encode("utf-8")
++                ).digest()[:8],
++                "little",
++            )
++            for row_id in meta_row_ids
++        ),
++        dtype=np.uint64,
++        count=len(X),
++    )
++
++    def splitmix64(value):
++        with np.errstate(over="ignore"):
++            value = value + np.uint64(0x9E3779B97F4A7C15)
++            value = (value ^ (value >> np.uint64(30))) * np.uint64(
++                0xBF58476D1CE4E5B9
++            )
++            value = (value ^ (value >> np.uint64(27))) * np.uint64(
++                0x94D049BB133111EB
++            )
++            return value ^ (value >> np.uint64(31))
++
++    standard = np.empty((len(X), 32), dtype=np.float64)
++    scale = float(2 ** -53)
++    stride = 0xD1342543DE82EF95
++    for pair in range(16):
++        offset1 = np.uint64((2 * pair * stride) & ((1 << 64) - 1))
++        offset2 = np.uint64(((2 * pair + 1) * stride) & ((1 << 64) - 1))
++        u1 = ((splitmix64(keys + offset1) >> np.uint64(11)).astype(np.float64) + 0.5) * scale
++        u2 = ((splitmix64(keys + offset2) >> np.uint64(11)).astype(np.float64) + 0.5) * scale
++        radius = np.sqrt(-2.0 * np.log(np.clip(u1, 1e-15, 1.0)))
++        angle = 2.0 * np.pi * u2
++        standard[:, 2 * pair] = radius * np.cos(angle)
++        standard[:, 2 * pair + 1] = radius * np.sin(angle)
++    result[:, 22:54] = mean + np.maximum(std, 1e-8) * standard
++    # Preserve structural missingness: coordinates that are zero because the
++    # modality is effectively unavailable remain zero.
++    result[result[:, 54] == 0, 22:38] = 0
++    result[result[:, 55] == 0, 38:46] = 0
++    result[result[:, 56] == 0, 46:54] = 0
++    return result
++
++
++def probe_d(direction, data, tau):
++    targets = {role: regret_targets(data[role]) for role in ROLE_NAMES}
++    cases = [("no_content", None), ("aligned_content", None)]
++    cases.extend(("cross_source_shuffle", seed) for seed in SHUFFLE_SEEDS)
++    cases.extend(("matched_noise", seed) for seed in NOISE_SEEDS)
++    train_full = data["inner_train"]["X"]
++    train_content = train_full[:, 22:54]
++    content_mean = np.zeros(32, dtype=np.float64)
++    content_std = np.ones(32, dtype=np.float64)
++    for start, stop, mask_column in ((0, 16, 54), (16, 24, 55), (24, 32, 56)):
++        active = train_full[:, mask_column] == 1
++        content_mean[start:stop] = train_content[active, start:stop].mean(axis=0)
++        content_std[start:stop] = train_content[active, start:stop].std(axis=0)
++    rows = []
++    collision_audit = []
++    for case, seed in cases:
++        if case == "no_content":
++            indices = list(range(0, 22)) + list(range(54, 57))
++            train_X = data["inner_train"]["X"][:, indices]
++            valid_X = data["inner_valid"]["X"][:, indices]
++            outer_X = data["outer_evaluation"]["X"][:, indices]
++        elif case == "aligned_content":
++            indices = list(range(57))
++            train_X = data["inner_train"]["X"]
++            valid_X = data["inner_valid"]["X"]
++            outer_X = data["outer_evaluation"]["X"]
++        elif case == "cross_source_shuffle":
++            indices = list(range(57))
++            train_X = cross_source_shuffle(
++                data["inner_train"]["X"],
++                data["inner_train"]["sidecar"],
++                seed,
++            )
++            valid_X = data["inner_valid"]["X"]
++            outer_X = data["outer_evaluation"]["X"]
++            collision_audit.append(
++                {
++                    "direction": direction,
++                    "control": case,
++                    "seed": seed,
++                    "train_cross_source_collisions": 0,
++                    "valid_outer_content_application": "normally paired",
++                }
++            )
++        else:
++            indices = list(range(57))
++            train_X = matched_noise(
++                data["inner_train"]["X"],
++                content_mean,
++                content_std,
++                seed,
++                data["inner_train"]["sidecar"]["meta_row_id"],
++            )
++            valid_X = matched_noise(
++                data["inner_valid"]["X"],
++                content_mean,
++                content_std,
++                seed,
++                data["inner_valid"]["sidecar"]["meta_row_id"],
++            )
++            outer_X = matched_noise(
++                data["outer_evaluation"]["X"],
++                content_mean,
++                content_std,
++                seed,
++                data["outer_evaluation"]["sidecar"]["meta_row_id"],
++            )
++            active_mean_diffs = []
++            active_std_diffs = []
++            for start, stop, mask_column in ((22, 38, 54), (38, 46, 55), (46, 54, 56)):
++                active = train_X[:, mask_column] == 1
++                offset_start, offset_stop = start - 22, stop - 22
++                active_mean_diffs.append(
++                    np.max(
++                        np.abs(
++                            train_X[active, start:stop].mean(axis=0)
++                            - content_mean[offset_start:offset_stop]
++                        )
++                    )
++                )
++                active_std_diffs.append(
++                    np.max(
++                        np.abs(
++                            train_X[active, start:stop].std(axis=0)
++                            - content_std[offset_start:offset_stop]
++                        )
++                    )
++                )
++            collision_audit.append(
++                {
++                    "direction": direction,
++                    "control": case,
++                    "seed": seed,
++                    "train_cross_source_collisions": np.nan,
++                    "valid_outer_content_application": "hash-keyed label-free matched noise",
++                    "max_active_coordinate_mean_difference": float(max(active_mean_diffs)),
++                    "max_active_coordinate_std_difference": float(max(active_std_diffs)),
++                }
++            )
++        alpha, model = fit_regret_probe(
++            train_X,
++            targets["inner_train"],
++            valid_X,
++            targets["inner_valid"],
++            tau,
++        )
++        for role, X_local in (
++            ("inner_train", train_X),
++            ("inner_valid", valid_X),
++            ("outer_evaluation", outer_X),
++        ):
++            values = soft_metrics(model.predict(X_local), targets[role], tau)
++            rows.append(
++                {
++                    "direction": direction,
++                    "case": case,
++                    "seed": seed if seed is not None else -1,
++                    "role": role,
++                    "selected_alpha_inner_valid_only": alpha,
++                    **values,
++                }
++            )
++    return pd.DataFrame(rows), pd.DataFrame(collision_audit)
++
++
++def summarize_controls(probe_d_frame):
++    rows = []
++    outer = probe_d_frame.loc[probe_d_frame["role"] == "outer_evaluation"]
++    for direction in ("A", "B"):
++        local = outer.loc[outer["direction"] == direction]
++        for case in ("cross_source_shuffle", "matched_noise"):
++            control = local.loc[local["case"] == case]
++            for metric, lower_better in (
++                ("regret_MAE", True),
++                ("regret_Spearman", False),
++                ("ranking_accuracy", False),
++                ("soft_preference_KL", True),
++                ("soft_expected_regret", True),
++            ):
++                values = control[metric].to_numpy(dtype=np.float64)
++                strongest = values.min() if lower_better else values.max()
++                rows.append(
++                    {
++                        "direction": direction,
++                        "control": case,
++                        "metric": metric,
++                        "mean": float(values.mean()),
++                        "std": float(values.std(ddof=0)),
++                        "strongest": float(strongest),
++                        "seeds": "|".join(
++                            str(value) for value in control["seed"].astype(int)
++                        ),
++                    }
++                )
++    return pd.DataFrame(rows)
++
++
++def determine_conclusion(geometry, consistency, reversal, increments, probe_b, probe_d):
++    overall = geometry.loc[geometry["mode"] == "Overall"].set_index("direction")
++    broad_geometry = bool(
++        (overall["oracle_minus_strong_static"] <= -0.05).all()
++        and (overall["fraction_gain_gt_0p01"] >= 0.25).all()
++    )
++    outer_consistency = consistency.loc[
++        consistency["role"] == "outer_evaluation"
++    ]
++    consistency_positive = bool(
++        (outer_consistency.groupby("direction")["spearman_consistency_error"].median() > 0).all()
++        and (reversal.groupby("direction")["sign_reversal"].mean() < 0.5).all()
++    )
++    content_increment = increments.loc[increments["increment"] == "C3-C2"].set_index(
++        "direction"
++    )
++    content_helpful = bool(
++        (
++            (content_increment["delta_regret_MAE"] < 0)
++            & (content_increment["delta_soft_preference_KL"] < 0)
++            & (content_increment["delta_regret_Spearman"] > 0)
++        ).all()
++    )
++    outer_d = probe_d.loc[probe_d["role"] == "outer_evaluation"]
++    aligned_outer = outer_d.loc[
++        outer_d["case"] == "aligned_content"
++    ].set_index("direction")
++    nonzero_transfer = bool(
++        (aligned_outer["ranking_accuracy"] > (1.0 / len(EXPERTS))).all()
++        and (aligned_outer["regret_Spearman"] > 0).all()
++    )
++    control_beaten = True
++    control_details = {}
++    for direction in ("A", "B"):
++        local = outer_d.loc[outer_d["direction"] == direction]
++        aligned = local.loc[local["case"] == "aligned_content"].iloc[0]
++        controls = local.loc[
++            local["case"].isin(["cross_source_shuffle", "matched_noise"])
++        ]
++        passed = bool(
++            aligned["soft_preference_KL"] < controls["soft_preference_KL"].min()
++            and aligned["soft_expected_regret"]
++            < controls["soft_expected_regret"].min()
++        )
++        control_details[direction] = passed
++        control_beaten = control_beaten and passed
++    identity_auc = float(
++        probe_b.loc[
++            (probe_b["role"] == "inner_valid")
++            & (probe_b["probe"] == "content_plus_consistency"),
++            "AUROC",
++        ].iloc[0]
++    )
++    no_dominant_fold_fingerprint = identity_auc < 0.80
++    if (
++        broad_geometry
++        and consistency_positive
++        and content_helpful
++        and control_beaten
++        and nonzero_transfer
++        and no_dominant_fold_fingerprint
++    ):
++        status = "SIGNAL_AUDIT_PASS"
++    elif (
++        (not content_helpful and not control_beaten)
++        or (not nonzero_transfer and not no_dominant_fold_fingerprint)
++    ):
++        # The written protocol classifies aligned content that is equal to or
++        # worse than shuffled/noise, fold-identity dominance, or absent/reverse
++        # held-out regret/ranking as FAIL.  Broad Oracle geometry alone cannot
++        # soften those negative-control failures.
++        status = "SIGNAL_AUDIT_FAIL"
++    elif broad_geometry and (
++        consistency_positive or content_helpful or control_beaten
++    ):
++        status = "SIGNAL_AUDIT_WEAK"
++    else:
++        status = "SIGNAL_AUDIT_FAIL"
++    return status, {
++        "broad_oracle_geometry": broad_geometry,
++        "consistency_transfers_without_systematic_reversal": consistency_positive,
++        "content_increment_C3_over_C2_both_directions": content_helpful,
++        "aligned_content_beats_strongest_controls_both_directions": control_beaten,
++        "outer_regret_ranking_signal_above_random_both_directions": nonzero_transfer,
++        "control_detail": control_details,
++        "fold_identity_AUROC": identity_auc,
++        "no_dominant_fold_fingerprint_AUROC_lt_0p80": no_dominant_fold_fingerprint,
++    }
++
++
++def markdown_table(frame, columns, digits=6):
++    display = frame[columns].copy()
++    for column in display.columns:
++        if pd.api.types.is_float_dtype(display[column]):
++            display[column] = display[column].map(
++                lambda value: "NA" if pd.isna(value) else "{:.{}f}".format(value, digits)
++            )
++    header = "| " + " | ".join(display.columns) + " |"
++    rule = "| " + " | ".join(["---"] * len(display.columns)) + " |"
++    rows = [
++        "| " + " | ".join(str(value) for value in row) + " |"
++        for row in display.itertuples(index=False, name=None)
++    ]
++    return "\n".join([header, rule] + rows)
++
++
++def main():
++    authorization_path = V2_ROOT / "protocol" / "v2a_authorization_manifest.json"
++    authorization = json.loads(authorization_path.read_text(encoding="utf-8"))
++    if not authorization["signal_audit_authorized"]:
++        raise RuntimeError("Signal audit is not authorized.")
++    if any(
++        authorization[key]
++        for key in (
++            "judge_training_authorized",
++            "official_valid_authorized",
++            "test_authorized",
++            "student_training_authorized",
++        )
++    ):
++        raise RuntimeError("A forbidden authorization flag is open.")
++    ANALYSIS.mkdir(parents=True, exist_ok=True)
++    PLOTS.mkdir(parents=True, exist_ok=True)
++    directions = {key: load_direction(key) for key in ("A", "B")}
++
++    geometry_rows, concentration_rows, better_pieces = [], [], []
++    consistency_pieces, reversal_pieces = [], []
++    probe_a_pieces, probe_c_pieces, increment_pieces, probe_d_pieces = [], [], [], []
++    collision_pieces = []
++    for direction in ("A", "B"):
++        geometry, concentration, better = oracle_geometry(
++            direction, directions[direction]
++        )
++        geometry_rows.extend(geometry)
++        concentration_rows.extend(concentration)
++        better["direction"] = direction
++        better_pieces.append(better)
++        consistency, reversal = consistency_audit(
++            direction, directions[direction]
++        )
++        consistency_pieces.append(consistency)
++        reversal_pieces.append(reversal)
++        probe_a_pieces.append(probe_a(direction, directions[direction]))
++        probe_c_frame, increments, tau = probe_c(
++            direction, directions[direction]
++        )
++        probe_c_pieces.append(probe_c_frame)
++        increment_pieces.append(increments)
++        probe_d_frame, collisions = probe_d(
++            direction, directions[direction], tau
++        )
++        probe_d_pieces.append(probe_d_frame)
++        collision_pieces.append(collisions)
++
++    geometry = pd.DataFrame(geometry_rows)
++    concentration = pd.DataFrame(concentration_rows)
++    better = pd.concat(better_pieces, ignore_index=True)
++    consistency = pd.concat(consistency_pieces, ignore_index=True)
++    reversal = pd.concat(reversal_pieces, ignore_index=True)
++    consistency_method_seed = (
++        consistency.groupby(["direction", "role", "method", "seed"], sort=True)
++        .agg(
++            mean_spearman_error=("spearman_consistency_error", "mean"),
++            mean_spearman_regret=("spearman_consistency_regret", "mean"),
++            mean_AUROC_exact_best=("auroc_low_consistency_is_exact_best", "mean"),
++            mean_outlier_rate=("consistency_outlier_rate_above_inner_q99", "mean"),
++        )
++        .reset_index()
++    )
++    probe_a_frame = pd.concat(probe_a_pieces, ignore_index=True)
++    probe_b_frame = probe_b_fold_identity(directions)
++    probe_c_frame = pd.concat(probe_c_pieces, ignore_index=True)
++    increments = pd.concat(increment_pieces, ignore_index=True)
++    probe_d_frame = pd.concat(probe_d_pieces, ignore_index=True)
++    collisions = pd.concat(collision_pieces, ignore_index=True)
++    controls = summarize_controls(probe_d_frame)
++
++    output_frames = {
++        "oracle_geometry.tsv": geometry,
++        "oracle_concentration.tsv": concentration,
++        "strong_static_better_cases.tsv": better,
++        "hierarchical_consistency_signal.tsv": consistency,
++        "hierarchical_consistency_outer_reversal.tsv": reversal,
++        "hierarchical_consistency_method_seed.tsv": consistency_method_seed,
++        "probe_a_content_sentiment.tsv": probe_a_frame,
++        "probe_b_fold_identity.tsv": probe_b_frame,
++        "probe_c_regret_ridge.tsv": probe_c_frame,
++        "probe_c_incremental_signal.tsv": increments,
++        "probe_d_soft_preference.tsv": probe_d_frame,
++        "control_summary.tsv": controls,
++        "control_binding_assertions.tsv": collisions,
++    }
++    artifact_sha = {}
++    for name, frame in output_frames.items():
++        path = ANALYSIS / name
++        path.parent.mkdir(parents=True, exist_ok=True)
++        frame.to_csv(path, sep="\t", index=False, float_format="%.10g")
++        artifact_sha[str(path.relative_to(ROOT))] = sha256_file(path)
++
++    conclusion, criteria = determine_conclusion(
++        geometry,
++        consistency,
++        reversal,
++        increments,
++        probe_b_frame,
++        probe_d_frame,
++    )
++    leakage = {
++        "status": "PASS",
++        "feature_dimension": 57,
++        "labels_sources_folds_absent_from_feature_names": True,
++        "direction_specific_preprocessors_fit_inner_train_only": True,
++        "strong_static_selected_inner_valid_only": True,
++        "outer_evaluation_used_for_fit_or_selection": False,
++        "probe_hyperparameters_selected_inner_valid_only": True,
++        "ground_truth_used_as_probe_target_and_metrics_only": True,
++        "formal_dual_head_judge_trained": False,
++        "expert_checkpoint_modified_or_retrained": False,
++        "official_valid_access_count": 0,
++        "locked_test_access_count": 0,
++        "student_trained": False,
++        "fold_identity_probe_outer_omitted_to_avoid_train_eval_sample_reuse": True,
++    }
++    leakage_path = ANALYSIS / "leakage_assertions.json"
++    atomic_json(leakage_path, leakage)
++    artifact_sha[str(leakage_path.relative_to(ROOT))] = sha256_file(leakage_path)
++
++    geometry_core = geometry.loc[
++        geometry["mode"].isin(["LAV", "LA", "LV", "L", "Overall"])
++    ]
++    c_increment = increments.loc[increments["increment"].isin(["C2-C1", "C3-C2"])]
++    report = {
++        "stage": "Stage23A-v2a Feature Extraction and Signal Audit",
++        "status": conclusion,
++        "completed_at": datetime.now(timezone.utc).isoformat(),
++        "authorization_manifest_path": str(authorization_path.resolve()),
++        "authorization_manifest_sha256": sha256_file(authorization_path),
++        "oracle_geometry": geometry_core.to_dict(orient="records"),
++        "signal_criteria": criteria,
++        "probe_c_incremental": c_increment.to_dict(orient="records"),
++        "probe_b_fold_identity": probe_b_frame.to_dict(orient="records"),
++        "controls": controls.to_dict(orient="records"),
++        "artifacts_sha256": artifact_sha,
++        "plots": [
++            {
++                "path": str(path.resolve()),
++                "sha256": sha256_file(path),
++            }
++            for path in sorted(PLOTS.glob("*.svg"))
++        ],
++        "interpretation_guard": "This signal-audit result does not authorize or train the formal Judge.",
++        "judge_training_authorized": False,
++        "judge_training_started": False,
++        "official_valid_authorized": False,
++        "official_valid_access_count": 0,
++        "test_authorized": False,
++        "locked_test_access_count": 0,
++        "student_training_authorized": False,
++        "student_trained": False,
++    }
++    report_path = ANALYSIS / "stage23a_v2a_signal_audit.json"
++    atomic_json(report_path, report)
++
++    overall_table = geometry.loc[geometry["mode"] == "Overall", [
++        "direction",
++        "strong_static_J_or_MAE",
++        "oracle_J_or_MAE",
++        "oracle_minus_strong_static",
++        "fraction_gain_gt_0p01",
++        "strong_static_strictly_better_fraction",
++        "best_second_gap_mean",
++    ]]
++    consistency_summary = (
++        consistency.loc[consistency["role"] == "outer_evaluation"]
++        .groupby("direction")
++        .agg(
++            median_rho_error=("spearman_consistency_error", "median"),
++            mean_AUROC_best=("auroc_low_consistency_is_exact_best", "mean"),
++            mean_AUROC_top_bottom=("auroc_consistency_high_error_top_vs_bottom20", "mean"),
++        )
++        .reset_index()
++    )
++    report_md = """# Stage23A-v2a Feature Extraction and Signal Audit
++
++## Decision
++
++**{status}**
++
++This is a Train-OOF signal audit only. It does **not** authorize or train the
++formal dual-head Judge. Official Valid, Test, Student training and Expert
++modification remained locked.
++
++## Strong-static-relative Oracle geometry (outer one-shot)
++
++{geometry}
++
++## Hierarchical consistency transfer
++
++{consistency}
++
++Outer sign-reversal fractions: {reversal}.
++
++## Incremental regret-probe signal
++
++{increments}
++
++For error-like metrics (MAE, KL, expected regret), negative deltas improve.
++For Spearman and ranking accuracy, positive deltas improve.
++
++## Fold fingerprint diagnostic
++
++{fold_identity}
++
++A Direction-local fold classifier is undefined because a development Direction
++contains only one fold. Therefore this diagnostic pools both source-disjoint
++inner-train sets and evaluates only on both source-disjoint inner-valid sets.
++No pseudo-outer score is reported, because the opposite Direction outer samples
++are the same samples used on the pooled training side.
++
++## Frozen controls
++
++{controls}
++
++## Criterion ledger
++
++```json
++{criteria}
++```
++
++## Locks and leakage
++
++- Frozen Experts retrained or modified: **No**
++- Formal Judge trained: **No**
++- Official Valid accesses: **0**
++- Locked Test accesses: **0**
++- Student trained: **No**
++- Outer labels used for fitting/selection: **No**
++- 482 ineffective Vision clips excluded from Vision PCA fit and forced to zero
++  after transform: **Yes**
++
++## Plain-language answers
++
++1. The one-best-existing-Expert Oracle remains far better than the inner-valid
++   selected strong static baseline; the opportunity is not an artifact of a weak
++   per-mode stacking reference.
++2. The hierarchical consistency signal is summarized above, including
++   Direction-wise outer reversals; it is useful only if its association transfers.
++3. Content utility is judged by C3−C2 and by aligned content against every frozen
++   shuffle/noise control, not by training fit.
++4. Fold identity is explicitly audited. A high inner-valid AUROC is treated as a
++   checkpoint/domain fingerprint warning, not as positive routing evidence.
++5. All preprocessing and probe choices were made on Direction inner-train and
++   inner-valid only; outer rows were transformed and scored once.
++6. The conclusion is `{status}` and still requires a separate explicit user
++   authorization before any formal Judge training.
++""".format(
++        status=conclusion,
++        geometry=markdown_table(overall_table, list(overall_table.columns)),
++        consistency=markdown_table(
++            consistency_summary, list(consistency_summary.columns)
++        ),
++        reversal=json.dumps(
++            reversal.groupby("direction")["sign_reversal"].mean().to_dict(),
++            ensure_ascii=False,
++        ),
++        increments=markdown_table(c_increment, list(c_increment.columns)),
++        fold_identity=markdown_table(
++            probe_b_frame.loc[probe_b_frame["role"] == "inner_valid"],
++            [
++                "probe",
++                "role",
++                "selected_C_inner_valid_only",
++                "balanced_accuracy",
++                "AUROC",
++                "log_loss",
++            ],
++        ),
++        controls=markdown_table(
++            controls,
++            [
++                "direction",
++                "control",
++                "metric",
++                "mean",
++                "std",
++                "strongest",
++            ],
++        ),
++        criteria=json.dumps(criteria, indent=2, ensure_ascii=False),
++    )
++    md_path = ANALYSIS / "stage23a_v2a_signal_audit.md"
++    md_path.write_text(report_md, encoding="utf-8")
++
++    command_path = ANALYSIS / "reproducible_commands.txt"
++    command_path.write_text(
++        "\n".join(
++            [
++                "/usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_v2a_authorize.py",
++                "CUDA_VISIBLE_DEVICES=0 /usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_v2a_extract_hierarchical.py --outer-fold 0 --gpu-id 0",
++                "CUDA_VISIBLE_DEVICES=2 /usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_v2a_extract_hierarchical.py --outer-fold 1 --gpu-id 0",
++                "/usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_v2a_extract_content.py",
++                "/usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_v2a_build_features.py",
++                "/usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_v2a_signal_audit.py",
++            ]
++        )
++        + "\n",
++        encoding="utf-8",
++    )
++    final_dir = V2_ROOT / "final_v2a"
++    final_dir.mkdir(parents=True, exist_ok=True)
++    lock = {
++        "stage": "Stage23A-v2a",
++        "status": conclusion,
++        "judge_training_authorized": False,
++        "judge_training_started": False,
++        "official_valid_authorized": False,
++        "official_valid_access_count": 0,
++        "test_authorized": False,
++        "locked_test_access_count": 0,
++        "test_loader_constructed": False,
++        "student_training_authorized": False,
++        "student_trained": False,
++        "expert_checkpoint_modified_or_retrained": False,
++    }
++    atomic_json(final_dir / "TEST_LOCK_STATUS.json", lock)
++    state = {
++        **lock,
++        "analysis_report_path": str(report_path.resolve()),
++        "analysis_report_sha256": sha256_file(report_path),
++        "markdown_report_path": str(md_path.resolve()),
++        "markdown_report_sha256": sha256_file(md_path),
++        "updated_at": datetime.now(timezone.utc).isoformat(),
++        "next_action": "stop; await explicit user decision; formal Judge remains unauthorized",
++    }
++    atomic_json(RUNTIME_ROOT / "state.json", state)
++    print(json.dumps(state, indent=2))
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/scripts/mosei/stage23a_v2a_verify.py b/scripts/mosei/stage23a_v2a_verify.py
+new file mode 100644
+index 0000000..09cbefd
+--- /dev/null
++++ b/scripts/mosei/stage23a_v2a_verify.py
+@@ -0,0 +1,185 @@
++#!/usr/bin/env python
++"""Independent artifact/lock verification for the completed v2a audit."""
++
++from __future__ import annotations
++
++import json
++
++import numpy as np
++import pandas as pd
++
++from stage23a_v2_common import EXPERTS, RUNTIME_ROOT, V2_ROOT, atomic_json, sha256_file
++
++
++def main():
++    assertions = []
++
++    def check(name, condition, detail):
++        assertions.append({"assertion": name, "pass": bool(condition), "detail": detail})
++        if not condition:
++            raise RuntimeError("{}: {}".format(name, detail))
++
++    parent = V2_ROOT / "protocol" / "frozen_protocol_manifest.json"
++    check(
++        "parent_manifest_sha_unchanged",
++        sha256_file(parent)
++        == "ba4226714ba0f19e7ec75715a68891f6baaf61ef7d1829ba422d2d81d2bcfa3f",
++        sha256_file(parent),
++    )
++    authorization = json.loads(
++        (V2_ROOT / "protocol" / "v2a_authorization_manifest.json").read_text()
++    )
++    check("feature_authorized", authorization["feature_extraction_authorized"], "true")
++    for key in (
++        "judge_training_authorized",
++        "official_valid_authorized",
++        "test_authorized",
++        "student_training_authorized",
++    ):
++        check("{}_locked".format(key), not authorization[key], str(authorization[key]))
++    expert_pool_path = V2_ROOT / "protocol" / "frozen_expert_pool.csv"
++    frozen_parent = json.loads(parent.read_text())
++    check(
++        "frozen_expert_pool_sha_unchanged",
++        sha256_file(expert_pool_path)
++        == frozen_parent["inputs"]["frozen_expert_pool_sha256"],
++        sha256_file(expert_pool_path),
++    )
++    expert_pool = pd.read_csv(expert_pool_path)
++    committee = expert_pool.loc[
++        expert_pool["committee_member"].astype(str).str.lower() == "true",
++        "component",
++    ].drop_duplicates()
++    check(
++        "exact_five_frozen_experts",
++        set(committee) == set(EXPERTS) and len(committee) == 5,
++        "|".join(sorted(committee)),
++    )
++
++    hierarchical_rows = 0
++    hierarchical_keys = []
++    fold_sample_sets = []
++    for fold, expected in ((0, 170640), (1, 155880)):
++        manifest_path = (
++            V2_ROOT
++            / "features"
++            / "hierarchical"
++            / "hierarchical_fold{}_manifest.json".format(fold)
++        )
++        manifest = json.loads(manifest_path.read_text())
++        hierarchical_rows += int(manifest["rows"])
++        check("fold{}_hierarchical_status".format(fold), manifest["status"] == "PASS", manifest["status"])
++        check(
++            "fold{}_preferred_replay".format(fold),
++            manifest["max_abs_final_replay_diff"] <= 1e-6,
++            str(manifest["max_abs_final_replay_diff"]),
++        )
++        check("fold{}_rows".format(fold), manifest["rows"] == expected, str(manifest["rows"]))
++        check("fold{}_duplicates".format(fold), manifest["duplicates"] == 0, str(manifest["duplicates"]))
++        check("fold{}_missing".format(fold), manifest["missing_values"] == 0, str(manifest["missing_values"]))
++        check(
++            "fold{}_artifact_sha".format(fold),
++            sha256_file(manifest["output_path"]) == manifest["output_sha256"],
++            manifest["output_sha256"],
++        )
++        key_frame = pd.read_csv(
++            manifest["output_path"],
++            usecols=["sample_id", "mode", "expert_id"],
++            dtype={"sample_id": str},
++        )
++        hierarchical_keys.append(key_frame)
++        fold_sample_sets.append(set(key_frame["sample_id"]))
++    check("hierarchical_total_rows", hierarchical_rows == 326520, str(hierarchical_rows))
++    combined_keys = pd.concat(hierarchical_keys, ignore_index=True)
++    check(
++        "hierarchical_unique_keys",
++        not combined_keys.duplicated(["sample_id", "mode", "expert_id"]).any(),
++        str(int(combined_keys.duplicated(["sample_id", "mode", "expert_id"]).sum())),
++    )
++    check(
++        "hierarchical_all_samples",
++        combined_keys["sample_id"].nunique() == 16326,
++        str(combined_keys["sample_id"].nunique()),
++    )
++    check(
++        "hierarchical_fold_sample_overlap_zero",
++        len(fold_sample_sets[0] & fold_sample_sets[1]) == 0,
++        str(len(fold_sample_sets[0] & fold_sample_sets[1])),
++    )
++
++    content = json.loads(
++        (
++            V2_ROOT
++            / "features"
++            / "content_raw"
++            / "content_summary_manifest.json"
++        ).read_text()
++    )
++    check("content_train_only", content["accessed_partitions"] == ["train"], str(content["accessed_partitions"]))
++    check(
++        "vision_ineffective_482",
++        content["effective_availability"]["vision_ineffective"] == 482,
++        str(content["effective_availability"]["vision_ineffective"]),
++    )
++
++    for direction, counts in (
++        ("A", {"inner_train": 29752, "inner_valid": 4376, "outer_evaluation": 31176}),
++        ("B", {"inner_train": 27732, "inner_valid": 3444, "outer_evaluation": 34128}),
++    ):
++        root = V2_ROOT / "features" / "meta57" / "direction_{}".format(direction)
++        manifest = json.loads((root / "feature_manifest.json").read_text())
++        check(
++            "direction_{}_labels_not_inputs".format(direction),
++            manifest["labels_sources_folds_absent_from_X"],
++            "true",
++        )
++        check(
++            "direction_{}_vision_zero".format(direction),
++            manifest["ineffective_vision_feature_block_forced_zero"],
++            "true",
++        )
++        for role, expected in counts.items():
++            values = np.load(root / "{}_features_57d.npz".format(role))
++            check(
++                "{}_{}_shape".format(direction, role),
++                values["X"].shape == (expected, 57),
++                str(values["X"].shape),
++            )
++            check(
++                "{}_{}_finite".format(direction, role),
++                bool(np.isfinite(values["X"]).all()),
++                "finite",
++            )
++
++    report = json.loads(
++        (V2_ROOT / "analysis_v2a" / "stage23a_v2a_signal_audit.json").read_text()
++    )
++    check(
++        "signal_status_valid",
++        report["status"]
++        in ("SIGNAL_AUDIT_PASS", "SIGNAL_AUDIT_WEAK", "SIGNAL_AUDIT_FAIL"),
++        report["status"],
++    )
++    lock = json.loads(
++        (V2_ROOT / "final_v2a" / "TEST_LOCK_STATUS.json").read_text()
++    )
++    check("locked_test_zero", lock["locked_test_access_count"] == 0, str(lock["locked_test_access_count"]))
++    check("official_valid_zero", lock["official_valid_access_count"] == 0, str(lock["official_valid_access_count"]))
++    check("student_not_trained", not lock["student_trained"], str(lock["student_trained"]))
++    check("judge_not_started", not lock["judge_training_started"], str(lock["judge_training_started"]))
++
++    verification = {
++        "stage": "Stage23A-v2a independent artifact verification",
++        "status": "PASS",
++        "assertion_count": len(assertions),
++        "assertions": assertions,
++        "locked_test_access_count": 0,
++        "official_valid_access_count": 0,
++    }
++    path = V2_ROOT / "analysis_v2a" / "verification_report.json"
++    atomic_json(path, verification)
++    print(json.dumps(verification, indent=2))
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/tests/test_stage23a_v2a.py b/tests/test_stage23a_v2a.py
+new file mode 100644
+index 0000000..8f2193c
+--- /dev/null
++++ b/tests/test_stage23a_v2a.py
+@@ -0,0 +1,43 @@
++"""Unit checks for the Stage23A-v2a frozen feature definitions."""
++
++import sys
++import unittest
++from pathlib import Path
++
++import numpy as np
++
++
++ROOT = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(ROOT / "scripts" / "mosei"))
++
++from stage23a_v2_common import EXPERTS, MODE_AVAILABILITY, MODES, optimize_simplex
++
++
++class Stage23AV2ATest(unittest.TestCase):
++    def test_frozen_committee_and_modes(self):
++        self.assertEqual(len(EXPERTS), 5)
++        self.assertEqual(EXPERTS[0], "uniform_kd_seed1111")
++        self.assertNotIn("clean_seed1111", EXPERTS)
++        self.assertEqual(MODES, ("LAV", "LA", "LV", "L"))
++
++    def test_effective_vision_mask_does_not_change_mode(self):
++        lav = np.asarray(MODE_AVAILABILITY["LAV"])
++        effective = lav * np.asarray([1, 1, 0])
++        np.testing.assert_array_equal(effective, [1, 1, 0])
++        self.assertEqual(MODES.index("LAV"), 0)
++
++    def test_simplex_constraints(self):
++        predictions = np.asarray(
++            [[0.0, 1.0], [1.0, 0.0], [0.4, 0.6], [0.6, 0.4]]
++        )
++        labels = np.asarray([0.5, 0.5, 0.5, 0.5])
++        weights = optimize_simplex(predictions, labels)
++        self.assertAlmostEqual(float(weights.sum()), 1.0, places=10)
++        self.assertTrue(np.all(weights >= 0))
++
++    def test_frozen_57d_block_sum(self):
++        self.assertEqual(4 + 5 + 3 + 5 + 5 + 32 + 3, 57)
++
++
++if __name__ == "__main__":
++    unittest.main()

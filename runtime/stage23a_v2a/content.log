@@ -1,0 +1,103 @@
+text shape=(16326, 50, 768) zero=0 active_mean=50.000000
+audio shape=(16326, 50, 74) zero=0 active_mean=22.850178
+vision shape=(16326, 50, 35) zero=482 active_mean=21.661276
+{
+  "stage": "Stage23A-v2a Train-only fixed input content summaries",
+  "status": "PASS",
+  "dataset_path": "/data4t/lyx/datasets/MOSEI/Processed/aligned_50.pkl",
+  "dataset_sha256": "45eccfb748a87c80ecab9bfac29582e7b1466bf6605ff29d3b338a75120bf791",
+  "accessed_partitions": [
+    "train"
+  ],
+  "official_valid_access_count": 0,
+  "locked_test_access_count": 0,
+  "samples": 16326,
+  "ordered_sample_id_sha256": "6056a1cfa8d9089cd98af6073faeb22bafd25f579347c11a578c35ced0046175",
+  "ordered_sample_ids_match_source_split": true,
+  "summary_definition": "padding-aware temporal mean concatenated with population std (ddof=0)",
+  "padding_rule": "timestep active iff any feature value is nonzero",
+  "stored_summary_dtype": "float32",
+  "modalities": {
+    "text": {
+      "raw_shape": [
+        16326,
+        50,
+        768
+      ],
+      "raw_dtype": "float32",
+      "summary_shape": [
+        16326,
+        1536
+      ],
+      "stored_summary_dtype": "float32",
+      "finite": true,
+      "valid_timestep_min": 50,
+      "valid_timestep_max": 50,
+      "valid_timestep_mean": 50.0,
+      "all_zero_clips": 0,
+      "all_zero_summary_is_zero": true,
+      "mean_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/content_raw/text_temporal_mean_float32.npy",
+      "mean_sha256": "4a15f181208b7272a33b2a3341ebd9e37e7e4a2ed9740b55e3fee6bb1437a433",
+      "std_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/content_raw/text_temporal_std_float32.npy",
+      "std_sha256": "bd0d3bda2d8454e34eb3a0a9edc256a5f51e76aee01c39ecf9dcd7f73d65e167"
+    },
+    "audio": {
+      "raw_shape": [
+        16326,
+        50,
+        74
+      ],
+      "raw_dtype": "float64",
+      "summary_shape": [
+        16326,
+        148
+      ],
+      "stored_summary_dtype": "float32",
+      "finite": true,
+      "valid_timestep_min": 1,
+      "valid_timestep_max": 48,
+      "valid_timestep_mean": 22.850177630773,
+      "all_zero_clips": 0,
+      "all_zero_summary_is_zero": true,
+      "mean_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/content_raw/audio_temporal_mean_float32.npy",
+      "mean_sha256": "fa0b89b9aaac98401c691f8ed7a0ee2674cfd5b6dee4fb4ff5a06789aeb57bab",
+      "std_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/content_raw/audio_temporal_std_float32.npy",
+      "std_sha256": "8d8cd7a4f80da70b7eee9f8b815b68e6b5f993ddf283906decfc0996844f906c"
+    },
+    "vision": {
+      "raw_shape": [
+        16326,
+        50,
+        35
+      ],
+      "raw_dtype": "float64",
+      "summary_shape": [
+        16326,
+        70
+      ],
+      "stored_summary_dtype": "float32",
+      "finite": true,
+      "valid_timestep_min": 0,
+      "valid_timestep_max": 48,
+      "valid_timestep_mean": 21.661276491485975,
+      "all_zero_clips": 482,
+      "all_zero_summary_is_zero": true,
+      "mean_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/content_raw/vision_temporal_mean_float32.npy",
+      "mean_sha256": "059b643bb5d6c9fa5f2da945ff7fb47497d7e88cb5d3fb561a4da671f0b5a2a3",
+      "std_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/content_raw/vision_temporal_std_float32.npy",
+      "std_sha256": "30a06fd7c685f6633b17c6869bb543aad8726430362e3955bf5b1a1cddd8b9b0"
+    }
+  },
+  "effective_availability": {
+    "text_ineffective": 0,
+    "audio_ineffective": 0,
+    "vision_ineffective": 482,
+    "vision_zero_policy": "raw summary zero; exclude from fit; transformed block forced zero; effective mask vision=0"
+  },
+  "metadata_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/content_raw/content_summary_ledger.csv",
+  "metadata_sha256": "cb4a98b522b61f21e8444a30d8bedbb247ac0e24baa7b43ae66177ad5958a99c",
+  "sample_binding_sha_verified": true,
+  "created_at": "2026-07-26T05:24:04.939319+00:00",
+  "judge_training_started": false,
+  "student_trained": false
+}

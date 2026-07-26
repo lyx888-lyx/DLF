@@ -1,0 +1,82 @@
+fold=1 expert=uniform_kd_seed1111 rows=31176 max_diff=5.0000004137e-10
+fold=1 expert=moddrop_seed1111 rows=31176 max_diff=5.0000004137e-10
+fold=1 expert=moddrop_seed1114 rows=31176 max_diff=5.0000004137e-10
+fold=1 expert=cfcompat_seed1111 rows=31176 max_diff=4.99877916837e-10
+fold=1 expert=cfcompat_seed1114 rows=31176 max_diff=5.0000004137e-10
+{
+  "stage": "Stage23A-v2a hierarchical frozen Expert extraction",
+  "status": "PASS",
+  "outer_fold": 1,
+  "gpu_id": 0,
+  "dataset_partition": "Train outer-fold held-out samples only",
+  "rows": 155880,
+  "expected_rows": 155880,
+  "samples": 7794,
+  "modes": [
+    "LAV",
+    "LA",
+    "LV",
+    "L"
+  ],
+  "experts": [
+    "uniform_kd_seed1111",
+    "moddrop_seed1111",
+    "moddrop_seed1114",
+    "cfcompat_seed1111",
+    "cfcompat_seed1114"
+  ],
+  "head_columns": [
+    "output_logit",
+    "logits_c",
+    "logits_l_hetero",
+    "logits_a_hetero",
+    "logits_v_hetero"
+  ],
+  "mode_active_heads": {
+    "LAV": [
+      "output_logit",
+      "logits_c",
+      "logits_l_hetero",
+      "logits_a_hetero",
+      "logits_v_hetero"
+    ],
+    "LA": [
+      "output_logit",
+      "logits_c",
+      "logits_l_hetero",
+      "logits_a_hetero"
+    ],
+    "LV": [
+      "output_logit",
+      "logits_c",
+      "logits_l_hetero",
+      "logits_v_hetero"
+    ],
+    "L": [
+      "output_logit",
+      "logits_c",
+      "logits_l_hetero"
+    ]
+  },
+  "duplicates": 0,
+  "missing_values": 0,
+  "finite_logits": true,
+  "max_abs_final_replay_diff": 5.000000413701855e-10,
+  "mean_abs_final_replay_diff": 7.5769171519954e-11,
+  "preferred_replay_gate_pass": true,
+  "hard_replay_gate_pass": true,
+  "sample_binding_sha_verified": true,
+  "row_binding_sha_verified": true,
+  "output_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/hierarchical/hierarchical_logits_fold1.csv.gz",
+  "output_sha256": "8540f76308f809de30886ac539feb6e3d673fbc893cfd58f64e2215acbdf6850",
+  "stats_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/hierarchical/hierarchical_replay_fold1_stats.csv",
+  "stats_sha256": "adc5dbd280e5954f3eb6fb776af6f8cd5e720eeeb25483f7e1cc561e07370446",
+  "maximum_cases_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/hierarchical/hierarchical_replay_fold1_maximum_cases.csv",
+  "maximum_cases_sha256": "b8d1fd23eee9c368d091a52ed0a9f70aadf7666f1fe018cf0ce59ff32db3e941",
+  "expert_retrained": false,
+  "judge_training_started": false,
+  "official_valid_access_count": 0,
+  "locked_test_access_count": 0,
+  "student_trained": false,
+  "completed_at": "2026-07-26T05:52:20.730712+00:00"
+}

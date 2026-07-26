@@ -1,0 +1,6 @@
+/usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_v2a_authorize.py
+CUDA_VISIBLE_DEVICES=0 /usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_v2a_extract_hierarchical.py --outer-fold 0 --gpu-id 0
+CUDA_VISIBLE_DEVICES=2 /usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_v2a_extract_hierarchical.py --outer-fold 1 --gpu-id 0
+/usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_v2a_extract_content.py
+/usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_v2a_build_features.py
+/usr/miniconda3/envs/DLF/bin/python scripts/mosei/stage23a_v2a_signal_audit.py

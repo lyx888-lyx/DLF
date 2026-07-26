@@ -1,0 +1,371 @@
+{
+  "directions": {
+    "A": {
+      "all_zero_vision_rows": 1928,
+      "completed_at": "2026-07-26T05:53:48.804537+00:00",
+      "direction": "A",
+      "feature_dim": 57,
+      "feature_files": [
+        {
+          "direction": "A",
+          "feature_dim": 57,
+          "feature_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_A/inner_train_features_57d.npz",
+          "feature_sha256": "c54a304d421a0649af993ad902bf9ef72cc98cf5dcfe2f8cd9cc8fad3d0e3b7d",
+          "finite": true,
+          "role": "inner_train",
+          "rows": 29752,
+          "sidecar_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_A/inner_train_targets_and_audit.csv",
+          "sidecar_sha256": "f06e7a43a03a49c339f07e6ad0d7a0c65227971f61c5af1be5a1daf40199fae2"
+        },
+        {
+          "direction": "A",
+          "feature_dim": 57,
+          "feature_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_A/inner_valid_features_57d.npz",
+          "feature_sha256": "0d175a1ada1539edc3764dde795e29f6c2b6733d5d334c858d962ad24f63f5cb",
+          "finite": true,
+          "role": "inner_valid",
+          "rows": 4376,
+          "sidecar_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_A/inner_valid_targets_and_audit.csv",
+          "sidecar_sha256": "5b1b587511c779f9cb26070b5711368b36f6bb4ac585839fa6654fefafbacd14"
+        },
+        {
+          "direction": "A",
+          "feature_dim": 57,
+          "feature_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_A/outer_evaluation_features_57d.npz",
+          "feature_sha256": "f2a41d2b367addfb2c6970fd0a6a0f773cde9a24fed4eae6fd6451c5fa696849",
+          "finite": true,
+          "role": "outer_evaluation",
+          "rows": 31176,
+          "sidecar_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_A/outer_evaluation_targets_and_audit.csv",
+          "sidecar_sha256": "f48cdc2ef771b545e25f90c617deaea72954c7ac933429fbc0af21702080f632"
+        }
+      ],
+      "feature_schema_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_A/feature_names.json",
+      "feature_schema_sha256": "df54b0cf385e69182de4b96fc4d625132312b032ec996b2679794780d01b0645",
+      "ineffective_vision_feature_block_forced_zero": true,
+      "judge_training_started": false,
+      "labels_sources_folds_absent_from_X": true,
+      "locked_test_access_count": 0,
+      "official_valid_access_count": 0,
+      "outer_evaluation_used_for_fit_or_selection": false,
+      "outlier_clip": [
+        0.0,
+        10.0
+      ],
+      "outlier_mode_q10_floor": {
+        "L": 0.023594120429999903,
+        "LA": 0.02432752590000008,
+        "LAV": 0.02453018478000005,
+        "LV": 0.02396431492900001
+      },
+      "rows": 65304,
+      "status": "PASS",
+      "strong_static": {
+        "candidate_valid_J": {
+          "equal_average": 0.5813212691529631,
+          "per_mode_constrained_fixed_stacking": 0.581233081771406
+        },
+        "outer_evaluation_used_for_selection": false,
+        "selected_by_inner_valid_only": "per_mode_constrained_fixed_stacking",
+        "weights_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_A/strong_static_weights.csv",
+        "weights_sha256": "fe9ecf217defbb5e0495d4e6068c315da262f182901f1eccc8f23922534581ed"
+      },
+      "student_trained": false
+    },
+    "B": {
+      "all_zero_vision_rows": 1928,
+      "completed_at": "2026-07-26T05:53:53.915613+00:00",
+      "direction": "B",
+      "feature_dim": 57,
+      "feature_files": [
+        {
+          "direction": "B",
+          "feature_dim": 57,
+          "feature_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_B/inner_train_features_57d.npz",
+          "feature_sha256": "24cdced522e5eb637a22a8e0095812c1e4255fe50494056ebc3cfb7b28d78436",
+          "finite": true,
+          "role": "inner_train",
+          "rows": 27732,
+          "sidecar_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_B/inner_train_targets_and_audit.csv",
+          "sidecar_sha256": "83d3785f801aa0e530758e0ab4bec551e98da291ce8305290b35a5d69140594e"
+        },
+        {
+          "direction": "B",
+          "feature_dim": 57,
+          "feature_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_B/inner_valid_features_57d.npz",
+          "feature_sha256": "e1fc9cc13d98d0168dad5bddf9f3865eb1e83612337d76a34392506b73874f85",
+          "finite": true,
+          "role": "inner_valid",
+          "rows": 3444,
+          "sidecar_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_B/inner_valid_targets_and_audit.csv",
+          "sidecar_sha256": "ebea41fffc16323e71538b40b4380890b7e633d2109f54ad0f6c9e41b11afd08"
+        },
+        {
+          "direction": "B",
+          "feature_dim": 57,
+          "feature_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_B/outer_evaluation_features_57d.npz",
+          "feature_sha256": "97a1c889d82c6585f6e0a356d33fe2601be57e8e22081a132b04720631b582d6",
+          "finite": true,
+          "role": "outer_evaluation",
+          "rows": 34128,
+          "sidecar_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_B/outer_evaluation_targets_and_audit.csv",
+          "sidecar_sha256": "0662e23cb859109a468ab7fd52eb49e19b7a86d4af81ce9b798d44d5a1b516dc"
+        }
+      ],
+      "feature_schema_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_B/feature_names.json",
+      "feature_schema_sha256": "df54b0cf385e69182de4b96fc4d625132312b032ec996b2679794780d01b0645",
+      "ineffective_vision_feature_block_forced_zero": true,
+      "judge_training_started": false,
+      "labels_sources_folds_absent_from_X": true,
+      "locked_test_access_count": 0,
+      "official_valid_access_count": 0,
+      "outer_evaluation_used_for_fit_or_selection": false,
+      "outlier_clip": [
+        0.0,
+        10.0
+      ],
+      "outlier_mode_q10_floor": {
+        "L": 0.024714092940000012,
+        "LA": 0.02472864539199999,
+        "LAV": 0.024345743659999995,
+        "LV": 0.024474823459999972
+      },
+      "rows": 65304,
+      "status": "PASS",
+      "strong_static": {
+        "candidate_valid_J": {
+          "equal_average": 0.5269541527283482,
+          "per_mode_constrained_fixed_stacking": 0.5267324869571957
+        },
+        "outer_evaluation_used_for_selection": false,
+        "selected_by_inner_valid_only": "per_mode_constrained_fixed_stacking",
+        "weights_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_B/strong_static_weights.csv",
+        "weights_sha256": "fbacb4591ba84ace8d0255124b251728fd407b1b1dbaf520cd5ded673d5660d5"
+      },
+      "student_trained": false
+    }
+  },
+  "feature_dim": 57,
+  "judge_training_started": false,
+  "labels_sources_and_folds_excluded_from_input": true,
+  "locked_test_access_count": 0,
+  "official_valid_access_count": 0,
+  "outer_evaluation_used_for_fit_or_selection": false,
+  "preprocessing": {
+    "A": {
+      "direction": "A",
+      "fit_ledger_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/preprocessing/direction_A/ordered_inner_train_fit_clips.csv",
+      "fit_ledger_sha256": "7ebdb7c3890b280ea68c7423510c5abc3a62ab9321604f267ebc383230398495",
+      "fit_samples": 7438,
+      "fit_scope": "unique inner-train clips only",
+      "fit_sources": 1007,
+      "locked_test_access_count": 0,
+      "modalities": {
+        "audio": {
+          "explained_variance_ratio": [
+            0.114848258702717,
+            0.0959172469920832,
+            0.0638636054671329,
+            0.05505591755474164,
+            0.03528311856275792,
+            0.029092506603177186,
+            0.0228119686103367,
+            0.02126920244318748
+          ],
+          "explained_variance_ratio_sum": 0.43814182493613407,
+          "finite_transformed": true,
+          "fit_clips": 7438,
+          "fit_sources": 1007,
+          "ineffective_clips_excluded_from_fit": 0,
+          "ineffective_transformed_forced_zero": true,
+          "input_dim": 148,
+          "input_feature_ordering": "temporal_mean raw coordinates 0..D-1, then population_std raw coordinates 0..D-1",
+          "normalization": "StandardScaler fitted on effective inner-train unique clips",
+          "output_dim": 8,
+          "pca_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/preprocessing/direction_A/audio_pca.joblib",
+          "pca_random_state": 2302,
+          "pca_sha256": "258864d1c1f72e59d4fb3d75c38d9ac4cf3a6959808d67c4a4f1ccefd90642f2",
+          "pca_solver": "randomized",
+          "scaler_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/preprocessing/direction_A/audio_scaler.joblib",
+          "scaler_sha256": "bb83001b7cdc8156c8e226bc22fb1e5e8bcdf7dbf41dfd232c7149b92404a751"
+        },
+        "text": {
+          "explained_variance_ratio": [
+            0.30200951989076,
+            0.03956272221556648,
+            0.02119631024288365,
+            0.020037211149593368,
+            0.01542249968181994,
+            0.013521524280732214,
+            0.011853186963671531,
+            0.011131889072874584,
+            0.01002508512949955,
+            0.008983551587330165,
+            0.008654285788079613,
+            0.007899036407996005,
+            0.007694313456885423,
+            0.006810731906405586,
+            0.006458472416412529,
+            0.0063254656086860475
+          ],
+          "explained_variance_ratio_sum": 0.49758580579919676,
+          "finite_transformed": true,
+          "fit_clips": 7438,
+          "fit_sources": 1007,
+          "ineffective_clips_excluded_from_fit": 0,
+          "ineffective_transformed_forced_zero": true,
+          "input_dim": 1536,
+          "input_feature_ordering": "temporal_mean raw coordinates 0..D-1, then population_std raw coordinates 0..D-1",
+          "normalization": "StandardScaler fitted on effective inner-train unique clips",
+          "output_dim": 16,
+          "pca_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/preprocessing/direction_A/text_pca.joblib",
+          "pca_random_state": 2302,
+          "pca_sha256": "82a8d48269920eab2225985fdeafe9286f68e16fee59cf9184b3eded687da776",
+          "pca_solver": "randomized",
+          "scaler_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/preprocessing/direction_A/text_scaler.joblib",
+          "scaler_sha256": "c88a89acfcb4f787a56f79830afa38fd8a915d9fdc64d2a8610a3a07dffb3c17"
+        },
+        "vision": {
+          "explained_variance_ratio": [
+            0.29231339501504455,
+            0.10095081534813229,
+            0.07689232201226084,
+            0.06072394241049959,
+            0.04192841179869862,
+            0.030119455012622722,
+            0.026713677105682395,
+            0.024465892199870727
+          ],
+          "explained_variance_ratio_sum": 0.6541079109028117,
+          "finite_transformed": true,
+          "fit_clips": 7212,
+          "fit_sources": 1003,
+          "ineffective_clips_excluded_from_fit": 226,
+          "ineffective_transformed_forced_zero": true,
+          "input_dim": 70,
+          "input_feature_ordering": "temporal_mean raw coordinates 0..D-1, then population_std raw coordinates 0..D-1",
+          "normalization": "StandardScaler fitted on effective inner-train unique clips",
+          "output_dim": 8,
+          "pca_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/preprocessing/direction_A/vision_pca.joblib",
+          "pca_random_state": 2302,
+          "pca_sha256": "d18757bebd0a18ebed750d05a4c73d505a65df3c9b1db301401b3ee22013bf91",
+          "pca_solver": "randomized",
+          "scaler_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/preprocessing/direction_A/vision_scaler.joblib",
+          "scaler_sha256": "c1250136de6683d5781a6552361a5d62bcddd309a34343de13064fd34639738e"
+        }
+      },
+      "official_valid_access_count": 0,
+      "ordered_fit_sample_id_sha256": "5221d1a189bb58412d3f27d65a67a0201fa8595ba36c32f9cfa37eb75f909021",
+      "outer_evaluation_used_for_fit_or_selection": false
+    },
+    "B": {
+      "direction": "B",
+      "fit_ledger_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/preprocessing/direction_B/ordered_inner_train_fit_clips.csv",
+      "fit_ledger_sha256": "0585edc0c726be04e8ebc52ea4a791c427e8a94f6b0ff781a195b6d4bb3cd462",
+      "fit_samples": 6933,
+      "fit_scope": "unique inner-train clips only",
+      "fit_sources": 980,
+      "locked_test_access_count": 0,
+      "modalities": {
+        "audio": {
+          "explained_variance_ratio": [
+            0.1127779356396795,
+            0.10059568012456724,
+            0.05766496509236071,
+            0.05404818694279315,
+            0.03315665726613444,
+            0.029873801637068938,
+            0.023739258116089023,
+            0.021875593880482738
+          ],
+          "explained_variance_ratio_sum": 0.43373207869917574,
+          "finite_transformed": true,
+          "fit_clips": 6933,
+          "fit_sources": 980,
+          "ineffective_clips_excluded_from_fit": 0,
+          "ineffective_transformed_forced_zero": true,
+          "input_dim": 148,
+          "input_feature_ordering": "temporal_mean raw coordinates 0..D-1, then population_std raw coordinates 0..D-1",
+          "normalization": "StandardScaler fitted on effective inner-train unique clips",
+          "output_dim": 8,
+          "pca_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/preprocessing/direction_B/audio_pca.joblib",
+          "pca_random_state": 2302,
+          "pca_sha256": "fd82fb91cded63aadf3eb36b90f2f71d18ae30a532bd9d8d87a2c8fd60879a7a",
+          "pca_solver": "randomized",
+          "scaler_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/preprocessing/direction_B/audio_scaler.joblib",
+          "scaler_sha256": "d659593ff2efde8df49c6beedaaf8b2ac0a94feab298628e24feb17c34b3e954"
+        },
+        "text": {
+          "explained_variance_ratio": [
+            0.2966730617036401,
+            0.03852026527832647,
+            0.02120682959578922,
+            0.01985086930566419,
+            0.016025398981526825,
+            0.01360137325506805,
+            0.01224127529587516,
+            0.01174441258941506,
+            0.010278352391767684,
+            0.009259451906264397,
+            0.009082699843013829,
+            0.007881280622213466,
+            0.00760878672683856,
+            0.007102115521312743,
+            0.006397947732694733,
+            0.006367560530945562
+          ],
+          "explained_variance_ratio_sum": 0.49384168128035605,
+          "finite_transformed": true,
+          "fit_clips": 6933,
+          "fit_sources": 980,
+          "ineffective_clips_excluded_from_fit": 0,
+          "ineffective_transformed_forced_zero": true,
+          "input_dim": 1536,
+          "input_feature_ordering": "temporal_mean raw coordinates 0..D-1, then population_std raw coordinates 0..D-1",
+          "normalization": "StandardScaler fitted on effective inner-train unique clips",
+          "output_dim": 16,
+          "pca_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/preprocessing/direction_B/text_pca.joblib",
+          "pca_random_state": 2302,
+          "pca_sha256": "eceb9613e5f574e2a366011ee60cbcf07d496b37a3100b8ae130c060ff1a8a98",
+          "pca_solver": "randomized",
+          "scaler_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/preprocessing/direction_B/text_scaler.joblib",
+          "scaler_sha256": "3dfbf4500bc39fcda78133d9956f97f09f32cfe1ab80f8102ea95feb82de2db9"
+        },
+        "vision": {
+          "explained_variance_ratio": [
+            0.29258571801323674,
+            0.10394391582484815,
+            0.07692144323428571,
+            0.062367168782546535,
+            0.043277966625607726,
+            0.028119525068711255,
+            0.02697057688920435,
+            0.023913539370487843
+          ],
+          "explained_variance_ratio_sum": 0.6580998538089283,
+          "finite_transformed": true,
+          "fit_clips": 6744,
+          "fit_sources": 979,
+          "ineffective_clips_excluded_from_fit": 189,
+          "ineffective_transformed_forced_zero": true,
+          "input_dim": 70,
+          "input_feature_ordering": "temporal_mean raw coordinates 0..D-1, then population_std raw coordinates 0..D-1",
+          "normalization": "StandardScaler fitted on effective inner-train unique clips",
+          "output_dim": 8,
+          "pca_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/preprocessing/direction_B/vision_pca.joblib",
+          "pca_random_state": 2302,
+          "pca_sha256": "4c440b6f4e421e09e555df43ad0d2e7c275847261bd768b51525d825536218da",
+          "pca_solver": "randomized",
+          "scaler_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/preprocessing/direction_B/vision_scaler.joblib",
+          "scaler_sha256": "eeb2329e1e09488232ca12292eda9cf491ad861829a3a31758cb0dabbeb0c7d0"
+        }
+      },
+      "official_valid_access_count": 0,
+      "ordered_fit_sample_id_sha256": "44949ef5fff9cbac37341b3fefa44bdececc93a80760b07b0693296637e0a26d",
+      "outer_evaluation_used_for_fit_or_selection": false
+    }
+  },
+  "stage": "Stage23A-v2a frozen 57D meta-feature construction",
+  "status": "PASS",
+  "student_trained": false
+}

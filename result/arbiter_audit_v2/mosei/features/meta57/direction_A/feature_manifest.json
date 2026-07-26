@@ -1,0 +1,72 @@
+{
+  "all_zero_vision_rows": 1928,
+  "completed_at": "2026-07-26T05:53:48.804537+00:00",
+  "direction": "A",
+  "feature_dim": 57,
+  "feature_files": [
+    {
+      "direction": "A",
+      "feature_dim": 57,
+      "feature_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_A/inner_train_features_57d.npz",
+      "feature_sha256": "c54a304d421a0649af993ad902bf9ef72cc98cf5dcfe2f8cd9cc8fad3d0e3b7d",
+      "finite": true,
+      "role": "inner_train",
+      "rows": 29752,
+      "sidecar_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_A/inner_train_targets_and_audit.csv",
+      "sidecar_sha256": "f06e7a43a03a49c339f07e6ad0d7a0c65227971f61c5af1be5a1daf40199fae2"
+    },
+    {
+      "direction": "A",
+      "feature_dim": 57,
+      "feature_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_A/inner_valid_features_57d.npz",
+      "feature_sha256": "0d175a1ada1539edc3764dde795e29f6c2b6733d5d334c858d962ad24f63f5cb",
+      "finite": true,
+      "role": "inner_valid",
+      "rows": 4376,
+      "sidecar_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_A/inner_valid_targets_and_audit.csv",
+      "sidecar_sha256": "5b1b587511c779f9cb26070b5711368b36f6bb4ac585839fa6654fefafbacd14"
+    },
+    {
+      "direction": "A",
+      "feature_dim": 57,
+      "feature_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_A/outer_evaluation_features_57d.npz",
+      "feature_sha256": "f2a41d2b367addfb2c6970fd0a6a0f773cde9a24fed4eae6fd6451c5fa696849",
+      "finite": true,
+      "role": "outer_evaluation",
+      "rows": 31176,
+      "sidecar_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_A/outer_evaluation_targets_and_audit.csv",
+      "sidecar_sha256": "f48cdc2ef771b545e25f90c617deaea72954c7ac933429fbc0af21702080f632"
+    }
+  ],
+  "feature_schema_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_A/feature_names.json",
+  "feature_schema_sha256": "df54b0cf385e69182de4b96fc4d625132312b032ec996b2679794780d01b0645",
+  "ineffective_vision_feature_block_forced_zero": true,
+  "judge_training_started": false,
+  "labels_sources_folds_absent_from_X": true,
+  "locked_test_access_count": 0,
+  "official_valid_access_count": 0,
+  "outer_evaluation_used_for_fit_or_selection": false,
+  "outlier_clip": [
+    0.0,
+    10.0
+  ],
+  "outlier_mode_q10_floor": {
+    "L": 0.023594120429999903,
+    "LA": 0.02432752590000008,
+    "LAV": 0.02453018478000005,
+    "LV": 0.02396431492900001
+  },
+  "rows": 65304,
+  "status": "PASS",
+  "strong_static": {
+    "candidate_valid_J": {
+      "equal_average": 0.5813212691529631,
+      "per_mode_constrained_fixed_stacking": 0.581233081771406
+    },
+    "outer_evaluation_used_for_selection": false,
+    "selected_by_inner_valid_only": "per_mode_constrained_fixed_stacking",
+    "weights_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2/mosei/features/meta57/direction_A/strong_static_weights.csv",
+    "weights_sha256": "fe9ecf217defbb5e0495d4e6068c315da262f182901f1eccc8f23922534581ed"
+  },
+  "student_trained": false
+}
