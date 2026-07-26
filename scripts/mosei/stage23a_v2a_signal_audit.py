@@ -929,6 +929,13 @@ def determine_conclusion(geometry, consistency, reversal, increments, probe_b, p
         ).all()
     )
     outer_d = probe_d.loc[probe_d["role"] == "outer_evaluation"]
+    aligned_outer = outer_d.loc[
+        outer_d["case"] == "aligned_content"
+    ].set_index("direction")
+    nonzero_transfer = bool(
+        (aligned_outer["ranking_accuracy"] > (1.0 / len(EXPERTS))).all()
+        and (aligned_outer["regret_Spearman"] > 0).all()
+    )
     control_beaten = True
     control_details = {}
     for direction in ("A", "B"):
@@ -957,6 +964,7 @@ def determine_conclusion(geometry, consistency, reversal, increments, probe_b, p
         and consistency_positive
         and content_helpful
         and control_beaten
+        and nonzero_transfer
         and no_dominant_fold_fingerprint
     ):
         status = "SIGNAL_AUDIT_PASS"
@@ -971,6 +979,7 @@ def determine_conclusion(geometry, consistency, reversal, increments, probe_b, p
         "consistency_transfers_without_systematic_reversal": consistency_positive,
         "content_increment_C3_over_C2_both_directions": content_helpful,
         "aligned_content_beats_strongest_controls_both_directions": control_beaten,
+        "outer_regret_ranking_signal_above_random_both_directions": nonzero_transfer,
         "control_detail": control_details,
         "fold_identity_AUROC": identity_auc,
         "no_dominant_fold_fingerprint_AUROC_lt_0p80": no_dominant_fold_fingerprint,
