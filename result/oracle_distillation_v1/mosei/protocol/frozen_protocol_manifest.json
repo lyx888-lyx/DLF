@@ -1,0 +1,116 @@
+{
+  "active_hierarchical_heads": {
+    "L": [
+      "logits_c",
+      "logits_l_hetero"
+    ],
+    "LA": [
+      "logits_c",
+      "logits_l_hetero",
+      "logits_a_hetero"
+    ],
+    "LAV": [
+      "logits_c",
+      "logits_l_hetero",
+      "logits_a_hetero",
+      "logits_v_hetero"
+    ],
+    "LV": [
+      "logits_c",
+      "logits_l_hetero",
+      "logits_v_hetero"
+    ]
+  },
+  "branch": "experiment/mosei-soft-oracle-hierarchical-distillation-v1",
+  "candidate_table_path": "/code/DLF-mosei-arbiter-audit-v1/result/oracle_distillation_v1/mosei/protocol/candidate_table.json",
+  "candidate_table_sha256": "3c27abaa30ae67dc2a715b55d4b34e83c898b387169e5b1f5a0ed857af13d274",
+  "created_at": "2026-07-26T08:51:35.695231+00:00",
+  "direction_protocol": {
+    "A": {
+      "development_expert_fold": 0,
+      "inner_train_samples": 7438,
+      "inner_valid_samples": 1094,
+      "outer_expert_fold": 1,
+      "outer_samples": 7794
+    },
+    "B": {
+      "development_expert_fold": 1,
+      "inner_train_samples": 6933,
+      "inner_valid_samples": 861,
+      "outer_expert_fold": 0,
+      "outer_samples": 8532
+    }
+  },
+  "expert_ids": [
+    "uniform_kd_seed1111",
+    "moddrop_seed1111",
+    "moddrop_seed1114",
+    "cfcompat_seed1111",
+    "cfcompat_seed1114"
+  ],
+  "frozen_parent_conclusions": {
+    "Stage23A-v2a": "SIGNAL_AUDIT_FAIL",
+    "Stage23A-v2b": "LOCAL_COMPETENCE_WEAK"
+  },
+  "full_data_training_authorized": false,
+  "joint_specialized_moe_authorized": false,
+  "judge_training_authorized": false,
+  "locked_test_access_count": 0,
+  "official_valid_access_count": 0,
+  "official_valid_authorized": false,
+  "oracle_target_audit_authorized": true,
+  "outer_evaluation_access_count": 0,
+  "outer_search_expansion_forbidden": true,
+  "parent_artifacts": {
+    "result/arbiter_audit_v2/mosei/analysis_v2a/stage23a_v2a_signal_audit.json": "2f495c423cffd6c4ef11573f9d5f3369236fe9289fff3c4de0fcdef2cc7ebbec",
+    "result/arbiter_audit_v2b/mosei/final/TEST_LOCK_STATUS.json": "6d2011da494e3089b9bfe689177aa989968cdf2835205e1c9591130b18d04cc1",
+    "result/arbiter_audit_v2b/mosei/final/stage23a_v2b_audit.json": "1dc01d26f52728e799c33695a2c9fa3cefebdf19b64a1da2c06bac2460f096fe"
+  },
+  "parent_commit": "99d18cc49c52b799c83a65af2ed308264d8c649c",
+  "possible_conclusions": [
+    "ORACLE_DISTILLATION_PASS",
+    "ORACLE_DISTILLATION_WEAK",
+    "ORACLE_DISTILLATION_FAIL"
+  ],
+  "selection_order": [
+    "select tau by inner-valid soft-oracle final target J",
+    "select fixed stacking L2 by inner-valid fixed target J",
+    "select clean and S0-S4 epochs by inner-valid J",
+    "select S5 lambda_hier ratio and epoch by inner-valid J",
+    "freeze lambda_hier then select each preregistered S6 epoch",
+    "retrain every method on full development side for frozen epoch",
+    "predict each outer method exactly once without labels",
+    "open outer labels only after every prediction is frozen"
+  ],
+  "stage": "Stage23C OOF Soft-Oracle Hierarchical Distillation Audit",
+  "status": "FROZEN_AUTHORIZED_TRAIN_OOF_STUDENT_SCREEN_ONLY",
+  "student_protocol": {
+    "architecture": "DLF wrapped by frozen Stage1 MissingModalityWrapper",
+    "batch_size": 16,
+    "checkpoint_selection": "inner-valid J only",
+    "early_stopping_patience": 6,
+    "gradient_accumulation_batches": 10,
+    "gradient_clip_value": 0.6,
+    "initialization": "one direction-specific clean DLF checkpoint shared by every method; clean screen uses inner-train/inner-valid and final clean retrain uses the frozen clean epoch on development side",
+    "learning_rate": 0.0001,
+    "max_epochs": 30,
+    "mode_sampling": "Stage23A sample_missing_masks; LA/LV/L only",
+    "optimizer": "Adam",
+    "outer_rule": "freeze all method configurations/epochs, retrain on full development side, write all label-free predictions, then open outer labels once for metrics",
+    "scalar_kd": "SmoothL1, lambda_final=1.0",
+    "scheduler": "ReduceLROnPlateau(mode=min,factor=0.5,patience=5)",
+    "supervised_objective": "original complete-view DLF objective plus one uniformly sampled LA/LV/L ModDrop task objective"
+  },
+  "student_screen_training_authorized": true,
+  "student_second_seed_authorized": false,
+  "student_seed": 1111,
+  "teacher_rules": {
+    "convex_hull_required": true,
+    "hierarchical_loss_normalized_by_active_head_count": true,
+    "inactive_specific_head_loss": false,
+    "outer_oracle_target_forbidden": true,
+    "raw_hidden_state_distillation": false,
+    "soft_responsibility": "softmax(-regret/tau), same sample and mode"
+  },
+  "test_authorized": false
+}

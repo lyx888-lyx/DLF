@@ -1,0 +1,15 @@
+{
+  "full_data_training_started": false,
+  "joint_specialized_moe_trained": false,
+  "judge_trained": false,
+  "locked_test_access_count": 0,
+  "official_valid_access_count": 0,
+  "outer_evaluation_access_count": 0,
+  "protocol_manifest_path": "/code/DLF-mosei-arbiter-audit-v1/result/oracle_distillation_v1/mosei/protocol/frozen_protocol_manifest.json",
+  "protocol_manifest_sha256": "6598762a3d6b65b23ec85bebe9636f775c66cd35aca263126c1e83020fe2ecbf",
+  "stage": "Stage23C",
+  "status": "FROZEN_AUTHORIZED_TRAIN_OOF_STUDENT_SCREEN_ONLY",
+  "student_second_seed_count": 0,
+  "student_seed": 1111,
+  "updated_at": "2026-07-26T08:51:35.697069+00:00"
+}

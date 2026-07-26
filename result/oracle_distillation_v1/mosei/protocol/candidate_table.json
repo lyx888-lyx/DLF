@@ -1,0 +1,36 @@
+{
+  "fixed_teacher_l2": [
+    0.0,
+    0.001,
+    0.01
+  ],
+  "lambda_final": 1.0,
+  "lambda_hier_ratio": [
+    0.25,
+    0.5,
+    1.0
+  ],
+  "methods": [
+    "S0_supervised_moddrop",
+    "S1_uniform_single_teacher_kd",
+    "S2_equal_ensemble_final_kd",
+    "S3_fixed_stacking_final_kd",
+    "S4_soft_oracle_final_kd",
+    "S5_soft_oracle_hierarchical_kd",
+    "S6_shuffled_soft_oracle_hierarchical_kd"
+  ],
+  "shuffle_seeds": [
+    23611,
+    23612,
+    23613
+  ],
+  "soft_oracle_tau": [
+    0.02,
+    0.05,
+    0.1,
+    0.2
+  ],
+  "student_seed": [
+    1111
+  ]
+}
