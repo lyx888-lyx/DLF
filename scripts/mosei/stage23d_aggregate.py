@@ -215,6 +215,38 @@ def coverage_gate(coverage):
     return table, aggregate_pass
 
 
+def coverage_summary(coverage):
+    rows = []
+    keys = ["checkpoint_fold", "expert_id", "mode", "model"]
+    for key, frame in coverage.groupby(keys, sort=True):
+        frame = frame.sort_values("coverage")
+        x = frame["coverage"].to_numpy(dtype=float)
+        retained = frame["retained_actual_MAE"].to_numpy(dtype=float)
+        random_curve = frame["random_expected_MAE"].to_numpy(dtype=float)
+        aurc = float(np.trapz(retained, x))
+        random_aurc = float(np.trapz(random_curve, x))
+        rows.append(
+            {
+                **dict(zip(keys, key)),
+                "AURC": aurc,
+                "random_expected_AURC": random_aurc,
+                "AURC_improvement_vs_random": random_aurc - aurc,
+                "relative_AURC_improvement": (
+                    (random_aurc - aurc) / random_aurc
+                    if abs(random_aurc) > 1e-12
+                    else 0.0
+                ),
+                "downward_adjacent_steps": int(
+                    (np.diff(retained) < -1e-8).sum()
+                ),
+                "monotonic_non_decreasing": bool(
+                    (np.diff(retained) >= -1e-8).all()
+                ),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
 def gate_table(metrics, coverage):
     r2 = metrics.loc[metrics["model"] == "R2"].copy()
     mean_s = float(r2["Error_Spearman"].mean())
@@ -419,6 +451,7 @@ def main():
     cli = parse_args()
     metrics = load_all("outer_metrics.tsv")
     coverage = load_all("risk_coverage.tsv")
+    coverage_aurc = coverage_summary(coverage)
     calibration = load_all("quantile_calibration.tsv")
     proxies = load_all("individual_proxy_metrics.tsv")
     sensitivity = load_all("confident_wrong_sensitivity.tsv")
@@ -462,6 +495,7 @@ def main():
         ANALYSIS / "negative_controls.tsv",
     )
     atomic_tsv(coverage, ANALYSIS / "risk_coverage_curves.tsv")
+    atomic_tsv(coverage_aurc, ANALYSIS / "risk_coverage_summary.tsv")
     atomic_tsv(coverage_detail, ANALYSIS / "risk_coverage_gate.tsv")
     atomic_tsv(calibration, ANALYSIS / "quantile_calibration.tsv")
     atomic_tsv(proxies, ANALYSIS / "individual_proxy_metrics.tsv")
