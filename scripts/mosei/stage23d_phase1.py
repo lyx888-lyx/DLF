@@ -721,6 +721,23 @@ def build_mode_selection(fold, expert, mode, output_dir):
     mode_dir.mkdir(parents=True, exist_ok=True)
     outer_path = mode_dir / "outer_risk_predictions_label_free.csv.gz"
     atomic_gzip_csv(outer_prediction, outer_path)
+    frozen_feature_frame = pd.concat(
+        [
+            frame[
+                [
+                    "sample_id",
+                    "video_id",
+                    "mode",
+                    "self_risk_role",
+                    "row_binding_sha256",
+                ]
+            ].reset_index(drop=True),
+            chosen["features"].reset_index(drop=True),
+        ],
+        axis=1,
+    )
+    frozen_feature_path = mode_dir / "frozen_static_probe_features_label_free.csv.gz"
+    atomic_gzip_csv(frozen_feature_frame, frozen_feature_path)
     atomic_tsv(candidate_table, mode_dir / "regression_candidates.tsv")
     atomic_tsv(bad_table, mode_dir / "bad20_candidates.tsv")
     atomic_tsv(cw_table, mode_dir / "confident_wrong_candidates.tsv")
@@ -761,6 +778,9 @@ def build_mode_selection(fold, expert, mode, output_dir):
         "outer_prediction_sha256": sha256_file(outer_path),
         "outer_prediction_rows": len(outer_prediction),
         "outer_labels_in_prediction": False,
+        "frozen_static_feature_path": str(frozen_feature_path.resolve()),
+        "frozen_static_feature_sha256": sha256_file(frozen_feature_path),
+        "frozen_static_feature_contains_label": False,
         "bundle_path": str(bundle_path.resolve()),
         "bundle_sha256": sha256_file(bundle_path),
     }
