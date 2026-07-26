@@ -161,6 +161,24 @@ def model_mean(metrics, model, metric):
     return float(values.mean())
 
 
+def markdown_table(frame):
+    """Render a compact Markdown table without the optional tabulate package."""
+    columns = list(frame.columns)
+
+    def render(value):
+        if isinstance(value, (float, np.floating)):
+            return f"{float(value):.4f}"
+        return str(value).replace("|", "\\|")
+
+    lines = [
+        "| " + " | ".join(columns) + " |",
+        "| " + " | ".join(["---"] * len(columns)) + " |",
+    ]
+    for row in frame.itertuples(index=False, name=None):
+        lines.append("| " + " | ".join(render(value) for value in row) + " |")
+    return "\n".join(lines)
+
+
 def coverage_gate(coverage):
     local = coverage.loc[coverage["model"] == "R2"].copy()
     rows = []
@@ -385,11 +403,11 @@ def report_markdown(details, r2, proxies, identity, comparable):
         "",
         "## Expert 汇总",
         "",
-        expert.reset_index().to_markdown(index=False, floatfmt=".4f"),
+        markdown_table(expert.reset_index()),
         "",
         "## Mode 汇总",
         "",
-        mode.reset_index().to_markdown(index=False, floatfmt=".4f"),
+        markdown_table(mode.reset_index()),
         "",
         "完整表、负对照、risk–coverage、quantile calibration、敏感性和 SHA 清单位于同目录。",
         "",
