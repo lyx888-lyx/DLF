@@ -116,6 +116,16 @@ def wait_for_safe_start():
         time.sleep(30)
 
 
+def wait_for_extraction():
+    while not extraction_complete():
+        write_state(
+            "WAITING_FOR_EXTRACTION",
+            note="All ten schema-v2 extraction manifests are required",
+        )
+        print(f"[{utc_now()}] waiting for schema-v2 extraction", flush=True)
+        time.sleep(30)
+
+
 def run(command):
     environment = os.environ.copy()
     environment.update(
@@ -132,6 +142,30 @@ def run(command):
 
 
 def main():
+    wait_for_extraction()
+    validation_path = OUT / "audit" / "feature_extraction_audit.json"
+    validation_ok = False
+    if validation_path.exists():
+        try:
+            validation_ok = json.loads(validation_path.read_text()).get(
+                "status"
+            ) == "PASS"
+        except json.JSONDecodeError:
+            validation_ok = False
+    if not validation_ok:
+        write_state("VALIDATING_SCHEMA_V2_FEATURES")
+        run(
+            [
+                sys.executable,
+                "-u",
+                str(
+                    ROOT
+                    / "scripts"
+                    / "mosei"
+                    / "stage23d_validate_features.py"
+                ),
+            ]
+        )
     wait_for_safe_start()
     for fold in FOLDS:
         for expert in EXPERTS:

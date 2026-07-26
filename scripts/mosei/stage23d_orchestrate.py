@@ -81,6 +81,20 @@ def main():
         [
             sys.executable,
             "-u",
+            str(
+                ROOT
+                / "scripts"
+                / "mosei"
+                / "stage23d_validate_features.py"
+            ),
+        ],
+        "feature_validation.log",
+    )
+    print(f"[{utc_now()}] schema-v2 integrity validation complete", flush=True)
+    run_logged(
+        [
+            sys.executable,
+            "-u",
             str(ROOT / "scripts" / "mosei" / "stage23d_phase1_queue.py"),
         ],
         "phase1_queue.log",
