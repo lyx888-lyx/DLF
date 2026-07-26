@@ -9,6 +9,7 @@ for metrics only and never for fitting or selection.
 from __future__ import annotations
 
 import html
+import hashlib
 import json
 import math
 import os
@@ -699,12 +700,46 @@ def cross_source_shuffle(X, sidecar, seed):
     return result
 
 
-def matched_noise(X, mean, std, seed):
+def matched_noise(X, mean, std, seed, meta_row_ids):
     result = X.copy()
-    rng = np.random.RandomState(seed)
-    result[:, 22:54] = rng.normal(
-        loc=mean, scale=np.maximum(std, 1e-8), size=(len(X), 32)
+    keys = np.fromiter(
+        (
+            int.from_bytes(
+                hashlib.sha256(
+                    "{}|{}".format(seed, row_id).encode("utf-8")
+                ).digest()[:8],
+                "little",
+            )
+            for row_id in meta_row_ids
+        ),
+        dtype=np.uint64,
+        count=len(X),
     )
+
+    def splitmix64(value):
+        with np.errstate(over="ignore"):
+            value = value + np.uint64(0x9E3779B97F4A7C15)
+            value = (value ^ (value >> np.uint64(30))) * np.uint64(
+                0xBF58476D1CE4E5B9
+            )
+            value = (value ^ (value >> np.uint64(27))) * np.uint64(
+                0x94D049BB133111EB
+            )
+            return value ^ (value >> np.uint64(31))
+
+    standard = np.empty((len(X), 32), dtype=np.float64)
+    scale = float(2 ** -53)
+    stride = 0xD1342543DE82EF95
+    for pair in range(16):
+        offset1 = np.uint64((2 * pair * stride) & ((1 << 64) - 1))
+        offset2 = np.uint64(((2 * pair + 1) * stride) & ((1 << 64) - 1))
+        u1 = ((splitmix64(keys + offset1) >> np.uint64(11)).astype(np.float64) + 0.5) * scale
+        u2 = ((splitmix64(keys + offset2) >> np.uint64(11)).astype(np.float64) + 0.5) * scale
+        radius = np.sqrt(-2.0 * np.log(np.clip(u1, 1e-15, 1.0)))
+        angle = 2.0 * np.pi * u2
+        standard[:, 2 * pair] = radius * np.cos(angle)
+        standard[:, 2 * pair + 1] = radius * np.sin(angle)
+    result[:, 22:54] = mean + np.maximum(std, 1e-8) * standard
     # Preserve structural missingness: coordinates that are zero because the
     # modality is effectively unavailable remain zero.
     result[result[:, 54] == 0, 22:38] = 0
@@ -718,9 +753,14 @@ def probe_d(direction, data, tau):
     cases = [("no_content", None), ("aligned_content", None)]
     cases.extend(("cross_source_shuffle", seed) for seed in SHUFFLE_SEEDS)
     cases.extend(("matched_noise", seed) for seed in NOISE_SEEDS)
-    train_content = data["inner_train"]["X"][:, 22:54]
-    content_mean = train_content.mean(axis=0)
-    content_std = train_content.std(axis=0)
+    train_full = data["inner_train"]["X"]
+    train_content = train_full[:, 22:54]
+    content_mean = np.zeros(32, dtype=np.float64)
+    content_std = np.ones(32, dtype=np.float64)
+    for start, stop, mask_column in ((0, 16, 54), (16, 24, 55), (24, 32, 56)):
+        active = train_full[:, mask_column] == 1
+        content_mean[start:stop] = train_content[active, start:stop].mean(axis=0)
+        content_std[start:stop] = train_content[active, start:stop].std(axis=0)
     rows = []
     collision_audit = []
     for case, seed in cases:
@@ -755,13 +795,57 @@ def probe_d(direction, data, tau):
         else:
             indices = list(range(57))
             train_X = matched_noise(
-                data["inner_train"]["X"], content_mean, content_std, seed
+                data["inner_train"]["X"],
+                content_mean,
+                content_std,
+                seed,
+                data["inner_train"]["sidecar"]["meta_row_id"],
             )
             valid_X = matched_noise(
-                data["inner_valid"]["X"], content_mean, content_std, seed + 1000
+                data["inner_valid"]["X"],
+                content_mean,
+                content_std,
+                seed,
+                data["inner_valid"]["sidecar"]["meta_row_id"],
             )
             outer_X = matched_noise(
-                data["outer_evaluation"]["X"], content_mean, content_std, seed + 2000
+                data["outer_evaluation"]["X"],
+                content_mean,
+                content_std,
+                seed,
+                data["outer_evaluation"]["sidecar"]["meta_row_id"],
+            )
+            active_mean_diffs = []
+            active_std_diffs = []
+            for start, stop, mask_column in ((22, 38, 54), (38, 46, 55), (46, 54, 56)):
+                active = train_X[:, mask_column] == 1
+                offset_start, offset_stop = start - 22, stop - 22
+                active_mean_diffs.append(
+                    np.max(
+                        np.abs(
+                            train_X[active, start:stop].mean(axis=0)
+                            - content_mean[offset_start:offset_stop]
+                        )
+                    )
+                )
+                active_std_diffs.append(
+                    np.max(
+                        np.abs(
+                            train_X[active, start:stop].std(axis=0)
+                            - content_std[offset_start:offset_stop]
+                        )
+                    )
+                )
+            collision_audit.append(
+                {
+                    "direction": direction,
+                    "control": case,
+                    "seed": seed,
+                    "train_cross_source_collisions": np.nan,
+                    "valid_outer_content_application": "hash-keyed label-free matched noise",
+                    "max_active_coordinate_mean_difference": float(max(active_mean_diffs)),
+                    "max_active_coordinate_std_difference": float(max(active_std_diffs)),
+                }
             )
         alpha, model = fit_regret_probe(
             train_X,
