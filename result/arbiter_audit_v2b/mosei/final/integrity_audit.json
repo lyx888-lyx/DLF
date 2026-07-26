@@ -1,0 +1,251 @@
+{
+  "access_locks": {
+    "expert_retrained_or_modified": false,
+    "feature_rich_judge_trained": false,
+    "locked_test_access_count": 0,
+    "official_valid_access_count": 0,
+    "outer_evaluation_access_count": 1,
+    "student_trained": false
+  },
+  "all_frozen_count_checks_pass": true,
+  "all_neighbor_constraints_pass": true,
+  "all_source_overlaps_zero": true,
+  "authorization": {
+    "feature_rich_judge_training_authorized": false,
+    "local_competence_audit_authorized": true,
+    "local_drs_authorized": true,
+    "official_valid_authorized": false,
+    "safe_fallback_audit_authorized": true,
+    "student_training_authorized": false,
+    "test_authorized": false
+  },
+  "completed_at": "2026-07-26T07:19:15.947878+00:00",
+  "direction_specific_preprocessing_manifests_differ": true,
+  "expert_risk_ledgers": {
+    "A": {
+      "expert_count": 5,
+      "fields_present": true,
+      "nonfinite_values": 0,
+      "rows": 170640,
+      "sha256": "d490e3b199462ffa431ea26a59862eebe1310f4858a98eb3d367130a4ed47e30"
+    },
+    "B": {
+      "expert_count": 5,
+      "fields_present": true,
+      "nonfinite_values": 0,
+      "rows": 155880,
+      "sha256": "38ffb937ae43f9d91ed208f043f2742c9bb12de4ea3cf94166921fb82d40c8f4"
+    }
+  },
+  "feature_preprocessing": {
+    "A": {
+      "feature_manifest_sha256": "ec19aa426bd015a962b6ccf39cbbfac847ca5e588b63b1b22f59d481d18d5643",
+      "preprocessing_manifest_sha256": "79f666e149ab5aaa92e819959261d5a3ac73b9786f37164b27f9279fce34e54c"
+    },
+    "B": {
+      "feature_manifest_sha256": "02424114e6d4b1090e4e5761118d6359907156a517e8029b750d1d0f6ac20e3b",
+      "preprocessing_manifest_sha256": "8d788a17a333de283e234928d0a7bd3ccc6a1b52152acbff1e4fa4255e62b96c"
+    }
+  },
+  "final_status": "LOCAL_COMPETENCE_WEAK",
+  "finalized_without_outer_reload": true,
+  "neighbor_audits": [
+    {
+      "constraints_pass": true,
+      "direction": "A",
+      "duplicate_neighbor_source_within_query": 0,
+      "expected_K": 30,
+      "invalid_rank_or_count_queries": 0,
+      "modes": [
+        "L",
+        "LA",
+        "LAV",
+        "LV"
+      ],
+      "path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2b/mosei/development/direction_A_selected_inner_valid_neighbors.csv.gz",
+      "queries": 4376,
+      "role": "inner_valid",
+      "rows": 131280,
+      "same_source_rows": 0,
+      "sha256": "a67de0d429f12e06519952364d88641d5cfd1a131126ead605cda311b607241d"
+    },
+    {
+      "constraints_pass": true,
+      "direction": "A",
+      "duplicate_neighbor_source_within_query": 0,
+      "expected_K": 30,
+      "invalid_rank_or_count_queries": 0,
+      "modes": [
+        "L",
+        "LA",
+        "LAV",
+        "LV"
+      ],
+      "path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2b/mosei/outer/direction_A_selected_outer_neighbors.csv.gz",
+      "queries": 31176,
+      "role": "outer_evaluation",
+      "rows": 935280,
+      "same_source_rows": 0,
+      "sha256": "db14bf1fbd4ae259703977f9bc20303cde00264e58fcb6da20a851735895bae9"
+    },
+    {
+      "constraints_pass": true,
+      "direction": "B",
+      "duplicate_neighbor_source_within_query": 0,
+      "expected_K": 60,
+      "invalid_rank_or_count_queries": 0,
+      "modes": [
+        "L",
+        "LA",
+        "LAV",
+        "LV"
+      ],
+      "path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2b/mosei/development/direction_B_selected_inner_valid_neighbors.csv.gz",
+      "queries": 3444,
+      "role": "inner_valid",
+      "rows": 206640,
+      "same_source_rows": 0,
+      "sha256": "000e7a8576a49f7b204239134335991c8d5ab11f339f2d14dd88dfb70c188698"
+    },
+    {
+      "constraints_pass": true,
+      "direction": "B",
+      "duplicate_neighbor_source_within_query": 0,
+      "expected_K": 60,
+      "invalid_rank_or_count_queries": 0,
+      "modes": [
+        "L",
+        "LA",
+        "LAV",
+        "LV"
+      ],
+      "path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2b/mosei/outer/direction_B_selected_outer_neighbors.csv.gz",
+      "queries": 34128,
+      "role": "outer_evaluation",
+      "rows": 2047680,
+      "same_source_rows": 0,
+      "sha256": "b624c4cd0ce6d8ca5c19deedd4b1b6fbc706bbe4d39d2797f767146e46281f57"
+    }
+  ],
+  "outer_predictions_frozen_before_label_metrics": true,
+  "prediction_audit": {
+    "directions": {
+      "A": 31176,
+      "B": 34128
+    },
+    "forbidden_columns_present": [],
+    "rows": 65304,
+    "sha256": "fe3f2493416acfaa47aae97a94c9e2eeee437d44c2a64c0d133251b9e9de58b6",
+    "unique_meta_rows": 65304
+  },
+  "protocol_manifest_sha256": "4364139a4aa5986f371b900247d59784fe5da9bd9dbc24233cfcee5fec8e2a86",
+  "role_counts": [
+    {
+      "direction": "A",
+      "duplicate_meta_rows": 0,
+      "matches_frozen_counts": true,
+      "meta_rows": 29752,
+      "modes": [
+        "L",
+        "LA",
+        "LAV",
+        "LV"
+      ],
+      "role": "inner_train",
+      "samples": 7438,
+      "sources": 1007
+    },
+    {
+      "direction": "A",
+      "duplicate_meta_rows": 0,
+      "matches_frozen_counts": true,
+      "meta_rows": 4376,
+      "modes": [
+        "L",
+        "LA",
+        "LAV",
+        "LV"
+      ],
+      "role": "inner_valid",
+      "samples": 1094,
+      "sources": 130
+    },
+    {
+      "direction": "A",
+      "duplicate_meta_rows": 0,
+      "matches_frozen_counts": true,
+      "meta_rows": 31176,
+      "modes": [
+        "L",
+        "LA",
+        "LAV",
+        "LV"
+      ],
+      "role": "outer_evaluation",
+      "samples": 7794,
+      "sources": 1112
+    },
+    {
+      "direction": "B",
+      "duplicate_meta_rows": 0,
+      "matches_frozen_counts": true,
+      "meta_rows": 27732,
+      "modes": [
+        "L",
+        "LA",
+        "LAV",
+        "LV"
+      ],
+      "role": "inner_train",
+      "samples": 6933,
+      "sources": 980
+    },
+    {
+      "direction": "B",
+      "duplicate_meta_rows": 0,
+      "matches_frozen_counts": true,
+      "meta_rows": 3444,
+      "modes": [
+        "L",
+        "LA",
+        "LAV",
+        "LV"
+      ],
+      "role": "inner_valid",
+      "samples": 861,
+      "sources": 132
+    },
+    {
+      "direction": "B",
+      "duplicate_meta_rows": 0,
+      "matches_frozen_counts": true,
+      "meta_rows": 34128,
+      "modes": [
+        "L",
+        "LA",
+        "LAV",
+        "LV"
+      ],
+      "role": "outer_evaluation",
+      "samples": 8532,
+      "sources": 1137
+    }
+  ],
+  "selection_manifest_sha256": "6729baa455f42a85803edd548ef131c4091792eb2fcc5f8a30a966018d4e71f6",
+  "source_overlaps": {
+    "A:inner_train:inner_valid": 0,
+    "A:inner_train:outer_evaluation": 0,
+    "A:inner_valid:outer_evaluation": 0,
+    "B:inner_train:inner_valid": 0,
+    "B:inner_train:outer_evaluation": 0,
+    "B:inner_valid:outer_evaluation": 0
+  },
+  "stage": "Stage23A-v2b integrity audit",
+  "strong_static": "per_mode_constrained_fixed_stacking (frozen v2a sidecar field)",
+  "total_outer_meta_rows": 65304,
+  "total_outer_samples": 16326,
+  "v2a_branch_tip": "4e6178bdcaaf5cf7730e81f7b20e305466e7cf83",
+  "v2a_status": "SIGNAL_AUDIT_FAIL",
+  "v2a_status_unchanged": true,
+  "v2b_branch": "audit/mosei-source-aware-local-competence-v2b"
+}

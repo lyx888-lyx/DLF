@@ -1,0 +1,12 @@
+{
+  "expert_retrained_or_modified": false,
+  "feature_rich_judge_trained": false,
+  "locked_test_access_count": 0,
+  "next_route": "await explicit user decision",
+  "official_valid_access_count": 0,
+  "outer_evaluation_access_count": 1,
+  "post_hoc_judge_route_permanently_closed": false,
+  "stage": "Stage23A-v2b",
+  "status": "LOCAL_COMPETENCE_WEAK",
+  "student_trained": false
+}

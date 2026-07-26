@@ -1,0 +1,3 @@
+direction	role	queries	neighbor_rows	unique_neighbor_sources	top1_source_share	top10_source_share	mean_nearest_distance	mean_kth_distance
+A	outer_evaluation	31176	935280	1006	0.00788533915	0.05909139509	0.1756502378	0.3061886379
+B	outer_evaluation	34128	2047680	980	0.006696847164	0.05260685263	0.4900987227	0.694125236

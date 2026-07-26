@@ -1,0 +1,247 @@
+{
+  "artifact_count": 48,
+  "artifacts": [
+    {
+      "bytes": 10858319,
+      "path": "result/arbiter_audit_v2b/mosei/data/direction_A_expert_risk_ledger.csv.gz",
+      "sha256": "d490e3b199462ffa431ea26a59862eebe1310f4858a98eb3d367130a4ed47e30"
+    },
+    {
+      "bytes": 9934298,
+      "path": "result/arbiter_audit_v2b/mosei/data/direction_B_expert_risk_ledger.csv.gz",
+      "sha256": "38ffb937ae43f9d91ed208f043f2742c9bb12de4ea3cf94166921fb82d40c8f4"
+    },
+    {
+      "bytes": 270,
+      "path": "result/arbiter_audit_v2b/mosei/development/consistency_ablation_decision.json",
+      "sha256": "c93791d67385d293ecd09bd52b67546bb8d855fc53cadfe1caa294e68d84966a"
+    },
+    {
+      "bytes": 291,
+      "path": "result/arbiter_audit_v2b/mosei/development/direction_A_inner_valid_density.tsv",
+      "sha256": "4e2252d9ff1322f51351af9e6400d65356da571c0c27791da17e602965863ef1"
+    },
+    {
+      "bytes": 989094,
+      "path": "result/arbiter_audit_v2b/mosei/development/direction_A_inner_valid_local_competence.csv.gz",
+      "sha256": "3dff5b782b68788ec386cb800e7ada7eb6b58205fd5916ec4a3cdd0f91b28af4"
+    },
+    {
+      "bytes": 48025,
+      "path": "result/arbiter_audit_v2b/mosei/development/direction_A_inner_valid_source_frequency.tsv",
+      "sha256": "7a7ea66a68b5c4f4ab61f743d0f1748dda8343b516892d1443297e8f7600dcd0"
+    },
+    {
+      "bytes": 308,
+      "path": "result/arbiter_audit_v2b/mosei/development/direction_A_inner_valid_source_summary.json",
+      "sha256": "5bddbd13addd7fedd4bd1dee53a3ba4c2a5c007ed10c80fdbb38e63e00f7b33c"
+    },
+    {
+      "bytes": 2719756,
+      "path": "result/arbiter_audit_v2b/mosei/development/direction_A_selected_inner_valid_neighbors.csv.gz",
+      "sha256": "a67de0d429f12e06519952364d88641d5cfd1a131126ead605cda311b607241d"
+    },
+    {
+      "bytes": 282,
+      "path": "result/arbiter_audit_v2b/mosei/development/direction_B_inner_valid_density.tsv",
+      "sha256": "ad11c336ead74edbd39a81bc6a1a189ed6bd23ab242d78852bccddbabf7d535a"
+    },
+    {
+      "bytes": 779824,
+      "path": "result/arbiter_audit_v2b/mosei/development/direction_B_inner_valid_local_competence.csv.gz",
+      "sha256": "362953fd45b87e5cd26232ed83ce0a57fb0ad3b73893c706c39aaa1c79cc4cdc"
+    },
+    {
+      "bytes": 47331,
+      "path": "result/arbiter_audit_v2b/mosei/development/direction_B_inner_valid_source_frequency.tsv",
+      "sha256": "ec35837e6367354a30cc2739e36621f0cb95c8058117ecf64425dce60a8d411c"
+    },
+    {
+      "bytes": 311,
+      "path": "result/arbiter_audit_v2b/mosei/development/direction_B_inner_valid_source_summary.json",
+      "sha256": "100f2ae4d80bb14c2c6bcc0224cdd21d52767a6c20ed6b6a654f823967777cdc"
+    },
+    {
+      "bytes": 4187454,
+      "path": "result/arbiter_audit_v2b/mosei/development/direction_B_selected_inner_valid_neighbors.csv.gz",
+      "sha256": "000e7a8576a49f7b204239134335991c8d5ab11f339f2d14dd88dfb70c188698"
+    },
+    {
+      "bytes": 2182,
+      "path": "result/arbiter_audit_v2b/mosei/development/drs_inner_valid_metrics.tsv",
+      "sha256": "2620c0ad58489c7258890e54c4b987fdd8fda8d234576ab6e3cfce3ae39ff537"
+    },
+    {
+      "bytes": 27319,
+      "path": "result/arbiter_audit_v2b/mosei/development/local_regularity_candidate_metrics.tsv",
+      "sha256": "86dbfbe9eb7e07eaa5064b519ff1f7d64f3efdecf9952498329e0af1bc8fc96c"
+    },
+    {
+      "bytes": 270563,
+      "path": "result/arbiter_audit_v2b/mosei/development/local_regularity_per_mode_expert.tsv",
+      "sha256": "463dd80c19232f2e8c738c1c82828e50469549305be01a2633ee06e74cbcba1e"
+    },
+    {
+      "bytes": 3102,
+      "path": "result/arbiter_audit_v2b/mosei/development/negative_controls_inner_valid.tsv",
+      "sha256": "e793b72133339d47fade92d5b6bbb04d482a9a0e48b26ec58ebbc2298f1c8cb0"
+    },
+    {
+      "bytes": 538,
+      "path": "result/arbiter_audit_v2b/mosei/development/safe_coverage_inner_valid.tsv",
+      "sha256": "5e9bc846fe2854853d0cf7e0a670c812476728a4bd1061829b64e56d9e7ae9f6"
+    },
+    {
+      "bytes": 382,
+      "path": "result/arbiter_audit_v2b/mosei/final/TEST_LOCK_STATUS.json",
+      "sha256": "6d2011da494e3089b9bfe689177aa989968cdf2835205e1c9591130b18d04cc1"
+    },
+    {
+      "bytes": 234765,
+      "path": "result/arbiter_audit_v2b/mosei/final/git_diff_before_final_commit.patch",
+      "sha256": "d8a6882cb5fb72ecec062eb812a61e99e0266dd6420316d1b5657dc0149c1c67"
+    },
+    {
+      "bytes": 7131,
+      "path": "result/arbiter_audit_v2b/mosei/final/integrity_audit.json",
+      "sha256": "f8950c8fc7dca4f088eea9519e6b189063ab3bb6799d13d4aeac81cdda7a5b4c"
+    },
+    {
+      "bytes": 1582,
+      "path": "result/arbiter_audit_v2b/mosei/final/plain_language_answers.md",
+      "sha256": "c3e35311ef9ca1df0b96096ba80d6a1cb69edc074bfd6fa55593b0b8f37f1813"
+    },
+    {
+      "bytes": 661,
+      "path": "result/arbiter_audit_v2b/mosei/final/reproducible_commands.sh",
+      "sha256": "5dc04a77da5c112eb6b12812ad2e609bf118ad8b6fe28e4fd84b13f432b74605"
+    },
+    {
+      "bytes": 708,
+      "path": "result/arbiter_audit_v2b/mosei/final/runtime_gpu_report.json",
+      "sha256": "bac30aa4af311a957c54702cf2810d35db8f760c1b6a7e5cc30105351ceb4180"
+    },
+    {
+      "bytes": 1917,
+      "path": "result/arbiter_audit_v2b/mosei/final/stage23a_v2b_audit.json",
+      "sha256": "1dc01d26f52728e799c33695a2c9fa3cefebdf19b64a1da2c06bac2460f096fe"
+    },
+    {
+      "bytes": 10636,
+      "path": "result/arbiter_audit_v2b/mosei/final/stage23a_v2b_audit.md",
+      "sha256": "0c75ad7707b5488d9b76d3a31db9d6cdb9ae8ac75aec70cb33c5cf837073da40"
+    },
+    {
+      "bytes": 19000932,
+      "path": "result/arbiter_audit_v2b/mosei/outer/direction_A_selected_outer_neighbors.csv.gz",
+      "sha256": "db14bf1fbd4ae259703977f9bc20303cde00264e58fcb6da20a851735895bae9"
+    },
+    {
+      "bytes": 39993714,
+      "path": "result/arbiter_audit_v2b/mosei/outer/direction_B_selected_outer_neighbors.csv.gz",
+      "sha256": "b624c4cd0ce6d8ca5c19deedd4b1b6fbc706bbe4d39d2797f767146e46281f57"
+    },
+    {
+      "bytes": 13571825,
+      "path": "result/arbiter_audit_v2b/mosei/outer/outer_local_competence_ledger.csv.gz",
+      "sha256": "bd062f033227098a3a37f88ddf89a43be31a100625b864882d9ec6bcf44299e6"
+    },
+    {
+      "bytes": 2543,
+      "path": "result/arbiter_audit_v2b/mosei/outer/outer_local_regularity.tsv",
+      "sha256": "aea9d44520db9503e1b385e9ac2649305090795f476e4ad4c367bba0f98cd6fb"
+    },
+    {
+      "bytes": 29044,
+      "path": "result/arbiter_audit_v2b/mosei/outer/outer_method_metrics.tsv",
+      "sha256": "1d5c3ec8ac904629fdf01d3704a2c9928e367927037310dc1c2d9f9005751273"
+    },
+    {
+      "bytes": 1272,
+      "path": "result/arbiter_audit_v2b/mosei/outer/outer_negative_control_metrics.tsv",
+      "sha256": "ea7e7f7ec00d6cce2135e09e03ca4cf8a04b15c6b81921e669425479b5578b29"
+    },
+    {
+      "bytes": 8586,
+      "path": "result/arbiter_audit_v2b/mosei/outer/outer_neighborhood_density.tsv",
+      "sha256": "eb22131b4b677c874e3b9cebc12d71bdb15bcf4d1162875395e098b9b696ea32"
+    },
+    {
+      "bytes": 900,
+      "path": "result/arbiter_audit_v2b/mosei/outer/outer_one_shot_access_audit.json",
+      "sha256": "bcb6027cfda4320cc9888fb0764dc7d8185961b65db757e905f0cba1c4fbb23e"
+    },
+    {
+      "bytes": 8180657,
+      "path": "result/arbiter_audit_v2b/mosei/outer/outer_predictions_frozen_before_label_evaluation.csv.gz",
+      "sha256": "fe3f2493416acfaa47aae97a94c9e2eeee437d44c2a64c0d133251b9e9de58b6"
+    },
+    {
+      "bytes": 2038,
+      "path": "result/arbiter_audit_v2b/mosei/outer/outer_risk_coverage.tsv",
+      "sha256": "fa5f39176ad9bde554da077ecc22ad75b6bed9bd68a34d7e58f6e3a7d765d39e"
+    },
+    {
+      "bytes": 919,
+      "path": "result/arbiter_audit_v2b/mosei/outer/risk_coverage.svg",
+      "sha256": "8b28a36da80a9276804853636cdf00d2a6ed30da6fa1c3c86e1682fdfd421dca"
+    },
+    {
+      "bytes": 320,
+      "path": "result/arbiter_audit_v2b/mosei/outer/source_dominance_summary.tsv",
+      "sha256": "a83c12afc25e7ad7d3952cc742abc0a460783c8869e0cda6cb708e42d40b959f"
+    },
+    {
+      "bytes": 108309,
+      "path": "result/arbiter_audit_v2b/mosei/outer/source_neighbor_frequency.tsv",
+      "sha256": "35c52147f8590d9fac779ec2f46ab2a32c5c781a074bb96b1c7c0fd9923395ef"
+    },
+    {
+      "bytes": 1555,
+      "path": "result/arbiter_audit_v2b/mosei/protocol/candidate_table.json",
+      "sha256": "35c45d95990fe4f67c0fe093ba02b1a3e747e08cdce217d41b507351dfd20349"
+    },
+    {
+      "bytes": 10276,
+      "path": "result/arbiter_audit_v2b/mosei/protocol/direction_A_retrieval_stats.json",
+      "sha256": "3cad4d5cf232eab5c004b3eca455325e8c54c3be0e0ee3da5faa3a2449b36d0c"
+    },
+    {
+      "bytes": 10279,
+      "path": "result/arbiter_audit_v2b/mosei/protocol/direction_B_retrieval_stats.json",
+      "sha256": "6151e341ccedf73af8d196390984335a93f115195fab4f7fd8f958dd661176ee"
+    },
+    {
+      "bytes": 5393,
+      "path": "result/arbiter_audit_v2b/mosei/protocol/frozen_development_selection.json",
+      "sha256": "6729baa455f42a85803edd548ef131c4091792eb2fcc5f8a30a966018d4e71f6"
+    },
+    {
+      "bytes": 4877,
+      "path": "result/arbiter_audit_v2b/mosei/protocol/frozen_protocol_manifest.json",
+      "sha256": "4364139a4aa5986f371b900247d59784fe5da9bd9dbc24233cfcee5fec8e2a86"
+    },
+    {
+      "bytes": 745,
+      "path": "result/arbiter_audit_v2b/mosei/protocol/reference_bank_schema.json",
+      "sha256": "0f48f3fc1fb02e93d8f345dfdb394bd5401a766f95b7384906bbc168eeb20619"
+    },
+    {
+      "bytes": 7073,
+      "path": "scripts/mosei/stage23a_v2b_authorize.py",
+      "sha256": "cc902020fb0c47ce8c9f732f89ce5578ba72f53029794970534d6fff4b07e165"
+    },
+    {
+      "bytes": 81586,
+      "path": "scripts/mosei/stage23a_v2b_local_competence.py",
+      "sha256": "a7b6f206e122f7b103ed19204cb37339504f88f0b42033abaa59e3cd4e6e345e"
+    },
+    {
+      "bytes": 20377,
+      "path": "scripts/mosei/stage23a_v2b_finalize.py",
+      "sha256": "2518065997bdbbb86868aca017287679181673cf4ae7c6495fae12e8a63dce95"
+    }
+  ],
+  "generated_at": "2026-07-26T07:19:16.246028+00:00",
+  "stage": "Stage23A-v2b"
+}

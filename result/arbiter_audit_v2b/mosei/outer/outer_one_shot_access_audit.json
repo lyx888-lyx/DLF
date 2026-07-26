@@ -1,0 +1,15 @@
+{
+  "frozen_at": "2026-07-26T07:09:55.421539+00:00",
+  "locked_test_access_count": 0,
+  "official_valid_access_count": 0,
+  "outer_evaluation_access_count": 1,
+  "outer_labels_used_after_prediction_freeze_for_metrics_only": true,
+  "outer_labels_used_for_retrieval_or_prediction": false,
+  "prediction_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2b/mosei/outer/outer_predictions_frozen_before_label_evaluation.csv.gz",
+  "prediction_rows": 65304,
+  "prediction_sha256": "fe3f2493416acfaa47aae97a94c9e2eeee437d44c2a64c0d133251b9e9de58b6",
+  "selection_manifest_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2b/mosei/protocol/frozen_development_selection.json",
+  "selection_manifest_sha256": "6729baa455f42a85803edd548ef131c4091792eb2fcc5f8a30a966018d4e71f6",
+  "stage": "Stage23A-v2b outer one-shot access",
+  "status": "PREDICTIONS_FROZEN_BEFORE_LABEL_METRICS"
+}

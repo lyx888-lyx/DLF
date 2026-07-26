@@ -1,0 +1,45 @@
+{
+  "completed_at": "2026-07-26T07:11:26.309039+00:00",
+  "feature_rich_judge_trained": false,
+  "finalized_from_saved_metrics_without_outer_reload": true,
+  "locked_test_access_count": 0,
+  "official_valid_access_count": 0,
+  "outer_evaluation_access_count": 1,
+  "outer_prediction_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2b/mosei/outer/outer_predictions_frozen_before_label_evaluation.csv.gz",
+  "outer_prediction_sha256": "fe3f2493416acfaa47aae97a94c9e2eeee437d44c2a64c0d133251b9e9de58b6",
+  "promotion_gate": {
+    "classification_gate_pass": true,
+    "classification_mean_deltas": {
+      "Acc2": 0.00014803990000006317,
+      "Acc5": 0.0007439050499999933,
+      "Acc7": 0.0006797531000000134,
+      "F1": 8.236984999993036e-05
+    },
+    "control_gate_pass": false,
+    "corr_delta_by_direction": [
+      -0.0011698548999999892,
+      -0.00021746709999992397
+    ],
+    "corr_gate_pass": true,
+    "direction_consistency_gate_pass": true,
+    "direction_delta_J": {
+      "A": -8.627809999994795e-05,
+      "B": -0.0001750221999999857
+    },
+    "high_confidence_trigger_gate_pass": false,
+    "mean_delta_J_gate_pass": false,
+    "mean_delta_J_vs_strong_static": -0.00013065014999996682,
+    "mean_delta_J_vs_strongest_random_or_shuffled": -0.00026931149999998016,
+    "missing_mode_gate_pass": false,
+    "missing_modes_improved": 1,
+    "not_global_or_mode_only_gate_pass": true,
+    "outer_one_shot_gate_pass": true,
+    "worst_direction_delta_J": -8.627809999994795e-05,
+    "worst_direction_gate_pass": true
+  },
+  "selection_manifest_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2b/mosei/protocol/frozen_development_selection.json",
+  "selection_manifest_sha256": "6729baa455f42a85803edd548ef131c4091792eb2fcc5f8a30a966018d4e71f6",
+  "stage": "Stage23A-v2b Source-Aware Local Competence Audit",
+  "status": "LOCAL_COMPETENCE_WEAK",
+  "student_trained": false
+}

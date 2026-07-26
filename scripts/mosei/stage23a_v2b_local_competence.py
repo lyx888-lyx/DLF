@@ -69,7 +69,16 @@ def atomic_json(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(
-        json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
+        json.dumps(
+            value,
+            indent=2,
+            sort_keys=True,
+            ensure_ascii=False,
+            default=lambda item: item.item()
+            if isinstance(item, np.generic)
+            else str(item),
+        )
+        + "\n",
         encoding="utf-8",
     )
     os.replace(str(temporary), str(path))
@@ -1631,17 +1640,141 @@ remained locked.
         choices=json.dumps(selection["directions"], indent=2, ensure_ascii=False),
         metrics=markdown_table(overall, list(overall.columns)),
         regularity=markdown_table(regularity, list(regularity.columns)),
-        gate=json.dumps(final["promotion_gate"], indent=2, ensure_ascii=False),
-        sources=json.dumps(source_summaries, indent=2, ensure_ascii=False),
+        gate=json.dumps(
+            final["promotion_gate"],
+            indent=2,
+            ensure_ascii=False,
+            default=lambda item: item.item()
+            if isinstance(item, np.generic)
+            else str(item),
+        ),
+        sources=json.dumps(
+            source_summaries,
+            indent=2,
+            ensure_ascii=False,
+            default=lambda item: item.item()
+            if isinstance(item, np.generic)
+            else str(item),
+        ),
     )
     path = V2B / "final" / "stage23a_v2b_audit.md"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(report, encoding="utf-8")
 
 
+def finalize_from_saved_outer_metrics():
+    """Finalize after the one-shot predictions/metrics were already frozen.
+
+    This recovery path intentionally reads only saved aggregate outputs.  It
+    does not construct an outer loader or reopen any query Ground Truth.
+    """
+    state_path = RUNTIME / "state.json"
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    if (
+        state["status"] != "OUTER_PREDICTIONS_FROZEN_METRICS_AUDIT_IN_PROGRESS"
+        or state["outer_evaluation_access_count"] != 1
+    ):
+        raise RuntimeError("Saved-metric finalization is not authorized.")
+    output = V2B / "outer"
+    required = {
+        "metrics": output / "outer_method_metrics.tsv",
+        "regularity": output / "outer_local_regularity.tsv",
+        "controls": output / "outer_negative_control_metrics.tsv",
+        "coverage": output / "outer_risk_coverage.tsv",
+        "sources": output / "source_dominance_summary.tsv",
+        "predictions": output
+        / "outer_predictions_frozen_before_label_evaluation.csv.gz",
+        "access_audit": output / "outer_one_shot_access_audit.json",
+    }
+    missing = [str(path) for path in required.values() if not path.exists()]
+    if missing:
+        raise RuntimeError("Missing frozen outer artifacts: {}".format(missing))
+    if sha256_file(required["predictions"]) != state["outer_prediction_sha256"]:
+        raise RuntimeError("Frozen outer prediction SHA mismatch.")
+    access_audit = json.loads(
+        required["access_audit"].read_text(encoding="utf-8")
+    )
+    if (
+        access_audit["outer_evaluation_access_count"] != 1
+        or access_audit["official_valid_access_count"] != 0
+        or access_audit["locked_test_access_count"] != 0
+    ):
+        raise RuntimeError("Outer one-shot access audit is inconsistent.")
+    metrics = pd.read_csv(required["metrics"], sep="\t")
+    regularity = pd.read_csv(required["regularity"], sep="\t")
+    controls = pd.read_csv(required["controls"], sep="\t")
+    coverage = pd.read_csv(required["coverage"], sep="\t")
+    source_summaries = pd.read_csv(required["sources"], sep="\t").to_dict(
+        orient="records"
+    )
+    selection_path = V2B / "protocol" / "frozen_development_selection.json"
+    selection = json.loads(selection_path.read_text(encoding="utf-8"))
+    gate, conclusion = promotion_gate(metrics, regularity, controls, coverage)
+    final = {
+        "stage": "Stage23A-v2b Source-Aware Local Competence Audit",
+        "status": conclusion,
+        "promotion_gate": gate,
+        "selection_manifest_path": str(selection_path.resolve()),
+        "selection_manifest_sha256": sha256_file(selection_path),
+        "outer_prediction_path": str(required["predictions"].resolve()),
+        "outer_prediction_sha256": state["outer_prediction_sha256"],
+        "outer_evaluation_access_count": 1,
+        "official_valid_access_count": 0,
+        "locked_test_access_count": 0,
+        "feature_rich_judge_trained": False,
+        "student_trained": False,
+        "completed_at": utc_now(),
+        "finalized_from_saved_metrics_without_outer_reload": True,
+    }
+    final_dir = V2B / "final"
+    atomic_json(final_dir / "stage23a_v2b_audit.json", final)
+    write_report(
+        final,
+        selection,
+        metrics,
+        regularity,
+        controls,
+        coverage,
+        source_summaries,
+    )
+    lock = {
+        "stage": "Stage23A-v2b",
+        "status": conclusion,
+        "post_hoc_judge_route_permanently_closed": conclusion
+        == "LOCAL_COMPETENCE_FAIL",
+        "official_valid_access_count": 0,
+        "locked_test_access_count": 0,
+        "outer_evaluation_access_count": 1,
+        "feature_rich_judge_trained": False,
+        "student_trained": False,
+        "expert_retrained_or_modified": False,
+        "next_route": "jointly trained structurally specialized Experts"
+        if conclusion == "LOCAL_COMPETENCE_FAIL"
+        else "await explicit user decision",
+    }
+    atomic_json(final_dir / "TEST_LOCK_STATUS.json", lock)
+    state.update(
+        {
+            "status": conclusion,
+            "outer_evaluation_access_count": 1,
+            "official_valid_access_count": 0,
+            "locked_test_access_count": 0,
+            "feature_rich_judge_trained": False,
+            "student_trained": False,
+            "next_action": lock["next_route"],
+            "finalized_from_saved_metrics_without_outer_reload": True,
+            "updated_at": utc_now(),
+        }
+    )
+    atomic_json(state_path, state)
+    print(json.dumps(final, indent=2, default=lambda item: item.item()))
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--phase", required=True, choices=("develop", "outer"))
+    parser.add_argument(
+        "--phase", required=True, choices=("develop", "outer", "finalize-saved")
+    )
     return parser.parse_args()
 
 
@@ -1649,5 +1782,7 @@ if __name__ == "__main__":
     args = parse_args()
     if args.phase == "develop":
         development()
-    else:
+    elif args.phase == "outer":
         outer()
+    else:
+        finalize_from_saved_outer_metrics()
