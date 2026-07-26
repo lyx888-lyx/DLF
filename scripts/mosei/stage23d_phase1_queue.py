@@ -17,7 +17,24 @@ def extraction_complete():
     path = RUNTIME / "extraction_queue_state.json"
     if not path.exists():
         return False
-    return json.loads(path.read_text()).get("status") == "COMPLETED"
+    if json.loads(path.read_text()).get("status") != "COMPLETED":
+        return False
+    for fold in FOLDS:
+        for expert in EXPERTS:
+            manifest = (
+                OUT
+                / "features"
+                / f"checkpoint_fold{fold}"
+                / expert
+                / "extraction_manifest.json"
+            )
+            try:
+                payload = json.loads(manifest.read_text())
+            except (FileNotFoundError, json.JSONDecodeError):
+                return False
+            if payload.get("feature_schema_version") != 2:
+                return False
+    return True
 
 
 def stage23c_training_processes():
