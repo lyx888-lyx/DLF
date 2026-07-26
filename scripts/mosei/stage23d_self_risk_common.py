@@ -206,8 +206,6 @@ def active_head_features(mode, outputs):
         "active_head_count": len(active_names),
         "active_head_names": "|".join(active_names),
     }
-    for name in active_names:
-        result[f"active__{name}"] = float(outputs[name])
     for name in HEADS:
         result[f"head_active__{name}"] = int(name in active_names)
     specific = [
@@ -361,7 +359,8 @@ def risk_labels(frame, fixed_error_threshold=1.0):
     result["confident"] = 0
     result["confident_wrong"] = 0
     thresholds = []
-    for mode in MODES:
+    present_modes = [mode for mode in MODES if mode in set(result["mode"])]
+    for mode in present_modes:
         train = result.loc[
             (result["mode"] == mode)
             & (result["self_risk_role"] == "inner_train")
