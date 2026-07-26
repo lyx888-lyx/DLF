@@ -37,6 +37,23 @@ def main():
         "student_training_authorized",
     ):
         check("{}_locked".format(key), not authorization[key], str(authorization[key]))
+    expert_pool_path = V2_ROOT / "protocol" / "frozen_expert_pool.csv"
+    frozen_parent = json.loads(parent.read_text())
+    check(
+        "frozen_expert_pool_sha_unchanged",
+        sha256_file(expert_pool_path)
+        == frozen_parent["inputs"]["frozen_expert_pool_sha256"],
+        sha256_file(expert_pool_path),
+    )
+    expert_pool = pd.read_csv(expert_pool_path)
+    committee = expert_pool.loc[
+        expert_pool["expert_id"].isin(EXPERTS), "expert_id"
+    ].drop_duplicates()
+    check(
+        "exact_five_frozen_experts",
+        set(committee) == set(EXPERTS) and len(committee) == 5,
+        "|".join(sorted(committee)),
+    )
 
     hierarchical_rows = 0
     hierarchical_keys = []
