@@ -497,7 +497,7 @@ def main():
             "OPENBLAS_NUM_THREADS": 1,
             "NUMEXPR_NUM_THREADS": 1,
         },
-        "phase1_started_only_after_stage23c_train_process_count_zero": True,
+        "phase1_started_only_after_stage23c_train_queue_pipeline_count_zero": True,
         "extraction_queue_log": str(
             (RUNTIME / "extraction_v2_resume.log").resolve()
         ),

@@ -37,9 +37,9 @@ def extraction_complete():
     return True
 
 
-def stage23c_training_processes():
+def stage23c_active_processes():
     result = subprocess.run(
-        ["pgrep", "-af", "stage23c_train.py"],
+        ["ps", "-eo", "args="],
         check=False,
         capture_output=True,
         text=True,
@@ -47,7 +47,15 @@ def stage23c_training_processes():
     return [
         line
         for line in result.stdout.splitlines()
-        if "stage23c_train.py" in line and "pgrep" not in line
+        if any(
+            token in line
+            for token in (
+                "stage23c_train.py",
+                "stage23c_queue.py",
+                "stage23c_pipeline.py",
+            )
+        )
+        and "stage23d_phase1_queue.py" not in line
     ]
 
 
@@ -95,10 +103,10 @@ def wait_for_safe_start():
             status = "WAITING_FOR_EXTRACTION"
             note = "GPU3 extraction queue has not completed"
         else:
-            processes = stage23c_training_processes()
+            processes = stage23c_active_processes()
             if processes:
-                status = "WAITING_FOR_STAGE23C_CPU_RELEASE"
-                note = f"{len(processes)} Stage23C train process entries remain"
+                status = "WAITING_FOR_STAGE23C_FULL_RELEASE"
+                note = f"{len(processes)} Stage23C train/queue/pipeline entries remain"
             else:
                 return
         if status != last_status:
