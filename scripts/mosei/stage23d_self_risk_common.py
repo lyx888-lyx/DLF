@@ -262,6 +262,27 @@ class ReadOnlyActivationCapture:
         self.close()
 
 
+def enable_dropout_only(model):
+    """Enable stochastic Dropout while leaving BatchNorm and weights frozen."""
+    model.eval()
+    count = 0
+    for module in model.modules():
+        if isinstance(
+            module,
+            (
+                torch.nn.Dropout,
+                torch.nn.Dropout1d,
+                torch.nn.Dropout2d,
+                torch.nn.Dropout3d,
+            ),
+        ):
+            module.train()
+            count += 1
+    if count == 0:
+        raise RuntimeError("MC-dropout requested but no Dropout module exists")
+    return count
+
+
 def source_stratified_split(samples, seed=SPLIT_SEED):
     """Deterministically split sources 70/15/15 with coarse label/size balance."""
     required = {"sample_id", "video_id", "label"}

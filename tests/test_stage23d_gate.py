@@ -10,7 +10,7 @@ sys.path.insert(0, str(ROOT / "scripts" / "mosei"))
 
 from stage23d_aggregate import gate_table, markdown_table
 from stage23d_phase1 import core_pca_features, cross_source_shuffle
-from stage23d_self_risk_common import EXPERTS, MODES
+from stage23d_self_risk_common import EXPERTS, MODES, enable_dropout_only
 
 
 class Stage23DGateTests(unittest.TestCase):
@@ -88,6 +88,26 @@ class Stage23DGateTests(unittest.TestCase):
         shuffled = cross_source_shuffle(values, sources, 23071).reshape(-1)
         original = values.reshape(-1)
         self.assertTrue((shuffled != original).all())
+
+    def test_a5_enables_only_dropout_modules(self):
+        import torch
+
+        model = torch.nn.Sequential(
+            torch.nn.Linear(3, 3),
+            torch.nn.BatchNorm1d(3),
+            torch.nn.Dropout(0.2),
+        )
+        before = [parameter.detach().clone() for parameter in model.parameters()]
+        count = enable_dropout_only(model)
+        self.assertEqual(count, 1)
+        self.assertFalse(model[1].training)
+        self.assertTrue(model[2].training)
+        self.assertTrue(
+            all(
+                torch.equal(left, right)
+                for left, right in zip(before, model.parameters())
+            )
+        )
 
 
 if __name__ == "__main__":
