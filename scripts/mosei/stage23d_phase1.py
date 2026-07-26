@@ -957,6 +957,9 @@ def evaluate(cli):
         ).iloc[0]
         bad20 = (actual >= float(thresholds["error_top20_threshold"])).astype(int)
         bad10 = (actual >= float(thresholds["error_top10_threshold"])).astype(int)
+        fixed_bad = (
+            actual > float(thresholds["fixed_error_threshold"])
+        ).astype(int)
         confident = (
             joined["raw_uncertainty"].to_numpy()
             <= float(thresholds["uncertainty_bottom30_threshold"])
@@ -1023,6 +1026,8 @@ def evaluate(cli):
                     ),
                     "bad20_ECE": ece(bad20, probability),
                     "bad10_AUROC": safe_auc(bad10, probability),
+                    "fixed_bad_AUROC": safe_auc(fixed_bad, probability),
+                    "fixed_bad_AUPRC": safe_auprc(fixed_bad, probability),
                     "confident_wrong_AUROC": (
                         safe_auc(confident_wrong, cw_probability)
                         if cw_probability is not None

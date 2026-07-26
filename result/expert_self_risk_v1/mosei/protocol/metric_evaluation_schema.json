@@ -1,0 +1,21 @@
+{
+  "stage": "Stage23D-A preregistered metric evaluation schema",
+  "frozen_before_any_phase1_outer_evaluation": true,
+  "continuous_target": "log(abs_error + 1e-6)",
+  "reported_continuous_unit": "absolute sentiment error",
+  "bad20": "inner-train per expert/checkpoint/mode top 20% absolute error",
+  "bad10": "inner-train per expert/checkpoint/mode top 10% absolute error",
+  "fixed_bad": "absolute error > 1.0",
+  "confident_wrong_primary": "raw uncertainty bottom 30% AND absolute error top 20%",
+  "confident_wrong_sensitivity": {
+    "confidence_bottom_percent": [20, 30, 40],
+    "error_top_percent": [10, 20]
+  },
+  "recall_fixed_precision": 0.8,
+  "ece_bins": 10,
+  "quantiles": [0.5, 0.8, 0.9],
+  "risk_coverage": [0.1, 0.2, 0.3, 0.5, 0.7, 1.0],
+  "aurc_rule": "trapezoidal integration over the frozen risk-coverage grid",
+  "float_gate_tolerance": 1e-8,
+  "outer_threshold_or_model_selection": false
+}
