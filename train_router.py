@@ -1,4 +1,4 @@
-"""Train the Conservative Expert Router on a frozen DLF checkpoint."""
+"""Train the context-aware, harm-averse router on a frozen DLF checkpoint."""
 
 import argparse
 import logging
@@ -8,7 +8,7 @@ import torch
 
 from config import get_config_regression
 from data_loader import MMDataLoader
-from trains.singleTask.expert_router import train_router
+from trains.singleTask.context_risk_router import train_router
 from trains.singleTask.model import DLF
 from trains.utils import MetricsTop
 from utils import assign_gpu, setup_seed
@@ -16,21 +16,27 @@ from utils import assign_gpu, setup_seed
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='Train a fusion-anchored conservative router for DLF experts.'
+        description='Train a context-aware, harm-averse router for DLF experts.'
     )
     parser.add_argument('--dataset', choices=['mosi', 'mosei'], default='mosi')
     parser.add_argument('--seed', type=int, default=1111)
     parser.add_argument('--checkpoint', type=str, default='')
     parser.add_argument('--config', type=str, default='./config/config.json')
-    parser.add_argument('--save-root', type=str, default='./result/router')
+    parser.add_argument('--save-root', type=str, default='./result/context_risk_router')
     parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--num-workers', type=int, default=1)
-    parser.add_argument('--epochs', type=int, default=40)
-    parser.add_argument('--patience', type=int, default=7)
-    parser.add_argument('--learning-rate', type=float, default=1e-3)
-    parser.add_argument('--hidden-dim', type=int, default=32)
-    parser.add_argument('--dropout', type=float, default=0.1)
+    parser.add_argument('--epochs', type=int, default=60)
+    parser.add_argument('--patience', type=int, default=10)
+    parser.add_argument('--learning-rate', type=float, default=5e-4)
+    parser.add_argument('--hidden-dim', type=int, default=64)
+    parser.add_argument('--context-hidden-dim', type=int, default=64)
+    parser.add_argument('--dropout', type=float, default=0.15)
     parser.add_argument('--minimum-gain', type=float, default=0.03)
+    parser.add_argument('--harm-margin', type=float, default=0.03)
+    parser.add_argument('--harm-averse-weight', type=float, default=2.0)
+    parser.add_argument('--minimum-switch-precision', type=float, default=0.60)
+    parser.add_argument('--harm-risk-weight', type=float, default=0.10)
+    parser.add_argument('--switch-rate-weight', type=float, default=0.005)
     return parser.parse_args()
 
 
@@ -79,7 +85,7 @@ def main():
     )
 
     logger.info('Loaded frozen DLF checkpoint from %s', checkpoint)
-    logger.info('Router outputs will be saved to %s', save_dir)
+    logger.info('Context-risk router outputs will be saved to %s', save_dir)
 
     _, summary = train_router(
         model=model,
@@ -92,10 +98,17 @@ def main():
         patience=cli_args.patience,
         learning_rate=cli_args.learning_rate,
         hidden_dim=cli_args.hidden_dim,
+        context_hidden_dim=cli_args.context_hidden_dim,
         dropout=cli_args.dropout,
         minimum_gain=cli_args.minimum_gain,
+        harm_margin=cli_args.harm_margin,
+        harm_averse_weight=cli_args.harm_averse_weight,
+        minimum_switch_precision=cli_args.minimum_switch_precision,
+        harm_risk_weight=cli_args.harm_risk_weight,
+        switch_rate_weight=cli_args.switch_rate_weight,
     )
 
+    logger.info('Selected gate: %s', summary['gate'])
     logger.info('Fusion metrics: %s', summary['fusion_metrics'])
     logger.info('Router metrics: %s', summary['router_metrics'])
     logger.info('Oracle metrics: %s', summary['oracle_metrics'])
