@@ -1,0 +1,82 @@
+{
+  "DRS": [
+    "Local-DS",
+    "Local-DW",
+    "Local-DWS"
+  ],
+  "DWS_risk_margin": [
+    0.02,
+    0.05,
+    0.1
+  ],
+  "DW_tau": [
+    0.02,
+    0.05,
+    0.1,
+    0.2
+  ],
+  "K": [
+    15,
+    30,
+    60
+  ],
+  "common_configuration": {
+    "DRS": "Local-DW",
+    "K": 30,
+    "distance": "standardized_euclidean",
+    "safe_coverage": 0.2,
+    "space": "C",
+    "tau": 0.05,
+    "weighting": "reciprocal_epsilon_1e-6"
+  },
+  "control_seeds": {
+    "decision_randomization": [
+      23421,
+      23422,
+      23423
+    ],
+    "random_same_mode_source": [
+      23401,
+      23402,
+      23403
+    ],
+    "shuffled_content": [
+      23411,
+      23412,
+      23413
+    ]
+  },
+  "distance_families": [
+    "standardized_euclidean",
+    "cosine"
+  ],
+  "distance_weighting": [
+    "reciprocal_epsilon_1e-6",
+    "exponential_query_neighbor_median_bandwidth"
+  ],
+  "hybrid_beta": [
+    0.25,
+    0.5,
+    0.75
+  ],
+  "local_risk_definition": "distance-weighted neighbor absolute error",
+  "outer_search_expansion_forbidden": true,
+  "safe_coverages": [
+    0.1,
+    0.2,
+    0.3,
+    0.5,
+    1.0
+  ],
+  "selection_order": [
+    "select Space/distance/K/weighting by inner-valid local-risk correlation; ranking accuracy is tie-breaker",
+    "select DS/DW/DWS and small tau/margin candidates by inner-valid J",
+    "select safe coverage/absolute estimated-gain threshold by inner-valid J; no-improvement falls back to zero dynamic coverage",
+    "freeze all choices, then transform/predict outer once"
+  ],
+  "spaces": [
+    "C",
+    "D",
+    "H"
+  ]
+}
