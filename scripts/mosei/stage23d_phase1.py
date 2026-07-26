@@ -840,6 +840,7 @@ def evaluate(cli):
     calibration_rows = []
     proxy_rows = []
     sensitivity_rows = []
+    diagnostic_frames = []
     for mode in MODES:
         frame, _ = load_mode(cli.checkpoint_fold, cli.expert_id, mode)
         _, sealed_label_path = label_paths(
@@ -878,6 +879,23 @@ def evaluate(cli):
             <= float(thresholds["uncertainty_bottom30_threshold"])
         )
         confident_wrong = confident & (bad20 == 1)
+        diagnostic = joined[
+            [
+                "sample_id",
+                "video_id",
+                "mode",
+                "R2_expected_abs_error",
+                "R2_q90_abs_error",
+                "R2_P_bad20",
+                "R2_P_confident_wrong",
+            ]
+        ].copy()
+        diagnostic.insert(0, "expert_id", cli.expert_id)
+        diagnostic.insert(0, "checkpoint_fold", cli.checkpoint_fold)
+        diagnostic["actual_abs_error"] = actual
+        diagnostic["bad20"] = bad20
+        diagnostic["confident_wrong"] = confident_wrong.astype(int)
+        diagnostic_frames.append(diagnostic)
         for model in (
             "R0",
             "R1",
@@ -1032,6 +1050,7 @@ def evaluate(cli):
     calibration = pd.DataFrame(calibration_rows)
     proxies = pd.DataFrame(proxy_rows)
     sensitivity = pd.DataFrame(sensitivity_rows)
+    diagnostics = pd.concat(diagnostic_frames, ignore_index=True)
     atomic_tsv(metrics, output_dir / "outer_metrics.tsv")
     atomic_tsv(coverage, output_dir / "risk_coverage.tsv")
     atomic_tsv(calibration, output_dir / "quantile_calibration.tsv")
@@ -1039,6 +1058,8 @@ def evaluate(cli):
     atomic_tsv(
         sensitivity, output_dir / "confident_wrong_sensitivity.tsv"
     )
+    diagnostic_path = output_dir / "outer_diagnostic_ledger.csv.gz"
+    atomic_gzip_csv(diagnostics, diagnostic_path)
     result = {
         "stage": "Stage23D-A one-shot Risk Head outer evaluation",
         "status": "COMPLETED",
@@ -1061,6 +1082,7 @@ def evaluate(cli):
         "confident_wrong_sensitivity_sha256": sha256_file(
             output_dir / "confident_wrong_sensitivity.tsv"
         ),
+        "outer_diagnostic_ledger_sha256": sha256_file(diagnostic_path),
         "outer_evaluation_access_count": 1,
         "official_valid_access_count": 0,
         "locked_test_access_count": 0,
