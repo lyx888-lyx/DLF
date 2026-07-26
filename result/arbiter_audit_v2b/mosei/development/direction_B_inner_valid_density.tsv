@@ -1,0 +1,5 @@
+mode	query_start	queries	mean_nearest_distance	mean_kth_distance	mean_neighbor_sources	available_reference_sources
+LAV	0	861	0.4406031668	0.6353058219	60	980
+LA	0	861	0.4224977195	0.6255530715	60	980
+LV	0	861	0.4210916758	0.6254473329	60	980
+L	0	861	0.3928572237	0.606020689	60	980

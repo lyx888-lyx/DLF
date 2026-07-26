@@ -1,0 +1,7 @@
+{
+  "clearly_above_random": true,
+  "raw_consistency_in_main_method": false,
+  "reason": "Frozen protocol forbids the ablation when fold identity remains clearly above random.",
+  "status": "STOPPED_NOT_ENTERED_INTO_ROUTING",
+  "v2a_fold_identity_AUROC": 0.8101744655
+}

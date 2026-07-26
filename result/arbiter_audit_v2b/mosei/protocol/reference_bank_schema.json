@@ -1,0 +1,24 @@
+{
+  "forbidden_query_fields": [
+    "label",
+    "absolute_error",
+    "squared_error",
+    "regret",
+    "best_expert_indicator",
+    "video_id",
+    "expert_fold",
+    "raw_hierarchical_consistency"
+  ],
+  "query_features": {
+    "C": "32D Direction-specific content PCA plus effective availability; block-wise joint-effective distance",
+    "D": "5 predictions + 5 within-row ranks + committee std/range/polarity; inner-train standardized",
+    "H": "beta*C_distance+(1-beta)*D_distance after inner-train distance-scale normalization"
+  },
+  "risk_fields": [
+    "absolute_error",
+    "squared_error",
+    "regret",
+    "best_expert_indicator"
+  ],
+  "source_rule": "same mode; query source excluded; one nearest clip per reference source"
+}

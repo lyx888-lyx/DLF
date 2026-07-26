@@ -1,0 +1,35 @@
+method_config_id	DRS	tau	margin	inner_valid_J	direction
+Local-DS__tauNone__marginNone	Local-DS			0.5849171788	A
+Local-DW__tau0.02__marginNone	Local-DW	0.02		0.5793802626	A
+Local-DW__tau0.05__marginNone	Local-DW	0.05		0.5785449347	A
+Local-DW__tau0.1__marginNone	Local-DW	0.1		0.5789725654	A
+Local-DW__tau0.2__marginNone	Local-DW	0.2		0.5794091523	A
+Local-DWS__tau0.02__margin0.02	Local-DWS	0.02	0.02	0.5807864408	A
+Local-DWS__tau0.02__margin0.05	Local-DWS	0.02	0.05	0.5795635768	A
+Local-DWS__tau0.02__margin0.1	Local-DWS	0.02	0.1	0.5793937582	A
+Local-DWS__tau0.05__margin0.02	Local-DWS	0.05	0.02	0.580526022	A
+Local-DWS__tau0.05__margin0.05	Local-DWS	0.05	0.05	0.5787177728	A
+Local-DWS__tau0.05__margin0.1	Local-DWS	0.05	0.1	0.5785696627	A
+Local-DWS__tau0.1__margin0.02	Local-DWS	0.1	0.02	0.5804861987	A
+Local-DWS__tau0.1__margin0.05	Local-DWS	0.1	0.05	0.5786380583	A
+Local-DWS__tau0.1__margin0.1	Local-DWS	0.1	0.1	0.578892222	A
+Local-DWS__tau0.2__margin0.02	Local-DWS	0.2	0.02	0.5804743915	A
+Local-DWS__tau0.2__margin0.05	Local-DWS	0.2	0.05	0.5786512263	A
+Local-DWS__tau0.2__margin0.1	Local-DWS	0.2	0.1	0.5791824583	A
+Local-DS__tauNone__marginNone	Local-DS			0.5311587328	B
+Local-DW__tau0.02__marginNone	Local-DW	0.02		0.5262258288	B
+Local-DW__tau0.05__marginNone	Local-DW	0.05		0.5260671829	B
+Local-DW__tau0.1__marginNone	Local-DW	0.1		0.5262237926	B
+Local-DW__tau0.2__marginNone	Local-DW	0.2		0.5264701146	B
+Local-DWS__tau0.02__margin0.02	Local-DWS	0.02	0.02	0.5264303407	B
+Local-DWS__tau0.02__margin0.05	Local-DWS	0.02	0.05	0.5264157214	B
+Local-DWS__tau0.02__margin0.1	Local-DWS	0.02	0.1	0.5262386658	B
+Local-DWS__tau0.05__margin0.02	Local-DWS	0.05	0.02	0.5265275058	B
+Local-DWS__tau0.05__margin0.05	Local-DWS	0.05	0.05	0.5268672127	B
+Local-DWS__tau0.05__margin0.1	Local-DWS	0.05	0.1	0.5262820204	B
+Local-DWS__tau0.1__margin0.02	Local-DWS	0.1	0.02	0.5265820473	B
+Local-DWS__tau0.1__margin0.05	Local-DWS	0.1	0.05	0.5272799702	B
+Local-DWS__tau0.1__margin0.1	Local-DWS	0.1	0.1	0.5266778408	B
+Local-DWS__tau0.2__margin0.02	Local-DWS	0.2	0.02	0.5266278067	B
+Local-DWS__tau0.2__margin0.05	Local-DWS	0.2	0.05	0.5275851168	B
+Local-DWS__tau0.2__margin0.1	Local-DWS	0.2	0.1	0.5270451215	B

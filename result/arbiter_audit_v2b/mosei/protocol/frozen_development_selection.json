@@ -1,0 +1,150 @@
+{
+  "candidate_metrics_sha256": "86dbfbe9eb7e07eaa5064b519ff1f7d64f3efdecf9952498329e0af1bc8fc96c",
+  "common_configuration": {
+    "DRS": "Local-DW",
+    "K": 30,
+    "distance": "standardized_euclidean",
+    "safe_coverage": 0.2,
+    "space": "C",
+    "tau": 0.05,
+    "weighting": "reciprocal_epsilon_1e-6"
+  },
+  "directions": {
+    "A": {
+      "common_configuration": {
+        "DRS": "Local-DW",
+        "K": 30,
+        "distance": "standardized_euclidean",
+        "inner_valid_J": 0.5821097800670738,
+        "safe_coverage": 0.2,
+        "space": "C",
+        "tau": 0.05,
+        "weighting": "reciprocal_epsilon_1e-6"
+      },
+      "development_samples": {
+        "inner_train": 29752,
+        "inner_valid": 4376
+      },
+      "family_best_methods": {
+        "Local-DS": {
+          "DRS": "Local-DS",
+          "inner_valid_J": 0.5849171787944611,
+          "margin": null,
+          "tau": null
+        },
+        "Local-DW": {
+          "DRS": "Local-DW",
+          "inner_valid_J": 0.5785449347312149,
+          "margin": null,
+          "tau": 0.05
+        },
+        "Local-DWS": {
+          "DRS": "Local-DWS",
+          "inner_valid_J": 0.5785696627250438,
+          "margin": 0.1,
+          "tau": 0.05
+        }
+      },
+      "neighbor_ledger_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2b/mosei/development/direction_A_selected_inner_valid_neighbors.csv.gz",
+      "neighbor_ledger_sha256": "a67de0d429f12e06519952364d88641d5cfd1a131126ead605cda311b607241d",
+      "retrieval_stats_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2b/mosei/protocol/direction_A_retrieval_stats.json",
+      "retrieval_stats_sha256": "3cad4d5cf232eab5c004b3eca455325e8c54c3be0e0ee3da5faa3a2449b36d0c",
+      "risk_ledger_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2b/mosei/data/direction_A_expert_risk_ledger.csv.gz",
+      "risk_ledger_sha256": "d490e3b199462ffa431ea26a59862eebe1310f4858a98eb3d367130a4ed47e30",
+      "safety": {
+        "coverage": 0.1,
+        "estimated_gain_threshold": 0.01485855595938701,
+        "inner_valid_J": 0.5782248456475392,
+        "strong_static_inner_valid_J": 0.5812330817750744
+      },
+      "selected_method": {
+        "DRS": "Local-DW",
+        "inner_valid_J": 0.5785449347312149,
+        "margin": null,
+        "method_config_id": "Local-DW__tau0.05__marginNone",
+        "tau": 0.05
+      },
+      "selected_region": {
+        "K": 30,
+        "beta": 0.25,
+        "config_id": "H__cosine__K30__reciprocal_epsilon_1e-6__beta0p25",
+        "distance": "cosine",
+        "space": "H",
+        "weighting": "reciprocal_epsilon_1e-6"
+      },
+      "strong_static": "per_mode_constrained_fixed_stacking"
+    },
+    "B": {
+      "common_configuration": {
+        "DRS": "Local-DW",
+        "K": 30,
+        "distance": "standardized_euclidean",
+        "inner_valid_J": 0.5259201470241763,
+        "safe_coverage": 0.2,
+        "space": "C",
+        "tau": 0.05,
+        "weighting": "reciprocal_epsilon_1e-6"
+      },
+      "development_samples": {
+        "inner_train": 27732,
+        "inner_valid": 3444
+      },
+      "family_best_methods": {
+        "Local-DS": {
+          "DRS": "Local-DS",
+          "inner_valid_J": 0.5311587327774226,
+          "margin": null,
+          "tau": null
+        },
+        "Local-DW": {
+          "DRS": "Local-DW",
+          "inner_valid_J": 0.526067182897588,
+          "margin": null,
+          "tau": 0.05
+        },
+        "Local-DWS": {
+          "DRS": "Local-DWS",
+          "inner_valid_J": 0.5262386658319056,
+          "margin": 0.1,
+          "tau": 0.02
+        }
+      },
+      "neighbor_ledger_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2b/mosei/development/direction_B_selected_inner_valid_neighbors.csv.gz",
+      "neighbor_ledger_sha256": "000e7a8576a49f7b204239134335991c8d5ab11f339f2d14dd88dfb70c188698",
+      "retrieval_stats_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2b/mosei/protocol/direction_B_retrieval_stats.json",
+      "retrieval_stats_sha256": "6151e341ccedf73af8d196390984335a93f115195fab4f7fd8f958dd661176ee",
+      "risk_ledger_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2b/mosei/data/direction_B_expert_risk_ledger.csv.gz",
+      "risk_ledger_sha256": "38ffb937ae43f9d91ed208f043f2742c9bb12de4ea3cf94166921fb82d40c8f4",
+      "safety": {
+        "coverage": 0.5,
+        "estimated_gain_threshold": -0.005052099403020094,
+        "inner_valid_J": 0.5258240562747956,
+        "strong_static_inner_valid_J": 0.5267324869574934
+      },
+      "selected_method": {
+        "DRS": "Local-DW",
+        "inner_valid_J": 0.526067182897588,
+        "margin": null,
+        "method_config_id": "Local-DW__tau0.05__marginNone",
+        "tau": 0.05
+      },
+      "selected_region": {
+        "K": 60,
+        "beta": 0.5,
+        "config_id": "H__standardized_euclidean__K60__reciprocal_epsilon_1e-6__beta0p5",
+        "distance": "standardized_euclidean",
+        "space": "H",
+        "weighting": "reciprocal_epsilon_1e-6"
+      },
+      "strong_static": "per_mode_constrained_fixed_stacking"
+    }
+  },
+  "outer_evaluation_access_count": 0,
+  "outer_evaluation_used": false,
+  "selected_at": "2026-07-26T06:52:04.163339+00:00",
+  "selection_used_roles": [
+    "inner_train",
+    "inner_valid"
+  ],
+  "stage": "Stage23A-v2b frozen development selection"
+}

@@ -1,0 +1,11 @@
+{
+  "direction": "B",
+  "mean_kth_distance": 0.6230817288160324,
+  "mean_nearest_distance": 0.41926244646310806,
+  "neighbor_rows": 206640,
+  "queries": 3444,
+  "role": "inner_valid",
+  "top10_source_share": 0.045402632597754546,
+  "top1_source_share": 0.0058555942702284165,
+  "unique_neighbor_sources": 980
+}

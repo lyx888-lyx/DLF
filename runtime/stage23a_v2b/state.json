@@ -1,12 +1,12 @@
 {
-  "feature_rich_judge_training_authorized": false,
+  "feature_rich_judge_trained": false,
   "locked_test_access_count": 0,
   "official_valid_access_count": 0,
   "outer_evaluation_access_count": 0,
-  "protocol_manifest_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2b/mosei/protocol/frozen_protocol_manifest.json",
-  "protocol_manifest_sha256": "4364139a4aa5986f371b900247d59784fe5da9bd9dbc24233cfcee5fec8e2a86",
+  "selection_manifest_path": "/code/DLF-mosei-arbiter-audit-v1/result/arbiter_audit_v2b/mosei/protocol/frozen_development_selection.json",
+  "selection_manifest_sha256": "6729baa455f42a85803edd548ef131c4091792eb2fcc5f8a30a966018d4e71f6",
   "stage": "Stage23A-v2b",
-  "status": "FROZEN_AUTHORIZED_TRAIN_OOF_LOCAL_AUDIT_ONLY",
-  "student_training_authorized": false,
-  "updated_at": "2026-07-26T06:26:27.980981+00:00"
+  "status": "DEVELOPMENT_SELECTION_FROZEN_OUTER_NOT_ACCESSED",
+  "student_trained": false,
+  "updated_at": "2026-07-26T06:52:04.163812+00:00"
 }
