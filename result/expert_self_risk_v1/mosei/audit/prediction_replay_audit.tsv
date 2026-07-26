@@ -1,0 +1,3 @@
+checkpoint_fold	status	max_abs_diff	mismatch_gt_1e_6	rows	report_path	report_sha256
+0	PASS	5.000000414e-10	0	170640	/code/DLF-mosei-self-risk-audit-v1/result/arbiter_audit_v2/mosei/validation/replay_fold0_report.json	80d6807bda55423813e55926738baf21def7675bd4d9f82e9c64516b3870a8b4
+1	PASS	5.000000414e-10	0	155880	/code/DLF-mosei-self-risk-audit-v1/result/arbiter_audit_v2/mosei/validation/replay_fold1_report.json	d8d4d307fc8f7617f4928ac0b4eb4970b2c31c3993f205540698a6a9ad2e5e99

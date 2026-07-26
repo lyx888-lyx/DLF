@@ -1,0 +1,113 @@
+{
+  "active_heads": {
+    "L": [
+      "output_logit",
+      "logits_c",
+      "logits_l_hetero"
+    ],
+    "LA": [
+      "output_logit",
+      "logits_c",
+      "logits_l_hetero",
+      "logits_a_hetero"
+    ],
+    "LAV": [
+      "output_logit",
+      "logits_c",
+      "logits_l_hetero",
+      "logits_a_hetero",
+      "logits_v_hetero"
+    ],
+    "LV": [
+      "output_logit",
+      "logits_c",
+      "logits_l_hetero",
+      "logits_v_hetero"
+    ]
+  },
+  "base_commit": "99d18cc49c52b799c83a65af2ed308264d8c649c",
+  "branch": "audit/mosei-expert-self-risk-signal-v1",
+  "candidate_table_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/protocol/candidate_table.json",
+  "candidate_table_sha256": "5c34b99394d8e08032ea86ddaf44dc3b712d83375c753daa93b8cd409b287252",
+  "checkpoint_audit_count": 10,
+  "checkpoint_replications": 2,
+  "created_at": "2026-07-26T12:59:55.933984+00:00",
+  "expert_ids": [
+    "uniform_kd_seed1111",
+    "moddrop_seed1111",
+    "moddrop_seed1114",
+    "cfcompat_seed1111",
+    "cfcompat_seed1114"
+  ],
+  "expert_retraining_authorized": false,
+  "expert_selection_authorized": false,
+  "formal_arbiter_training_authorized": false,
+  "frozen_parent_conclusions": {
+    "Stage23A-v2a": "SIGNAL_AUDIT_FAIL",
+    "Stage23A-v2b": "LOCAL_COMPETENCE_WEAK"
+  },
+  "hook_schema_path": "/code/DLF-mosei-self-risk-audit-v1/result/expert_self_risk_v1/mosei/protocol/hook_schema.json",
+  "hook_schema_sha256": "2b7e593e3b0e14219f2e93e222c335e646dd607dd7fc0d19a19f610d8dfa4743",
+  "internal_state_extraction_authorized": true,
+  "legal_submodes": {
+    "L": [
+      "L"
+    ],
+    "LA": [
+      "LA",
+      "L"
+    ],
+    "LAV": [
+      "LAV",
+      "LA",
+      "LV",
+      "L"
+    ],
+    "LV": [
+      "LV",
+      "L"
+    ]
+  },
+  "limited_perturbation_probe_authorized": "conditional",
+  "locked_test_access_count": 0,
+  "official_valid_access_count": 0,
+  "official_valid_authorized": false,
+  "outer_access_count_per_risk_head": 0,
+  "phase1_gate": {
+    "R2_beats_R1": true,
+    "R2_beats_strongest_shuffle": true,
+    "bad20_mean_auroc": 0.63,
+    "confident_wrong_mean_auroc": 0.63,
+    "expert_configs_positive_both_replications": "at least 4/5",
+    "mean_error_spearman": 0.25,
+    "missing_modes_positive": "at least 2/3",
+    "not_mode_length_prediction_only": true,
+    "risk_coverage_monotonic": true,
+    "worst_checkpoint_fold_mean_spearman": 0.15
+  },
+  "possible_conclusions": [
+    "SELF_RISK_SIGNAL_PASS",
+    "SELF_RISK_SIGNAL_WEAK",
+    "SELF_RISK_SIGNAL_FAIL",
+    "READY_WAITING_FOR_FREE_GPU"
+  ],
+  "prior_frozen_replay_gate": {
+    "max_abs_diff": 5.000000413701855e-10,
+    "status": "PASS",
+    "threshold": 1e-06
+  },
+  "sample_split_sha256": "1cde51ede2d0b2fd70a80378e09f4de714b2a4472c2edb1661df71e7d0aabff0",
+  "self_risk_signal_audit_authorized": true,
+  "source_split_seed": 23170,
+  "source_split_sha256": "cf5981550d48323b5ae8cd1684c363a67e0012961161ab091b5b4bba872e0490",
+  "stage": "Stage23D-A Expert Self-Risk Signal Audit",
+  "stage23c_conclusion": "NOT_FROZEN_NOT_USED",
+  "stage23c_head_at_freeze": "5319cad7fe5fa518f22dbee6c9159eaf723a4e08",
+  "stage23c_main_worktree": "/code/DLF-mosei-arbiter-audit-v1",
+  "stage23c_modification_authorized": false,
+  "stage23c_modification_count": 0,
+  "static_feature_probe_authorized": true,
+  "status": "FROZEN_READY_FOR_CPU_IMPLEMENTATION_GPU_EXTRACTION_LOCKED",
+  "student_training_authorized": false,
+  "test_authorized": false
+}

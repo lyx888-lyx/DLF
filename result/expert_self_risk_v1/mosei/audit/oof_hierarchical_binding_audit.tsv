@@ -1,0 +1,3 @@
+checkpoint_fold	oof_rows	hierarchical_rows	joined_rows	duplicates	missing	max_abs_oof_hierarchical_diff	binding_pass
+0	170640	170640	170640	0	0	0	True
+1	155880	155880	155880	0	0	0	True

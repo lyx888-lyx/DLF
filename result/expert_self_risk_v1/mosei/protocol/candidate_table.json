@@ -1,0 +1,61 @@
+{
+  "bad10": "inner-train expert/checkpoint/mode abs_error top 10%",
+  "bad20": "inner-train expert/checkpoint/mode abs_error top 20%",
+  "confident": "fixed raw uncertainty inner-train bottom 30%",
+  "confident_wrong": "confident AND bad20",
+  "fixed_bad_error_threshold": 1.0,
+  "logistic_C": [
+    0.1,
+    1.0,
+    10.0
+  ],
+  "negative_controls": [
+    "N0 shuffled internal state, three seeds",
+    "N1 matched Gaussian",
+    "N2 length/mask only",
+    "N3 output-only",
+    "N4 checkpoint identity scalar audit",
+    "N5 prediction magnitude/sign/mode prior"
+  ],
+  "nonlinear_probe": {
+    "algorithm": "HistGradientBoosting",
+    "learning_rate": 0.05,
+    "max_depth": 3,
+    "max_iter": 100
+  },
+  "outer_selection_forbidden": true,
+  "pca_dimensions": [
+    16,
+    32,
+    64
+  ],
+  "phase1_models": [
+    "R0",
+    "R1",
+    "R2"
+  ],
+  "raw_uncertainty": "mean of inner-train standardized active_head_std, submode_prediction_variance, hidden_centroid_distance",
+  "ridge_alpha": [
+    0.1,
+    1.0,
+    10.0
+  ],
+  "risk_models": {
+    "R0": "global and per-mode inner-train priors",
+    "R1": "A0 output-only Ridge/LogisticRegression",
+    "R2": "A0+A1+A2+A3+A4 Ridge/LogisticRegression and one fixed HGB",
+    "R3": "R2+A5; unauthorized until Phase-1 WEAK/PASS"
+  },
+  "shuffle_seeds": [
+    23071,
+    23072,
+    23073
+  ],
+  "source_split_ratio": [
+    0.7,
+    0.15,
+    0.15
+  ],
+  "split_seed": 23170,
+  "stage": "Stage23D-A Phase-1 preregistered candidates"
+}

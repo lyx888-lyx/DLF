@@ -1,0 +1,25 @@
+{
+  "existing_forward_outputs": [
+    "fusion_input",
+    "specific_hidden_l/a/v",
+    "c_l/c_a/c_v",
+    "c_l_sim/c_a_sim/c_v_sim",
+    "lfa_l/lfa_a/lfa_v",
+    "lfa_cross_a/lfa_cross_v",
+    "reconstruction tensors"
+  ],
+  "inactive_specific_heads_are_omitted": true,
+  "mechanism": "read-only forward_pre_hook; no model source modification",
+  "modules": {
+    "out_layer": "final fused representation used by final scalar head",
+    "out_layer_a_high": "audio-specific representation when active",
+    "out_layer_c": "shared fused representation",
+    "out_layer_l_high": "language-specific representation",
+    "out_layer_v_high": "vision-specific representation when active"
+  },
+  "not_exposed_not_fabricated": [
+    "modality gate weights",
+    "raw attention matrices",
+    "explicit fusion coefficients"
+  ]
+}
