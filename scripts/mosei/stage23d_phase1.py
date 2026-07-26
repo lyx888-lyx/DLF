@@ -389,6 +389,34 @@ def predict_probability(bundle, values):
     return model.predict_proba(transformed)[:, 1]
 
 
+def estimator_parameter_count(bundle_or_model):
+    model = (
+        bundle_or_model[2]
+        if isinstance(bundle_or_model, tuple)
+        else bundle_or_model
+    )
+    if isinstance(model, (float, np.floating)):
+        return 1
+    if hasattr(model, "coef_"):
+        return int(np.asarray(model.coef_).size + np.asarray(model.intercept_).size)
+    if hasattr(model, "estimators_"):
+        return int(
+            sum(
+                estimator.tree_.node_count
+                for estimator in np.asarray(model.estimators_).reshape(-1)
+            )
+        )
+    if hasattr(model, "_predictors"):
+        return int(
+            sum(
+                predictor.nodes.size
+                for iteration in model._predictors
+                for predictor in iteration
+            )
+        )
+    return 0
+
+
 def cross_source_shuffle(values, sources, seed):
     rng = np.random.RandomState(int(seed))
     unique = np.unique(sources)
@@ -827,6 +855,19 @@ def build_mode_selection(fold, expert, mode, output_dir):
         },
         bundle_path,
     )
+    r2_parameter_count = sum(
+        estimator_parameter_count(model)
+        for model in (
+            r2_regression,
+            r2_bad,
+            r2_cw,
+            *quantiles.values(),
+        )
+    )
+    r1_parameter_count = sum(
+        estimator_parameter_count(model)
+        for model in (r1_regression, r1_bad, r1_cw)
+    )
     return {
         "mode": mode,
         "selected_pca_dimension": chosen_dimension,
@@ -844,6 +885,8 @@ def build_mode_selection(fold, expert, mode, output_dir):
         "frozen_static_feature_contains_label": False,
         "bundle_path": str(bundle_path.resolve()),
         "bundle_sha256": sha256_file(bundle_path),
+        "R1_primary_probe_parameter_count": r1_parameter_count,
+        "R2_primary_probe_parameter_count": r2_parameter_count,
     }
 
 

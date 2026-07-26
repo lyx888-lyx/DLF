@@ -154,6 +154,46 @@ def cross_expert_diagnostic():
     return pd.DataFrame(rows)
 
 
+def probe_capacity_audit():
+    checkpoint = pd.read_csv(OUT / "audit" / "checkpoint_audit.tsv", sep="\t")
+    checkpoint_bytes = checkpoint.set_index(
+        ["checkpoint_fold", "expert_id"]
+    )["checkpoint_bytes"].to_dict()
+    rows = []
+    for fold in FOLDS:
+        for expert in EXPERTS:
+            selection = json.loads(
+                (
+                    phase_dir(fold, expert)
+                    / "frozen_inner_valid_selection.json"
+                ).read_text()
+            )
+            for mode, payload in selection["modes"].items():
+                bundle = Path(payload["bundle_path"])
+                rows.append(
+                    {
+                        "checkpoint_fold": fold,
+                        "expert_id": expert,
+                        "mode": mode,
+                        "R1_primary_probe_parameter_count": payload[
+                            "R1_primary_probe_parameter_count"
+                        ],
+                        "R2_primary_probe_parameter_count": payload[
+                            "R2_primary_probe_parameter_count"
+                        ],
+                        "probe_bundle_bytes": bundle.stat().st_size,
+                        "expert_checkpoint_bytes": checkpoint_bytes[
+                            (fold, expert)
+                        ],
+                        "bundle_to_checkpoint_byte_ratio": (
+                            bundle.stat().st_size
+                            / checkpoint_bytes[(fold, expert)]
+                        ),
+                    }
+                )
+    return pd.DataFrame(rows)
+
+
 def model_mean(metrics, model, metric):
     values = pd.to_numeric(
         metrics.loc[metrics["model"] == model, metric], errors="coerce"
@@ -457,6 +497,7 @@ def main():
     sensitivity = load_all("confident_wrong_sensitivity.tsv")
     identity = checkpoint_identity_audit()
     comparable = cross_expert_diagnostic()
+    capacity = probe_capacity_audit()
     gate, coverage_detail, details = gate_table(metrics, coverage)
     ANALYSIS.mkdir(parents=True, exist_ok=True)
     FINAL.mkdir(parents=True, exist_ok=True)
@@ -504,6 +545,7 @@ def main():
     atomic_tsv(sensitivity, ANALYSIS / "confident_wrong_analysis.tsv")
     atomic_tsv(identity, ANALYSIS / "checkpoint_identity_audit.tsv")
     atomic_tsv(comparable, ANALYSIS / "cross_expert_comparability.tsv")
+    atomic_tsv(capacity, ANALYSIS / "probe_capacity_audit.tsv")
     atomic_tsv(gate, ANALYSIS / "phase1_gate.tsv")
     atomic_json(ANALYSIS / "phase1_gate.json", details)
     r2 = r2_rows
