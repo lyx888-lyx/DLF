@@ -143,6 +143,7 @@ def run(command):
 
 def main():
     wait_for_extraction()
+    wait_for_safe_start()
     validation_path = OUT / "audit" / "feature_extraction_audit.json"
     validation_ok = False
     if validation_path.exists():
@@ -166,7 +167,6 @@ def main():
                 ),
             ]
         )
-    wait_for_safe_start()
     for fold in FOLDS:
         for expert in EXPERTS:
             key = f"fold{fold}/{expert}"
