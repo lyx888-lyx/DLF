@@ -71,6 +71,7 @@ def checkpoint_identity_audit():
     excluded = {
         "train_index",
         "checkpoint_fold",
+        "identity",
         "prediction",
     }
     for expert in EXPERTS:
@@ -340,7 +341,7 @@ def report_markdown(details, r2, proxies, identity, comparable):
         proxies.groupby("proxy")["Error_Spearman"].mean().sort_values(ascending=False)
     )
     best_expert, worst_expert = expert.index[0], expert.index[-1]
-    strongest_mode = mode.index[0]
+    strongest_mode = mode.loc[mode.index.isin(MISSING_MODES)].index[0]
     top_proxy = proxy.index[0]
     conclusion = {
         "PASS": "SELF_RISK_SIGNAL_PASS",
