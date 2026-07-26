@@ -47,7 +47,8 @@ def main():
     )
     expert_pool = pd.read_csv(expert_pool_path)
     committee = expert_pool.loc[
-        expert_pool["expert_id"].isin(EXPERTS), "expert_id"
+        expert_pool["committee_member"].astype(str).str.lower() == "true",
+        "component",
     ].drop_duplicates()
     check(
         "exact_five_frozen_experts",

@@ -968,6 +968,15 @@ def determine_conclusion(geometry, consistency, reversal, increments, probe_b, p
         and no_dominant_fold_fingerprint
     ):
         status = "SIGNAL_AUDIT_PASS"
+    elif (
+        (not content_helpful and not control_beaten)
+        or (not nonzero_transfer and not no_dominant_fold_fingerprint)
+    ):
+        # The written protocol classifies aligned content that is equal to or
+        # worse than shuffled/noise, fold-identity dominance, or absent/reverse
+        # held-out regret/ranking as FAIL.  Broad Oracle geometry alone cannot
+        # soften those negative-control failures.
+        status = "SIGNAL_AUDIT_FAIL"
     elif broad_geometry and (
         consistency_positive or content_helpful or control_beaten
     ):
