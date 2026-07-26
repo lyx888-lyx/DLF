@@ -1117,6 +1117,7 @@ def evaluate(cli):
         "checkpoint_fold": cli.checkpoint_fold,
         "expert_id": cli.expert_id,
         "selection_sha256": sha256_file(selection_path),
+        "outer_access_lock_sha256": sha256_file(access_lock_path),
         "metrics_path": str((output_dir / "outer_metrics.tsv").resolve()),
         "metrics_sha256": sha256_file(output_dir / "outer_metrics.tsv"),
         "coverage_path": str((output_dir / "risk_coverage.tsv").resolve()),

@@ -297,6 +297,12 @@ def submode_features(query_mode, position, values):
 
 def main():
     cli = parse_args()
+    torch.set_num_threads(1)
+    try:
+        torch.set_num_interop_threads(1)
+    except RuntimeError:
+        # Safe when a hosting process has already initialized the interop pool.
+        pass
     protocol_path = OUT / "protocol" / "frozen_protocol_manifest.json"
     protocol = json.loads(protocol_path.read_text(encoding="utf-8"))
     if not protocol["internal_state_extraction_authorized"]:
