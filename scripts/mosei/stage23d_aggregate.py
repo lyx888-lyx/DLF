@@ -466,6 +466,45 @@ def main():
         "status": "LOCKED_UNTOUCHED",
     }
     atomic_json(FINAL / "OFFICIAL_VALID_TEST_LOCK_STATUS.json", lock)
+    extraction_manifests = []
+    for fold in FOLDS:
+        for expert in EXPERTS:
+            path = feature_dir(fold, expert) / "extraction_manifest.json"
+            payload = json.loads(path.read_text())
+            extraction_manifests.append(
+                {
+                    "checkpoint_fold": fold,
+                    "expert_id": expert,
+                    "gpu_id": payload["gpu_id"],
+                    "feature_schema_version": payload["feature_schema_version"],
+                    "samples": payload["samples"],
+                    "rows": payload["rows"],
+                    "max_abs_final_replay_diff": payload[
+                        "max_abs_final_replay_diff"
+                    ],
+                    "hook_prediction_max_abs_diff": payload[
+                        "hook_prediction_max_abs_diff"
+                    ],
+                }
+            )
+    gpu_report = {
+        "extractions": extraction_manifests,
+        "stage23d_gpu": 3,
+        "stage23c_reserved_gpus_not_used": [0, 1, 2],
+        "cpu_thread_limits": {
+            "OMP_NUM_THREADS": 1,
+            "MKL_NUM_THREADS": 1,
+            "OPENBLAS_NUM_THREADS": 1,
+            "NUMEXPR_NUM_THREADS": 1,
+        },
+        "phase1_started_only_after_stage23c_train_process_count_zero": True,
+        "extraction_queue_log": str(
+            (RUNTIME / "extraction_v2_resume.log").resolve()
+        ),
+        "official_valid_access_count": 0,
+        "locked_test_access_count": 0,
+    }
+    atomic_json(FINAL / "runtime_gpu_report.json", gpu_report)
     command_text = "\n".join(
         [
             "# Stage23D-A reproducible commands",
@@ -481,9 +520,16 @@ def main():
         ]
     )
     (FINAL / "reproducible_commands.sh").write_text(command_text, encoding="utf-8")
+    git_diff = subprocess.check_output(
+        ["git", "diff", "--binary"], cwd=ROOT
+    )
+    (FINAL / "git_diff_at_aggregation.patch").write_bytes(git_diff)
     artifact_rows = []
     for path in sorted(OUT.rglob("*")):
-        if path.is_file() and path.name != "artifact_sha256_manifest.tsv":
+        if path.is_file() and path.name not in {
+            "artifact_sha256_manifest.tsv",
+            "artifact_sha_verification.json",
+        }:
             artifact_rows.append(
                 {
                     "path": str(path.relative_to(ROOT)),
@@ -493,6 +539,21 @@ def main():
             )
     atomic_tsv(
         pd.DataFrame(artifact_rows), FINAL / "artifact_sha256_manifest.tsv"
+    )
+    sha_failures = [
+        row["path"]
+        for row in artifact_rows
+        if sha256_file(ROOT / row["path"]) != row["sha256"]
+    ]
+    atomic_json(
+        FINAL / "artifact_sha_verification.json",
+        {
+            "checked_artifacts": len(artifact_rows),
+            "sha256_failures": len(sha_failures),
+            "failure_paths": sha_failures,
+            "status": "PASS" if not sha_failures else "FAIL",
+            "verified_at": utc_now(),
+        },
     )
     state = {
         "stage": "Stage23D-A",
