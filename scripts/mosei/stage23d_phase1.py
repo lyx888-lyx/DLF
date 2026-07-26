@@ -7,6 +7,7 @@ import argparse
 import gzip
 import json
 import os
+from functools import lru_cache
 from pathlib import Path
 
 import joblib
@@ -218,6 +219,31 @@ def label_paths(fold, expert, mode):
         directory / f"development_risk_labels_{mode}.csv.gz",
         directory / "sealed_outer_labels" / f"outer_labels_{mode}.csv.gz",
     )
+
+
+@lru_cache(maxsize=None)
+def global_train_abs_error_prior(fold, expert):
+    errors = []
+    for mode in MODES:
+        scalar_path, _ = feature_paths(fold, expert, mode)
+        development_path, _ = label_paths(fold, expert, mode)
+        scalar = pd.read_csv(
+            scalar_path,
+            usecols=["sample_id", "self_risk_role", "prediction"],
+            dtype={"sample_id": str},
+        )
+        labels = pd.read_csv(
+            development_path,
+            usecols=["sample_id", "label"],
+            dtype={"sample_id": str},
+        )
+        train = scalar.loc[scalar["self_risk_role"] == "inner_train"].merge(
+            labels, on="sample_id", validate="one_to_one"
+        )
+        errors.extend(np.abs(train["label"] - train["prediction"]).tolist())
+    if not errors:
+        raise RuntimeError("Global R0 prior has no inner-train errors")
+    return float(np.mean(errors))
 
 
 def geometry_features(raw, sources, train_mask, pca_dimension):
@@ -689,8 +715,11 @@ def build_mode_selection(fold, expert, mode, output_dir):
     ):
         if proxy in chosen["features"]:
             prediction[f"proxy__{proxy}"] = chosen["features"][proxy].to_numpy()
-    prediction["R0_expected_abs_error"] = float(
+    prediction["R0_mode_expected_abs_error"] = float(
         targets.loc[train_mask, "abs_error"].mean()
+    )
+    prediction["R0_global_expected_abs_error"] = global_train_abs_error_prior(
+        fold, expert
     )
     for name, values, regression, bad_model, cw_model in (
         ("R1", r1, r1_regression, r1_bad, r1_cw),
@@ -983,7 +1012,8 @@ def evaluate(cli):
         diagnostic["confident_wrong"] = confident_wrong.astype(int)
         diagnostic_frames.append(diagnostic)
         for model in (
-            "R0",
+            "R0_global",
+            "R0_mode",
             "R1",
             "R2",
             "N3_output_only",

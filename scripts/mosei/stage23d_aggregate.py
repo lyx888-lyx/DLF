@@ -491,7 +491,9 @@ def main():
         ANALYSIS / "per_mode_metrics.tsv",
     )
     atomic_tsv(
-        metrics.loc[~metrics["model"].isin(["R0", "R1", "R2"])],
+        metrics.loc[
+            ~metrics["model"].isin(["R0_global", "R0_mode", "R1", "R2"])
+        ],
         ANALYSIS / "negative_controls.tsv",
     )
     atomic_tsv(coverage, ANALYSIS / "risk_coverage_curves.tsv")
