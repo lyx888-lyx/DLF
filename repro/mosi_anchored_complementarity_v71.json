@@ -1,0 +1,66 @@
+{
+  "status": "frozen_reference",
+  "method": "anchored_complementarity_shrinkage_v7_1",
+  "dataset": "mosi",
+  "seed": 1111,
+  "source_branch": "innovation/complementarity-preserving-v7.1",
+  "source_commit": "d22a22013857287fb7825eec5bca7670bd99883f",
+  "teacher_family": "CFCompatKD best-valid, seeds 1111-1115",
+  "teacher_paths": [
+    "/code/DLF/pt/missing_baseline/cf_compat_kd_v1/DLF_mosi_seed1111_best_valid.pth",
+    "/code/DLF/pt/missing_baseline/cf_compat_kd_v1/benchmark_multiseed/seed1112/DLF_mosi_seed1112_best_valid.pth",
+    "/code/DLF/pt/missing_baseline/cf_compat_kd_v1/benchmark_multiseed/seed1113/DLF_mosi_seed1113_best_valid.pth",
+    "/code/DLF/pt/missing_baseline/cf_compat_kd_v1/benchmark_multiseed/seed1114/DLF_mosi_seed1114_best_valid.pth",
+    "/code/DLF/pt/missing_baseline/cf_compat_kd_v1/benchmark_multiseed/seed1115/DLF_mosi_seed1115_best_valid.pth"
+  ],
+  "base_teacher_index": 3,
+  "global_simplex_weights": [
+    0.2879529595375061,
+    0.003656679065898061,
+    0.07590345293283463,
+    0.21372200548648834,
+    0.4187648594379425
+  ],
+  "valid_selected_hybrid": {
+    "committee": "region_simplex",
+    "beta": 0.5,
+    "valid_mae": 0.6593225598335266,
+    "valid_objective": 0.6613312934339046
+  },
+  "test_metrics": {
+    "anchor": {
+      "MAE": 0.7097,
+      "Corr": 0.7832,
+      "acc_2": 0.8445,
+      "F1_score": 0.8438
+    },
+    "uniform_pe5": {
+      "MAE": 0.7049,
+      "Corr": 0.7970,
+      "acc_2": 0.8399,
+      "F1_score": 0.8395
+    },
+    "global_simplex": {
+      "MAE": 0.7019,
+      "Corr": 0.7975,
+      "acc_2": 0.8521,
+      "F1_score": 0.8514
+    },
+    "region_simplex": {
+      "MAE": 0.7017,
+      "Corr": 0.7976,
+      "acc_2": 0.8537,
+      "F1_score": 0.8530
+    },
+    "valid_selected_hybrid": {
+      "MAE": 0.6995,
+      "Corr": 0.7942,
+      "acc_2": 0.8491,
+      "F1_score": 0.8484,
+      "acc_7": 0.4781,
+      "acc_5": 0.5394
+    }
+  },
+  "interpretation": "The deployable gain comes primarily from robust committee complementarity plus conservative shrinkage toward the best validation-selected anchor. The standalone distilled student improved only marginally and is not the main claimed result.",
+  "expected_output_directory": "result/complementarity_v71/mosi/seed_1111"
+}
