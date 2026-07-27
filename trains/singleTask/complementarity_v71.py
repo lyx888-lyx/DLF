@@ -118,7 +118,7 @@ def _fit_global_weights(
             weights
             * (weights.clamp_min(1e-8) / uniform).log()
         ).sum()
-        objective = overall + 0.30 * stability + 0.01 * kl
+        objective = overall + 0.35 * stability + 0.01 * kl
         optimizer.zero_grad()
         objective.backward()
         optimizer.step()
@@ -173,7 +173,7 @@ def _fit_region_weights(
         smoothness = (weights[1:] - weights[:-1]).square().mean()
         objective = (
             overall
-            + 0.30 * stability
+            + 0.35 * stability
             + float(regularization) * kl
             + 0.05 * smoothness
         )
