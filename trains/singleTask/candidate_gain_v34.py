@@ -229,8 +229,12 @@ def train_gain_model(
 ):
     features = build_candidate_features(train_cache, specialist_residuals, ordinal_output)
     targets = candidate_gain_targets(train_cache, specialist_residuals)
-    benefit_pos_weight = _positive_weights(targets['benefit']).to(device)
-    harm_pos_weight = _positive_weights(targets['severe_harm']).to(device)
+    benefit_pos_weight = _positive_weights(
+        targets['benefit'][train_indices]
+    ).to(device)
+    harm_pos_weight = _positive_weights(
+        targets['severe_harm'][train_indices]
+    ).to(device)
     model = CandidateGainNet(
         features.size(1), hidden_dim, candidate_hidden_dim, dropout, max_gain
     ).to(device)
