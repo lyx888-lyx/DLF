@@ -52,6 +52,10 @@ class UnimodalExpertV8(nn.Module):
         self.batch_key = _MODALITY_TO_KEY[modality]
         self.hidden_dim = int(hidden_dim)
         self.num_layers = int(num_layers)
+        self.num_heads = int(num_heads)
+        self.ffn_multiplier = int(ffn_multiplier)
+        self.dropout = float(dropout)
+        self.max_length = int(max_length)
         self.layer_fusion = layer_fusion
         self.finetune_text_encoder = bool(finetune_text_encoder)
         self.use_bert = bool(modality == "text" and args.use_bert)
@@ -77,9 +81,9 @@ class UnimodalExpertV8(nn.Module):
             nn.Dropout(dropout),
         )
         self.position_embedding = nn.Parameter(
-            torch.zeros(1, int(max_length), hidden_dim)
+            torch.zeros(1, self.max_length, hidden_dim)
         )
-        nn.init.trunc_normal_(self.position_embedding, std=0.02)
+        nn.init.normal_(self.position_embedding, mean=0.0, std=0.02)
 
         self.layers = nn.ModuleList([
             nn.TransformerEncoderLayer(
@@ -125,6 +129,21 @@ class UnimodalExpertV8(nn.Module):
         self.register_buffer("normalizer_std", torch.ones(input_dim))
         self.register_buffer("normalizer_enabled", torch.tensor(False))
         self.register_buffer("error_scale", torch.tensor(1.0))
+
+    def model_profile(self) -> Dict[str, object]:
+        return {
+            "modality": self.modality,
+            "input_dim": self.input_dim,
+            "hidden_dim": self.hidden_dim,
+            "num_layers": self.num_layers,
+            "num_heads": self.num_heads,
+            "ffn_multiplier": self.ffn_multiplier,
+            "dropout": self.dropout,
+            "max_length": self.max_length,
+            "layer_fusion": self.layer_fusion,
+            "use_bert": self.use_bert,
+            "finetune_text_encoder": self.finetune_text_encoder,
+        }
 
     def set_normalizer(
         self,
@@ -183,6 +202,10 @@ class UnimodalExpertV8(nn.Module):
                 sequence - self.normalizer_mean.view(1, 1, -1)
             ) / self.normalizer_std.view(1, 1, -1)
         sequence = sequence.masked_fill(~effective_mask.unsqueeze(-1), 0.0)
+        if all_missing.any():
+            # Keep fully missing samples as a deterministic zero token instead of
+            # the normalized value of zero, which would encode train means.
+            sequence[all_missing] = 0.0
         return sequence, effective_mask, all_missing
 
     @staticmethod
