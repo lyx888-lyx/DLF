@@ -1,295 +1,154 @@
-"""Train independent text, audio and vision experts for MOSI/MOSEI V8."""
-
+"""Train safe independent text/audio/vision experts for V8."""
 from __future__ import annotations
 
-import argparse
-import json
-import logging
+import argparse, json, logging
 from pathlib import Path
-
 import pandas as pd
 import torch
+from torch.utils.data import DataLoader
 
 from config import get_config_regression
 from data_loader import MMDataLoader
 from trains.singleTask.model.UnimodalExpertV8 import UnimodalExpertV8
-from trains.singleTask.unimodal_expert_system_v8 import (
-    UnimodalExpertTrainerV8,
-    dataset_diagnostics,
-    fit_train_normalizer,
-)
+from trains.singleTask.unimodal_expert_system_v8 import dataset_diagnostics, fit_train_normalizer
+from trains.singleTask.unimodal_expert_system_v8_safe import SafeUnimodalExpertTrainerV8
 from trains.utils import MetricsTop
 from utils import assign_gpu, setup_seed
 
-
 LOGGER = logging.getLogger("MMSA")
-VALID_MODALITIES = ("text", "audio", "vision")
+MODALITIES = ("text", "audio", "vision")
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description=(
-            "Train stable single-modality experts with prediction and explicit "
-            "sample-error heads. Existing DLF/V7 code and checkpoints are not modified."
-        )
-    )
-    parser.add_argument("--dataset", choices=["mosi", "mosei"], default="mosi")
-    parser.add_argument("--gpu", type=int, default=0)
-    parser.add_argument("--config", type=str, default="./config/config.json")
-    parser.add_argument(
-        "--save-root",
-        type=str,
-        default="./result/unimodal_experts_v8",
-    )
-    parser.add_argument(
-        "--modalities",
-        nargs="+",
-        default=list(VALID_MODALITIES),
-        choices=list(VALID_MODALITIES),
-    )
-    parser.add_argument("--seeds", nargs="+", type=int, default=[1111])
-    parser.add_argument("--batch-size", type=int, default=32)
-    parser.add_argument("--num-workers", type=int, default=1)
-
-    parser.add_argument("--text-hidden-dim", type=int, default=128)
-    parser.add_argument("--audio-hidden-dim", type=int, default=96)
-    parser.add_argument("--vision-hidden-dim", type=int, default=96)
-    parser.add_argument("--text-layers", type=int, default=3)
-    parser.add_argument("--audio-layers", type=int, default=2)
-    parser.add_argument("--vision-layers", type=int, default=2)
-    parser.add_argument("--num-heads", type=int, default=4)
-    parser.add_argument("--ffn-multiplier", type=int, default=4)
-    parser.add_argument("--text-dropout", type=float, default=0.22)
-    parser.add_argument("--audio-dropout", type=float, default=0.35)
-    parser.add_argument("--vision-dropout", type=float, default=0.35)
-    parser.add_argument(
-        "--layer-fusion",
-        choices=["final", "mid_last"],
-        default="final",
-        help="E0=final is the default; E1=mid_last is a separate ablation.",
-    )
-    parser.add_argument(
-        "--freeze-text-encoder",
-        action="store_true",
-        help="Keep BERT frozen. By default BERT is fine-tuned with a smaller LR.",
-    )
-
-    parser.add_argument("--prediction-epochs-text", type=int, default=15)
-    parser.add_argument("--prediction-epochs-av", type=int, default=20)
-    parser.add_argument("--uncertainty-epochs", type=int, default=6)
-    parser.add_argument("--joint-epochs", type=int, default=6)
-    parser.add_argument("--prediction-patience-text", type=int, default=6)
-    parser.add_argument("--prediction-patience-av", type=int, default=8)
-    parser.add_argument("--joint-patience", type=int, default=4)
-
-    parser.add_argument("--learning-rate", type=float, default=1e-4)
-    parser.add_argument("--text-learning-rate", type=float, default=2e-5)
-    parser.add_argument("--uncertainty-learning-rate", type=float, default=3e-4)
-    parser.add_argument("--weight-decay", type=float, default=1e-2)
-    parser.add_argument("--uncertainty-weight", type=float, default=0.10)
-    parser.add_argument("--grad-clip", type=float, default=1.0)
-    parser.add_argument("--max-prediction-degradation", type=float, default=0.005)
-    parser.add_argument("--max-corr-degradation", type=float, default=0.005)
-    return parser.parse_args()
+    p = argparse.ArgumentParser()
+    p.add_argument("--dataset", choices=["mosi", "mosei"], default="mosi")
+    p.add_argument("--gpu", type=int, default=0)
+    p.add_argument("--config", default="./config/config.json")
+    p.add_argument("--save-root", default="./result/unimodal_experts_v8")
+    p.add_argument("--modalities", nargs="+", choices=MODALITIES, default=list(MODALITIES))
+    p.add_argument("--seeds", nargs="+", type=int, default=[1111])
+    p.add_argument("--batch-size", type=int, default=16)
+    p.add_argument("--num-workers", type=int, default=1)
+    p.add_argument("--text-hidden-dim", type=int, default=256)
+    p.add_argument("--audio-hidden-dim", type=int, default=96)
+    p.add_argument("--vision-hidden-dim", type=int, default=96)
+    p.add_argument("--text-layers", type=int, default=0)
+    p.add_argument("--audio-layers", type=int, default=2)
+    p.add_argument("--vision-layers", type=int, default=2)
+    p.add_argument("--num-heads", type=int, default=4)
+    p.add_argument("--ffn-multiplier", type=int, default=4)
+    p.add_argument("--text-dropout", type=float, default=.20)
+    p.add_argument("--audio-dropout", type=float, default=.35)
+    p.add_argument("--vision-dropout", type=float, default=.35)
+    p.add_argument("--text-pooling", choices=["cls", "mean"], default="cls")
+    p.add_argument("--layer-fusion", choices=["final", "mid_last"], default="final")
+    p.add_argument("--freeze-text-encoder", action="store_true")
+    p.add_argument("--prediction-epochs-text", type=int, default=20)
+    p.add_argument("--prediction-epochs-av", type=int, default=20)
+    p.add_argument("--uncertainty-epochs", type=int, default=8)
+    p.add_argument("--joint-epochs", type=int, default=0)
+    p.add_argument("--prediction-patience-text", type=int, default=8)
+    p.add_argument("--prediction-patience-av", type=int, default=8)
+    p.add_argument("--joint-patience", type=int, default=3)
+    p.add_argument("--joint-mode", choices=["disabled", "detached", "shared"], default="disabled")
+    p.add_argument("--learning-rate", type=float, default=1e-4)
+    p.add_argument("--text-learning-rate", type=float, default=1e-5)
+    p.add_argument("--uncertainty-learning-rate", type=float, default=3e-4)
+    p.add_argument("--weight-decay", type=float, default=1e-2)
+    p.add_argument("--uncertainty-weight", type=float, default=.02)
+    p.add_argument("--grad-clip", type=float, default=1.0)
+    p.add_argument("--prediction-loss-text", choices=["mae", "mse", "huber"], default="mae")
+    p.add_argument("--prediction-loss-av", choices=["mae", "mse", "huber"], default="mse")
+    p.add_argument("--max-prediction-degradation", type=float, default=.005)
+    p.add_argument("--max-corr-degradation", type=float, default=.005)
+    return p.parse_args()
 
 
-def _profile(cli, modality):
+def profile(c, modality):
     if modality == "text":
-        return {
-            "hidden_dim": cli.text_hidden_dim,
-            "num_layers": cli.text_layers,
-            "dropout": cli.text_dropout,
-            "prediction_epochs": cli.prediction_epochs_text,
-            "prediction_patience": cli.prediction_patience_text,
-        }
-    if modality == "audio":
-        return {
-            "hidden_dim": cli.audio_hidden_dim,
-            "num_layers": cli.audio_layers,
-            "dropout": cli.audio_dropout,
-            "prediction_epochs": cli.prediction_epochs_av,
-            "prediction_patience": cli.prediction_patience_av,
-        }
-    return {
-        "hidden_dim": cli.vision_hidden_dim,
-        "num_layers": cli.vision_layers,
-        "dropout": cli.vision_dropout,
-        "prediction_epochs": cli.prediction_epochs_av,
-        "prediction_patience": cli.prediction_patience_av,
-    }
+        return dict(hidden=c.text_hidden_dim, layers=c.text_layers, dropout=c.text_dropout,
+                    pooling=c.text_pooling, loss=c.prediction_loss_text,
+                    epochs=c.prediction_epochs_text, patience=c.prediction_patience_text)
+    prefix = "audio" if modality == "audio" else "vision"
+    return dict(hidden=getattr(c, f"{prefix}_hidden_dim"), layers=getattr(c, f"{prefix}_layers"),
+                dropout=getattr(c, f"{prefix}_dropout"), pooling="mean", loss=c.prediction_loss_av,
+                epochs=c.prediction_epochs_av, patience=c.prediction_patience_av)
 
 
-def _aggregate(seed_frame: pd.DataFrame) -> pd.DataFrame:
-    metric_columns = [
-        "MAE",
-        "Corr",
-        "acc_7",
-        "acc_5",
-        "acc_2",
-        "F1_score",
-        "error_spearman",
-        "high_error_auroc",
-        "q4_q1_ratio",
-    ]
+def deterministic_loaders(loaders, batch_size, workers):
+    result = dict(loaders)
+    for split in ("valid", "test"):
+        result[split] = DataLoader(loaders[split].dataset, batch_size=batch_size,
+                                   shuffle=False, drop_last=False, num_workers=workers)
+    result["train_eval"] = DataLoader(loaders["train"].dataset, batch_size=batch_size,
+                                      shuffle=False, drop_last=False, num_workers=workers)
+    return result
+
+
+def aggregate(frame):
+    metrics = ["MAE", "Corr", "acc_7", "acc_5", "acc_2", "F1_score",
+               "error_spearman", "high_error_auroc", "q4_q1_ratio"]
     rows = []
-    for modality, frame in seed_frame.groupby("modality", sort=False):
-        row = {"modality": modality, "seed_count": int(len(frame))}
-        for column in metric_columns:
-            values = pd.to_numeric(frame[column], errors="coerce")
-            row[f"{column}_mean"] = float(values.mean())
-            row[f"{column}_std"] = float(values.std(ddof=0))
-        row["all_acceptance_checks_pass_rate"] = float(
-            frame["all_acceptance_checks_pass"].astype(float).mean()
-        )
+    for modality, group in frame.groupby("modality", sort=False):
+        row = {"modality": modality, "seed_count": len(group)}
+        for metric in metrics:
+            values = pd.to_numeric(group[metric], errors="coerce")
+            row[f"{metric}_mean"], row[f"{metric}_std"] = float(values.mean()), float(values.std(ddof=0))
+        row["direction_pass_rate"] = float(group["uncertainty_direction_pass"].astype(float).mean())
         rows.append(row)
     return pd.DataFrame(rows)
 
 
 def main():
-    cli = parse_args()
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    )
-    device = assign_gpu([cli.gpu])
-    save_root = Path(cli.save_root) / cli.dataset
-    save_root.mkdir(parents=True, exist_ok=True)
-    seed_rows = []
-    diagnostics_written = False
-
-    for seed in cli.seeds:
-        setup_seed(seed)
-        args = get_config_regression("DLF", cli.dataset, Path(cli.config))
-        args["device"] = device
-        args["train_mode"] = "regression"
-        args["feature_T"] = ""
-        args["feature_A"] = ""
-        args["feature_V"] = ""
-        args["seed"] = seed
-        args["cur_seed"] = seed
-        args["batch_size"] = cli.batch_size
-        args["use_finetune"] = bool(not cli.freeze_text_encoder)
-        dataloaders = MMDataLoader(args, cli.num_workers)
-
-        if not diagnostics_written:
-            diagnostics = dataset_diagnostics(dataloaders, cli.modalities)
-            (save_root / "v8_dataset_diagnostics.json").write_text(
-                json.dumps(diagnostics, indent=2), encoding="utf-8"
-            )
-            diagnostics_written = True
-
-        for modality in cli.modalities:
-            setup_seed(seed)
-            profile = _profile(cli, modality)
-            run_dir = save_root / f"seed_{seed}" / modality
-            run_dir.mkdir(parents=True, exist_ok=True)
-            LOGGER.info(
-                "Starting V8 expert modality=%s seed=%d profile=%s",
-                modality,
-                seed,
-                profile,
-            )
-
-            model = UnimodalExpertV8(
-                args=args,
-                modality=modality,
-                hidden_dim=profile["hidden_dim"],
-                num_layers=profile["num_layers"],
-                num_heads=cli.num_heads,
-                ffn_multiplier=cli.ffn_multiplier,
-                dropout=profile["dropout"],
-                max_length=512,
-                layer_fusion=cli.layer_fusion,
-                finetune_text_encoder=not cli.freeze_text_encoder,
-            ).to(device)
-            mean, std, normalizer_info = fit_train_normalizer(
-                dataloaders["train"].dataset, modality
-            )
-            if mean is not None and std is not None:
-                model.set_normalizer(mean.to(device), std.to(device))
-
-            trainer = UnimodalExpertTrainerV8(
-                args=args,
-                metrics_fn=MetricsTop("regression").getMetics(cli.dataset),
-                modality=modality,
-                save_dir=run_dir,
-                prediction_epochs=profile["prediction_epochs"],
-                uncertainty_epochs=cli.uncertainty_epochs,
-                joint_epochs=cli.joint_epochs,
-                prediction_patience=profile["prediction_patience"],
-                joint_patience=cli.joint_patience,
-                learning_rate=cli.learning_rate,
-                text_learning_rate=cli.text_learning_rate,
-                uncertainty_learning_rate=cli.uncertainty_learning_rate,
-                weight_decay=cli.weight_decay,
-                uncertainty_weight=cli.uncertainty_weight,
-                grad_clip=cli.grad_clip,
-                max_prediction_degradation=cli.max_prediction_degradation,
-                max_corr_degradation=cli.max_corr_degradation,
-            )
-            summary = trainer.train_and_evaluate(
-                model, dataloaders, normalizer_info=normalizer_info
-            )
-            summary["seed"] = seed
-            summary["architecture"] = {
-                **profile,
-                "num_heads": cli.num_heads,
-                "ffn_multiplier": cli.ffn_multiplier,
-                "layer_fusion": cli.layer_fusion,
-                "finetune_text_encoder": bool(not cli.freeze_text_encoder),
-            }
-            (run_dir / "unimodal_expert_v8_summary.json").write_text(
-                json.dumps(summary, indent=2, allow_nan=True), encoding="utf-8"
-            )
-
-            metrics = summary["test"]["metrics"]
-            uncertainty = summary["test"]["uncertainty"]
-            seed_rows.append({
-                "seed": seed,
-                "modality": modality,
-                "selected_stage": summary["selected_stage"],
-                **metrics,
-                "error_spearman": uncertainty["error_spearman"],
-                "high_error_auroc": uncertainty["high_error_auroc"],
-                "q4_q1_ratio": uncertainty["q4_q1_ratio"],
-                "quartile_monotonic": uncertainty["quartile_monotonic"],
-                "all_acceptance_checks_pass": summary["acceptance"]["all_pass"],
-            })
+    c = parse_args(); logging.basicConfig(level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    device = assign_gpu([c.gpu]); root = Path(c.save_root)/c.dataset; root.mkdir(parents=True, exist_ok=True)
+    rows, wrote_diagnostics = [], False
+    for seed in c.seeds:
+        setup_seed(seed); args = get_config_regression("DLF", c.dataset, Path(c.config))
+        args.update(dict(device=device, train_mode="regression", feature_T="", feature_A="", feature_V="",
+                         seed=seed, cur_seed=seed, batch_size=c.batch_size,
+                         use_finetune=not c.freeze_text_encoder))
+        loaders = deterministic_loaders(MMDataLoader(args, c.num_workers), c.batch_size, c.num_workers)
+        if not wrote_diagnostics:
+            (root/"v8_dataset_diagnostics.json").write_text(
+                json.dumps(dataset_diagnostics(loaders, c.modalities), indent=2), encoding="utf-8")
+            wrote_diagnostics = True
+        for modality in c.modalities:
+            setup_seed(seed); cfg = profile(c, modality); run = root/f"seed_{seed}"/modality; run.mkdir(parents=True, exist_ok=True)
+            LOGGER.info("V8 start modality=%s seed=%d profile=%s joint=%s", modality, seed, cfg, c.joint_mode)
+            model = UnimodalExpertV8(args, modality, cfg["hidden"], cfg["layers"], c.num_heads,
+                                    c.ffn_multiplier, cfg["dropout"], 512, c.layer_fusion,
+                                    cfg["pooling"], not c.freeze_text_encoder).to(device)
+            mean, std, norm = fit_train_normalizer(loaders["train"].dataset, modality)
+            if mean is not None: model.set_normalizer(mean.to(device), std.to(device))
+            trainer = SafeUnimodalExpertTrainerV8(
+                args=args, metrics_fn=MetricsTop("regression").getMetics(c.dataset), modality=modality,
+                save_dir=run, prediction_epochs=cfg["epochs"], uncertainty_epochs=c.uncertainty_epochs,
+                joint_epochs=c.joint_epochs, prediction_patience=cfg["patience"], joint_patience=c.joint_patience,
+                learning_rate=c.learning_rate, text_learning_rate=c.text_learning_rate,
+                uncertainty_learning_rate=c.uncertainty_learning_rate, weight_decay=c.weight_decay,
+                uncertainty_weight=c.uncertainty_weight, grad_clip=c.grad_clip, prediction_loss=cfg["loss"],
+                joint_mode=c.joint_mode, max_prediction_degradation=c.max_prediction_degradation,
+                max_corr_degradation=c.max_corr_degradation)
+            summary = trainer.train_and_evaluate(model, loaders, norm); summary["seed"] = seed
+            (run/"unimodal_expert_v8_summary.json").write_text(json.dumps(summary, indent=2, allow_nan=True), encoding="utf-8")
+            m, u = summary["test"]["metrics"], summary["test"]["uncertainty"]
+            rows.append(dict(seed=seed, modality=modality, selected_stage=summary["selected_stage"],
+                             score_orientation=summary["score_orientation"], **m,
+                             error_spearman=u["error_spearman"], high_error_auroc=u["high_error_auroc"],
+                             q4_q1_ratio=u["q4_q1_ratio"], quartile_monotonic=u["quartile_monotonic"],
+                             uncertainty_direction_pass=summary["acceptance"]["checks"]["uncertainty_direction"]))
             del model
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
-
-    seed_frame = pd.DataFrame(seed_rows)
-    seed_frame.to_csv(save_root / "v8_unimodal_seed_results.csv", index=False)
-    aggregate = _aggregate(seed_frame)
-    aggregate.to_csv(save_root / "v8_unimodal_aggregate.csv", index=False)
-
-    best_modality = None
-    if not aggregate.empty:
-        best_modality = str(
-            aggregate.sort_values("MAE_mean", ascending=True).iloc[0]["modality"]
-        )
-    overall = {
-        "method": "independent_unimodal_experts_v8",
-        "dataset": cli.dataset,
-        "seeds": list(cli.seeds),
-        "modalities": list(cli.modalities),
-        "best_modality_by_mean_test_mae": best_modality,
-        "seed_results": seed_rows,
-        "aggregate": aggregate.to_dict(orient="records"),
-        "selection_protocol": (
-            "All checkpoints use validation metrics only. Test predictions are "
-            "generated after each expert and its error scale are frozen."
-        ),
-    }
-    (save_root / "unimodal_experts_v8_summary.json").write_text(
-        json.dumps(overall, indent=2, allow_nan=True), encoding="utf-8"
-    )
-
-    LOGGER.info("V8 seed results:\n%s", seed_frame.to_string(index=False))
-    LOGGER.info("V8 aggregate:\n%s", aggregate.to_string(index=False))
-    LOGGER.info("Best modality by mean Test MAE: %s", best_modality)
+            if torch.cuda.is_available(): torch.cuda.empty_cache()
+    seed_frame = pd.DataFrame(rows); seed_frame.to_csv(root/"v8_unimodal_seed_results.csv", index=False)
+    agg = aggregate(seed_frame); agg.to_csv(root/"v8_unimodal_aggregate.csv", index=False)
+    best = None if agg.empty else str(agg.sort_values("MAE_mean").iloc[0]["modality"])
+    (root/"unimodal_experts_v8_summary.json").write_text(json.dumps({
+        "method":"safe_independent_unimodal_experts_v8","dataset":c.dataset,"seeds":c.seeds,
+        "modalities":c.modalities,"joint_mode":c.joint_mode,"best_modality_by_mean_test_mae":best,
+        "seed_results":rows,"aggregate":agg.to_dict(orient="records")}, indent=2, allow_nan=True), encoding="utf-8")
+    LOGGER.info("V8 results:\n%s", seed_frame.to_string(index=False))
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__main__": main()
