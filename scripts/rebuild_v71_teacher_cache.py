@@ -10,7 +10,15 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import sys
 from pathlib import Path
+
+# When this file is executed as ``python3 scripts/rebuild_v71_teacher_cache.py``,
+# Python places ``scripts/`` rather than the repository root on sys.path.
+# Add the root explicitly so project modules such as config.py are importable.
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from config import get_config_regression
 from data_loader import MMDataLoader
