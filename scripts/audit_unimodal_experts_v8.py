@@ -13,7 +13,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--root",
-        default="./result/unimodal_experts_v8/mosi/seed_1111",
+        default="./result/unimodal_experts_v8_safe/mosi/seed_1111",
     )
     return parser.parse_args()
 
