@@ -8,11 +8,12 @@ cd "$(dirname "$0")/.."
 # - Stage B frozen encoder/predictor, error head only
 # - no shared-encoder joint training
 # - deterministic Valid/Test evaluation
+# - separate output root, so old buggy results cannot be mixed in
 python3 train_unimodal_experts_v8.py \
   --dataset mosi \
   --gpu 0 \
   --config ./config/config.json \
-  --save-root ./result/unimodal_experts_v8 \
+  --save-root ./result/unimodal_experts_v8_safe \
   --modalities text audio vision \
   --seeds 1111 \
   --batch-size 16 \
