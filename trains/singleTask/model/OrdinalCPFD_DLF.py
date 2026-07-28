@@ -125,7 +125,14 @@ class OrdinalComplementarityStudent(nn.Module):
         )
 
     def load_v71_checkpoint(self, path, map_location=None):
-        payload = torch.load(path, map_location=map_location)
+        try:
+            payload = torch.load(
+                path,
+                map_location=map_location,
+                weights_only=False,
+            )
+        except TypeError:
+            payload = torch.load(path, map_location=map_location)
         state = payload.get("state", payload) if isinstance(payload, dict) else payload
         if not isinstance(state, dict):
             raise TypeError("V7.1 checkpoint does not contain a state dictionary.")
