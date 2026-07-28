@@ -1,9 +1,9 @@
-"""Independent text/audio/vision experts for V8.
+"""Safe independent text/audio/vision experts for V8.
 
-Each expert consumes exactly one modality and returns a sequence representation,
-a pooled utterance representation, a scalar sentiment prediction and a bounded
-sample-wise error estimate. The module is independent from the existing DLF/V7
-pipeline so previous improvements remain untouched.
+The expert consumes exactly one modality and returns sequence and pooled
+representations, a scalar sentiment prediction, and a bounded sample-wise error
+score.  The error head can be detached from the shared representation so the
+auxiliary task cannot damage the sentiment encoder.
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ _MODALITY_TO_KEY = {
 
 
 class UnimodalExpertV8(nn.Module):
-    """A modality-specific Transformer expert with an explicit error head."""
+    """Modality-specific expert with a direction-consistent error head."""
 
     def __init__(
         self,
@@ -37,6 +37,7 @@ class UnimodalExpertV8(nn.Module):
         dropout: float = 0.25,
         max_length: int = 512,
         layer_fusion: str = "final",
+        pooling: str = "auto",
         finetune_text_encoder: bool = True,
     ):
         super().__init__()
@@ -45,8 +46,14 @@ class UnimodalExpertV8(nn.Module):
             raise ValueError(f"Unsupported modality: {modality}")
         if layer_fusion not in ("final", "mid_last"):
             raise ValueError("layer_fusion must be 'final' or 'mid_last'.")
+        if pooling not in ("auto", "cls", "mean"):
+            raise ValueError("pooling must be one of: auto, cls, mean.")
         if hidden_dim % num_heads != 0:
             raise ValueError("hidden_dim must be divisible by num_heads.")
+        if num_layers < 0:
+            raise ValueError("num_layers must be non-negative.")
+        if layer_fusion == "mid_last" and num_layers < 2:
+            raise ValueError("mid_last fusion requires at least two layers.")
 
         self.modality = modality
         self.batch_key = _MODALITY_TO_KEY[modality]
@@ -59,14 +66,20 @@ class UnimodalExpertV8(nn.Module):
         self.layer_fusion = layer_fusion
         self.finetune_text_encoder = bool(finetune_text_encoder)
         self.use_bert = bool(modality == "text" and args.use_bert)
+        self.pooling = (
+            "cls" if pooling == "auto" and self.use_bert
+            else "mean" if pooling == "auto"
+            else pooling
+        )
+        if self.pooling == "cls" and not self.use_bert:
+            raise ValueError("CLS pooling is only valid for BERT text inputs.")
 
-        if modality == "text":
-            input_dim = int(args.feature_dims[0])
-        elif modality == "audio":
-            input_dim = int(args.feature_dims[1])
-        else:
-            input_dim = int(args.feature_dims[2])
-        self.input_dim = input_dim
+        feature_dims = tuple(int(value) for value in args.feature_dims)
+        self.input_dim = {
+            "text": feature_dims[0],
+            "audio": feature_dims[1],
+            "vision": feature_dims[2],
+        }[modality]
 
         if self.use_bert:
             self.text_model = BertTextEncoder(
@@ -76,57 +89,57 @@ class UnimodalExpertV8(nn.Module):
             )
 
         self.input_projection = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim),
-            nn.LayerNorm(hidden_dim),
-            nn.Dropout(dropout),
+            nn.Linear(self.input_dim, self.hidden_dim),
+            nn.LayerNorm(self.hidden_dim),
+            nn.Dropout(self.dropout),
         )
         self.position_embedding = nn.Parameter(
-            torch.zeros(1, self.max_length, hidden_dim)
+            torch.zeros(1, self.max_length, self.hidden_dim)
         )
         nn.init.normal_(self.position_embedding, mean=0.0, std=0.02)
 
         self.layers = nn.ModuleList([
             nn.TransformerEncoderLayer(
-                d_model=hidden_dim,
-                nhead=num_heads,
-                dim_feedforward=hidden_dim * int(ffn_multiplier),
-                dropout=dropout,
+                d_model=self.hidden_dim,
+                nhead=self.num_heads,
+                dim_feedforward=self.hidden_dim * self.ffn_multiplier,
+                dropout=self.dropout,
                 activation="gelu",
                 batch_first=True,
                 norm_first=True,
             )
-            for _ in range(num_layers)
+            for _ in range(self.num_layers)
         ])
-        self.final_norm = nn.LayerNorm(hidden_dim)
+        self.final_norm = nn.LayerNorm(self.hidden_dim)
 
-        if layer_fusion == "mid_last":
-            self.mid_projection = nn.Linear(hidden_dim, hidden_dim)
-            self.last_projection = nn.Linear(hidden_dim, hidden_dim)
+        if self.layer_fusion == "mid_last":
+            self.mid_projection = nn.Linear(self.hidden_dim, self.hidden_dim)
+            self.last_projection = nn.Linear(self.hidden_dim, self.hidden_dim)
             self.layer_fusion_projection = nn.Sequential(
-                nn.LayerNorm(hidden_dim * 2),
-                nn.Linear(hidden_dim * 2, hidden_dim),
+                nn.LayerNorm(self.hidden_dim * 2),
+                nn.Linear(self.hidden_dim * 2, self.hidden_dim),
                 nn.GELU(),
-                nn.Dropout(dropout),
+                nn.Dropout(self.dropout),
             )
 
-        head_hidden = max(32, hidden_dim // 2)
+        head_hidden = max(32, self.hidden_dim // 2)
         self.prediction_head = nn.Sequential(
-            nn.LayerNorm(hidden_dim),
-            nn.Linear(hidden_dim, head_hidden),
+            nn.LayerNorm(self.hidden_dim),
+            nn.Linear(self.hidden_dim, head_hidden),
             nn.GELU(),
-            nn.Dropout(dropout),
+            nn.Dropout(self.dropout),
             nn.Linear(head_hidden, 1),
         )
         self.error_head = nn.Sequential(
-            nn.LayerNorm(hidden_dim),
-            nn.Linear(hidden_dim, head_hidden),
+            nn.LayerNorm(self.hidden_dim),
+            nn.Linear(self.hidden_dim, head_hidden),
             nn.GELU(),
-            nn.Dropout(dropout),
+            nn.Dropout(self.dropout),
             nn.Linear(head_hidden, 1),
         )
 
-        self.register_buffer("normalizer_mean", torch.zeros(input_dim))
-        self.register_buffer("normalizer_std", torch.ones(input_dim))
+        self.register_buffer("normalizer_mean", torch.zeros(self.input_dim))
+        self.register_buffer("normalizer_std", torch.ones(self.input_dim))
         self.register_buffer("normalizer_enabled", torch.tensor(False))
         self.register_buffer("error_scale", torch.tensor(1.0))
 
@@ -141,6 +154,7 @@ class UnimodalExpertV8(nn.Module):
             "dropout": self.dropout,
             "max_length": self.max_length,
             "layer_fusion": self.layer_fusion,
+            "pooling": self.pooling,
             "use_bert": self.use_bert,
             "finetune_text_encoder": self.finetune_text_encoder,
         }
@@ -150,7 +164,7 @@ class UnimodalExpertV8(nn.Module):
         mean: Optional[torch.Tensor],
         std: Optional[torch.Tensor],
     ) -> None:
-        """Install statistics computed exclusively from the training split."""
+        """Install feature statistics computed exclusively from Train."""
         if mean is None or std is None:
             self.normalizer_enabled.fill_(False)
             return
@@ -172,7 +186,7 @@ class UnimodalExpertV8(nn.Module):
         self,
         value: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """Return sequence features, valid-token mask and missing-sample flags."""
+        """Return sequence, valid-token mask and all-missing sample flags."""
         if self.use_bert:
             if value.ndim != 3 or value.shape[1] < 2:
                 raise ValueError(
@@ -194,17 +208,15 @@ class UnimodalExpertV8(nn.Module):
         all_missing = ~mask.any(dim=1)
         effective_mask = mask.clone()
         if all_missing.any():
-            # PyTorch attention cannot process a row whose every token is masked.
             effective_mask[all_missing, 0] = True
 
         if bool(self.normalizer_enabled.item()):
             sequence = (
                 sequence - self.normalizer_mean.view(1, 1, -1)
             ) / self.normalizer_std.view(1, 1, -1)
+
         sequence = sequence.masked_fill(~effective_mask.unsqueeze(-1), 0.0)
         if all_missing.any():
-            # Keep fully missing samples as a deterministic zero token instead of
-            # the normalized value of zero, which would encode train means.
             sequence[all_missing] = 0.0
         return sequence, effective_mask, all_missing
 
@@ -221,6 +233,7 @@ class UnimodalExpertV8(nn.Module):
                 f"Sequence length {length} exceeds max_length "
                 f"{self.position_embedding.shape[1]}."
             )
+
         hidden = self.input_projection(sequence)
         hidden = hidden + self.position_embedding[:, :length]
         hidden = hidden.masked_fill(~mask.unsqueeze(-1), 0.0)
@@ -232,7 +245,7 @@ class UnimodalExpertV8(nn.Module):
             hidden = hidden.masked_fill(~mask.unsqueeze(-1), 0.0)
             layer_outputs.append(hidden)
 
-        last = self.final_norm(layer_outputs[-1])
+        last = self.final_norm(hidden)
         last = last.masked_fill(~mask.unsqueeze(-1), 0.0)
         if self.layer_fusion == "mid_last":
             middle_index = max(0, (len(layer_outputs) - 1) // 2)
@@ -248,7 +261,12 @@ class UnimodalExpertV8(nn.Module):
         else:
             sequence_feature = last
 
-        pooled = self._masked_mean(sequence_feature, mask)
+        if self.pooling == "cls":
+            pooled = sequence_feature[:, 0]
+        else:
+            pooled = self._masked_mean(sequence_feature, mask)
+        pooled = pooled.masked_fill(all_missing.unsqueeze(-1), 0.0)
+
         return {
             "sequence": sequence_feature,
             "pooled": pooled,
@@ -256,14 +274,23 @@ class UnimodalExpertV8(nn.Module):
             "all_missing": all_missing,
         }
 
-    def forward(self, value: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(
+        self,
+        value: torch.Tensor,
+        detach_uncertainty_features: bool = False,
+    ) -> Dict[str, torch.Tensor]:
         encoded = self.encode(value)
         pooled = encoded["pooled"]
         prediction = self.prediction_head(pooled)
-        uncertainty = torch.sigmoid(self.error_head(pooled))
+        uncertainty_feature = (
+            pooled.detach() if detach_uncertainty_features else pooled
+        )
+        uncertainty_logit = self.error_head(uncertainty_feature)
+        uncertainty = torch.sigmoid(uncertainty_logit)
         return {
             **encoded,
             "prediction": prediction,
+            "uncertainty_logit": uncertainty_logit,
             "uncertainty": uncertainty,
         }
 
@@ -272,6 +299,7 @@ class UnimodalExpertV8(nn.Module):
         prediction: torch.Tensor,
         labels: torch.Tensor,
     ) -> torch.Tensor:
+        """High target values always mean larger absolute prediction error."""
         return torch.tanh(
             torch.abs(labels - prediction.detach())
             / self.error_scale.clamp_min(1e-4)
@@ -288,13 +316,14 @@ class UnimodalExpertV8(nn.Module):
         stage = str(stage).lower()
         for parameter in self.parameters():
             parameter.requires_grad_(False)
+
         if stage == "prediction":
             for parameter in self.prediction_parameters():
                 parameter.requires_grad_(True)
         elif stage == "uncertainty":
             for parameter in self.error_head.parameters():
                 parameter.requires_grad_(True)
-        elif stage == "joint":
+        elif stage in ("joint_detached", "joint_shared"):
             for parameter in self.parameters():
                 parameter.requires_grad_(True)
         else:
