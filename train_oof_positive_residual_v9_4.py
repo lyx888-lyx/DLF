@@ -274,6 +274,14 @@ def main():
         gate_threshold_grid=cli.gate_threshold_grid,
     )
     best = trainer.train(model, dataloaders)
+
+    # The inherited V9.2 result writer expects ``expert_metrics``. V9.4 stores
+    # the same checkpoint-level diagnostic under the clearer
+    # ``magnitude_metrics`` name, so expose a compatibility alias before saving
+    # and evaluation. This does not change model selection or predictions.
+    best.setdefault("expert_metrics", dict(best.get("magnitude_metrics", {})))
+    torch.save(best, save_dir / "oof_positive_residual_v94_best.pth")
+
     policy = best["policy"]
     logger.info(
         "V9.4 selected magnitude=%d gate=%d source=%s gate_mode=%s "
