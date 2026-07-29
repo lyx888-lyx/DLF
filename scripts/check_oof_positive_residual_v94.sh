@@ -2,6 +2,7 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
+export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"
 
 python3 -m py_compile \
   trains/singleTask/model/OOFPositiveResidual_DLF.py \
