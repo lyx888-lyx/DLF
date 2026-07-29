@@ -3,6 +3,16 @@
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+# Direct execution puts ``scripts/`` on sys.path rather than the repository
+# root. Add the root explicitly so project packages such as ``trains`` can be
+# imported reliably from the runner and from manual invocations.
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 import torch
 
 from trains.singleTask.oof_positive_residual_system_v94 import (
