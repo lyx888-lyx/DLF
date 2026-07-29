@@ -48,6 +48,19 @@ Output directory:
 result/region_balanced_ordinal_mixture_v9/mosi/seed_1111/
 ```
 
+## Audit
+
+Run the audit before interpreting the Test metrics:
+
+```bash
+python3 scripts/audit_region_balanced_ordinal_mixture_v9.py \
+  --run-dir result/region_balanced_ordinal_mixture_v9/mosi/seed_1111 \
+  --expected-reference-mae 0.6994764 \
+  --reference-tolerance 0.0002
+```
+
+The expected reference check is optional when the environment is intentionally different. The audit always checks unique IDs, finite predictions, valid gate probabilities, matched ordinary-positive counts, and normalized Train region weights.
+
 ## Files to inspect first
 
 ```text
