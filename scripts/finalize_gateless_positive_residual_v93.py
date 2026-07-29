@@ -63,7 +63,21 @@ def main():
         "policy_search": "v93_valid_policy_search.csv",
     }
     summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+
+    selected = summary["selected_policy"]
+    candidate = results[NEW_MODEL]
+    reference = results["original_v71_hybrid"]
     print(f"V9.3 outputs finalized in {run_dir}")
+    print(
+        "V9.3 final "
+        f"source={selected['source']} epoch={summary['selected_epoch']} "
+        f"training_contributed={summary['training_contributed']} "
+        f"Test(MAE={candidate['MAE']:.4f} "
+        f"worst={candidate['worst_region_mae']:.4f} "
+        f"op={candidate['ordinary_positive_mae']:.4f} "
+        f"nonpos={candidate['nonpositive_mae']:.4f}) "
+        f"reference_MAE={reference['MAE']:.4f}"
+    )
 
 
 if __name__ == "__main__":
