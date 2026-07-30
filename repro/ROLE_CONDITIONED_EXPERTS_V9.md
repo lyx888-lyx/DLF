@@ -24,8 +24,9 @@ The five roles are shared across MOSI and MOSEI because both use the continuous
 ## Why this is not a simple weighted-loss implementation
 
 Each expert is initialized from exactly the same validation-best strong
-multimodal checkpoint. Specialization is then induced by five coordinated
-mechanisms:
+multimodal checkpoint **and the same new-head random seed**. This removes random
+initialization as an explanation for the capability matrix. Specialization is
+then induced by five coordinated mechanisms:
 
 1. **Validation-fitted role Teacher targets.** A global simplex is fitted on
    Validation. Each role then receives a region-specific Teacher simplex,
