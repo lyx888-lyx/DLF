@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
 REGION_NAMES = (
     "strong_negative",
     "negative",
@@ -24,7 +25,13 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--root",
-        default="./result/role_conditioned_experts_v9/mosi/seed_1111",
+        default=str(
+            REPO_ROOT
+            / "result"
+            / "role_conditioned_experts_v9"
+            / "mosi"
+            / "seed_1111"
+        ),
     )
     parser.add_argument(
         "--require-designated-wins",
