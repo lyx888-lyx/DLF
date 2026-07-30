@@ -348,6 +348,11 @@ class RoleConditionedExpertTrainerV9:
         role_name = REGION_NAMES[int(role)]
         role_dir = self.save_dir / role_name
         role_dir.mkdir(parents=True, exist_ok=True)
+
+        role_seed = int(getattr(self.args, "seed", 0))
+        torch.manual_seed(role_seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(role_seed)
         model = self._new_model()
         history: List[Dict[str, object]] = []
         best = None
@@ -645,6 +650,7 @@ class RoleConditionedExpertTrainerV9:
             "seed": int(getattr(self.args, "seed", 0)),
             "anchor_checkpoint": str(self.teacher_paths[self.anchor_index]),
             "anchor_index": self.anchor_index,
+            "role_initialization_seed": int(getattr(self.args, "seed", 0)),
             "teacher_paths": [str(value) for value in self.teacher_paths],
             "teacher_fit": {
                 "global_weights": self.global_teacher_weights.tolist(),
