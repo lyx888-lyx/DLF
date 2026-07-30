@@ -2,6 +2,16 @@
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+# When a file under ``scripts/`` is executed directly, Python puts that
+# directory—not the repository root—at sys.path[0].  Bootstrap the root before
+# importing the local ``trains`` package so the test works from any cwd.
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 import torch
 
 from trains.singleTask.role_conditioned_experts_v9 import (
