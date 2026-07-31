@@ -13,8 +13,8 @@ from torch.utils.data import DataLoader
 
 from config import get_config_regression
 from data_loader import MMDataset
-from trains.singleTask.oof_tail_residual_system_v92 import (
-    OOFTailResidualTrainerV92,
+from trains.singleTask.oof_tail_function_space_system_v92 import (
+    OOFTailFunctionSpaceTrainerV92,
 )
 from trains.utils import MetricsTop
 from utils import assign_gpu, setup_seed
@@ -143,7 +143,7 @@ def main():
         )
     teachers = discover_teacher_paths(cli)
     loaders = build_eval_loaders(args, cli.feature_batch_size, cli.num_workers)
-    trainer = OOFTailResidualTrainerV92(
+    trainer = OOFTailFunctionSpaceTrainerV92(
         args=args,
         metrics_fn=MetricsTop("regression").getMetics(cli.dataset),
         save_dir=save_dir,
