@@ -16,6 +16,15 @@ FEATURE_KEYS = (
 )
 
 
+def _identifier_from_dataset(dataset, sample_index, fallback):
+    base = dataset
+    while not hasattr(base, "ids") and hasattr(base, "dataset"):
+        base = base.dataset
+    if hasattr(base, "ids"):
+        return canonical_sample_id(base.ids[int(sample_index)])
+    return canonical_sample_id(fallback)
+
+
 def function_space_feature(output):
     """Return four scalar prediction branches with consistent semantics.
 
@@ -46,7 +55,15 @@ def predict_wrapper_function_space(model, loader, device, capture_features=True)
         output = model(text, audio, vision, mask)
         feature = function_space_feature(output).detach().cpu()
         indices = batch["index"].view(-1).cpu().tolist()
-        identifiers = [canonical_sample_id(value) for value in list(batch["id"])]
+        fallback_ids = list(batch.get("id", []))
+        identifiers = [
+            _identifier_from_dataset(
+                loader.dataset,
+                index,
+                fallback_ids[offset] if offset < len(fallback_ids) else index,
+            )
+            for offset, index in enumerate(indices)
+        ]
         for offset, index in enumerate(indices):
             row = {
                 "sample_index": int(index),
