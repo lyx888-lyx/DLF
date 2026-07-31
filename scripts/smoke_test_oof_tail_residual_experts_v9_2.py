@@ -11,6 +11,10 @@ if str(REPO_ROOT) not in sys.path:
 
 import torch
 
+from trains.singleTask.function_space_features_v92 import (
+    FEATURE_KEYS,
+    function_space_feature,
+)
 from trains.singleTask.oof_group_splits_v92 import (
     build_nested_group_folds,
     conversation_group_id,
@@ -52,11 +56,20 @@ def main():
         assert not set(spec.inner_train_groups) & set(spec.outer_holdout_groups)
         assert not set(spec.inner_valid_groups) & set(spec.outer_holdout_groups)
 
+    fake_output = {
+        key: torch.randn(32, 1) for key in FEATURE_KEYS
+    }
+    aligned_feature = function_space_feature(fake_output)
+    assert aligned_feature.shape == (32, len(FEATURE_KEYS))
+    assert torch.isfinite(aligned_feature).all()
+
     torch.manual_seed(7)
-    feature = torch.randn(32, 24)
+    feature = torch.randn(32, len(FEATURE_KEYS))
     anchor = torch.linspace(-2.5, 2.5, 32).view(-1, 1)
     labels_tensor = anchor + 0.3 * torch.tanh(torch.randn_like(anchor))
-    model = CachedTailResidualHeadV92(feature_dim=24, hidden_dim=16)
+    model = CachedTailResidualHeadV92(
+        feature_dim=len(FEATURE_KEYS), hidden_dim=16
+    )
     for role in TAIL_ROLE_NAMES:
         outputs = model(feature, anchor)
         losses = oof_tail_residual_loss(
