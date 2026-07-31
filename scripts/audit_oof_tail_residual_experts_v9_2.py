@@ -11,6 +11,12 @@ import pandas as pd
 import torch
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+EXPECTED_FEATURE_KEYS = (
+    "logits_l_hetero",
+    "logits_a_hetero",
+    "logits_v_hetero",
+    "logits_c",
+)
 
 
 def parse_args():
@@ -64,11 +70,25 @@ def main():
         "unexpected OOF version",
         errors,
     )
+    require(
+        cache.get("feature_space") == "auxiliary_prediction_logits_v1",
+        "unexpected OOF feature space",
+        errors,
+    )
+    require(
+        tuple(cache.get("feature_keys", ())) == EXPECTED_FEATURE_KEYS,
+        "unexpected OOF feature keys",
+        errors,
+    )
     sample_count = len(cache.get("sample_ids", []))
     require(sample_count > 0, "empty OOF cache", errors)
     require(cache["labels"].shape == (sample_count, 1), "invalid OOF labels shape", errors)
     require(cache["oof_prediction"].shape == (sample_count, 1), "invalid OOF prediction shape", errors)
-    require(cache["oof_feature"].shape[0] == sample_count, "invalid OOF feature count", errors)
+    require(
+        cache["oof_feature"].shape == (sample_count, len(EXPECTED_FEATURE_KEYS)),
+        "invalid OOF function-space feature shape",
+        errors,
+    )
     require(torch.isfinite(cache["oof_prediction"]).all(), "non-finite OOF prediction", errors)
     require(torch.isfinite(cache["oof_feature"]).all(), "non-finite OOF feature", errors)
     require(bool((cache["fold_index"] >= 0).all()), "unassigned outer fold", errors)
@@ -128,6 +148,7 @@ def main():
     print("ENGINEERING AUDIT PASSED")
     print("OOF samples:", sample_count)
     print("outer folds:", len(folds))
+    print("feature space:", cache.get("feature_space"))
     print("anchor index:", summary.get("anchor_index"))
     for tail, policy in summary.get("validation_selected_tail_policy", {}).items():
         print(
