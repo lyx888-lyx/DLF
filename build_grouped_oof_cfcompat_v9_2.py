@@ -8,7 +8,7 @@ from pathlib import Path
 
 from config import get_config_regression
 from data_loader import MMDataset
-from trains.singleTask.grouped_oof_cfcompat_v92 import (
+from trains.singleTask.grouped_oof_function_space_v92 import (
     StageLimits,
     run_nested_oof_cfcompat,
 )
@@ -92,10 +92,11 @@ def main():
         resume=not cli.no_resume,
     )
     logging.getLogger("MMSA").info(
-        "V9.2 OOF complete samples=%d folds=%d feature_dim=%d",
+        "V9.2 OOF complete samples=%d folds=%d feature_dim=%d feature_space=%s",
         len(payload["sample_ids"]),
         payload["outer_folds"],
         payload["oof_feature"].size(1),
+        payload["feature_space"],
     )
 
 
