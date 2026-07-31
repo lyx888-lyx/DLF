@@ -8,9 +8,26 @@ residual `label - full_train_anchor(train_sample)` is not a valid supervision
 signal for a deployable tail expert.
 
 V9.2 replaces that signal with nested, group-cross-fitted CFCompatKD predictions
-and fusion features. Every training sample is predicted by a CFCompatKD student
-whose entire training and checkpoint-selection pipeline excludes that sample's
-source video/conversation group.
+and function-space prediction features. Every training sample is predicted by a
+CFCompatKD student whose entire training and checkpoint-selection pipeline
+excludes that sample's source video/conversation group.
+
+## Why hidden fusion vectors are not mixed across folds
+
+Outer-fold models are trained independently, so their hidden coordinate systems
+are not guaranteed to be aligned. V9.2 therefore does not concatenate their
+hidden fusion vectors. Its registered feature schema is:
+
+```text
+logits_l_hetero
+logits_a_hetero
+logits_v_hetero
+logits_c
+```
+
+These four coordinates have the same task-space meaning in every fold and in the
+full-data deployment anchor. The cache records and audits the schema as
+`auxiliary_prediction_logits_v1`.
 
 ## Leakage boundary
 
@@ -25,33 +42,38 @@ For each outer fold:
 6. counterfactual compatibility ranks are fitted only on inner train;
 7. a CFCompatKD student is initialized from the clean checkpoint, trained on
    inner train, and selected on inner validation;
-8. only then is the untouched outer holdout predicted and its final fusion
-   feature cached.
+8. only then is the untouched outer holdout predicted and its four fold-aligned
+   auxiliary prediction logits cached.
 
 The five existing full-data CFCompatKD checkpoints are **not** used anywhere in
 OOF construction. They are used only after the OOF cache is complete to choose
 the full-data deployable anchor from Validation and extract Validation/Test
-features.
+function-space features.
 
 ## Cost
 
 The default is three outer folds. Each fold trains three models, so the OOF stage
 contains nine validation-selected training runs. It is intentionally expensive.
 The output is resumable: a completed `outer_holdout_cache.pth` skips that fold on
-the next invocation.
+the next invocation. A stale fold cache with the wrong feature schema is rejected
+rather than silently reused.
 
 ## Files
 
 - `build_grouped_oof_cfcompat_v9_2.py`: nested OOF builder.
 - `train_oof_tail_residual_experts_v9_2.py`: trains the three low-capacity tail
   heads from OOF features and residuals.
-- `trains/singleTask/grouped_oof_cfcompat_v92.py`: group splitting and all three
-  fold-training stages.
+- `trains/singleTask/grouped_oof_cfcompat_v92.py`: base group splitting and all
+  three fold-training stages.
+- `trains/singleTask/grouped_oof_function_space_v92.py`: enforces the registered
+  cross-fold function-space schema.
+- `trains/singleTask/function_space_features_v92.py`: extracts the four aligned
+  prediction coordinates.
 - `trains/singleTask/model/CachedTailResidualHeadV92.py`: frozen-anchor residual
   head.
 - `trains/singleTask/oof_tail_residual_v92.py`: loss and diagnostics.
-- `trains/singleTask/oof_tail_residual_system_v92.py`: Validation selection and
-  final evaluation.
+- `trains/singleTask/oof_tail_function_space_system_v92.py`: full-anchor feature
+  extraction and final tail training/evaluation.
 
 ## Run
 
