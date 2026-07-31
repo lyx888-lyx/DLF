@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 
 from .advantage_head_crossfit_v93 import AdvantageHeadCrossFitterV93
-from .coach_routing_v93 import CoachRouterV93
+from .coach_routing_safe_v93 import CoachRouterV93
 from .model.OrdinalAdvantageCoachV93 import SPECIALIST_NAMES
 from .ordinal_region_coach_system_v93 import (
     OrdinalRegionCoachCrossFitterV93,
