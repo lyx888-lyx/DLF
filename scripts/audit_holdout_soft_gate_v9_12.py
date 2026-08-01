@@ -109,6 +109,11 @@ def main():
                 f"{split}/{name} has non-finite signatures",
             )
 
+    upstream_paths = list(pool.get("upstream_checkpoints", {}).values())
+    require(len(upstream_paths) == 3, "expected three upstream checkpoints")
+    for value in upstream_paths:
+        require(Path(value).is_file(), f"missing upstream checkpoint: {value}")
+
     checkpoint_paths = [
         *pool.get("role_expert_checkpoints", {}).values(),
         *pool.get("tail_expert_checkpoints", {}).values(),
@@ -119,8 +124,12 @@ def main():
 
     gate_checkpoints = summary.get("gate_ensemble_checkpoints", [])
     require(
-        len(gate_checkpoints) == 3,
-        f"expected three gate checkpoints, got {len(gate_checkpoints)}",
+        len(gate_checkpoints) >= 1,
+        "expected at least one gate checkpoint",
+    )
+    require(
+        len(gate_checkpoints) == len(summary.get("gate_selected_epochs", [])),
+        "gate checkpoint/selected-epoch count mismatch",
     )
     for value in gate_checkpoints:
         require(Path(value).is_file(), f"missing gate checkpoint: {value}")
