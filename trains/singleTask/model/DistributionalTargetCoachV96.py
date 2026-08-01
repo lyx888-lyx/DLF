@@ -9,6 +9,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 QUANTILE_LEVELS = (0.10, 0.25, 0.50, 0.75, 0.90)
+# Midpoint quadrature over tau in [0,1] for the levels above.
+QUANTILE_RISK_WEIGHTS = (0.175, 0.200, 0.250, 0.200, 0.175)
 SPECIALIST_NAMES = (
     "strong_negative",
     "boundary",
@@ -16,7 +18,6 @@ SPECIALIST_NAMES = (
     "strong_positive",
 )
 ACTION_NAMES = ("anchor", *SPECIALIST_NAMES)
-REGION_BOUNDARIES = (-1.5, -0.5, 0.5, 1.5)
 
 
 def coach_input_features(function_space: torch.Tensor, anchor: torch.Tensor) -> torch.Tensor:
@@ -29,7 +30,9 @@ def coach_input_features(function_space: torch.Tensor, anchor: torch.Tensor) -> 
     value_range = function_space.amax(dim=1, keepdim=True) - function_space.amin(
         dim=1, keepdim=True
     )
-    disagreement = torch.mean(torch.abs(function_space - anchor), dim=1, keepdim=True)
+    disagreement = torch.mean(
+        torch.abs(function_space - anchor), dim=1, keepdim=True
+    )
     return torch.cat(
         [
             function_space,
@@ -75,22 +78,33 @@ class DistributionalTargetCoachV96(nn.Module):
         nn.init.zeros_(self.gap_head.weight)
         nn.init.constant_(self.gap_head.bias, -2.0)
 
-    def forward(self, features: torch.Tensor, anchor: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(
+        self,
+        features: torch.Tensor,
+        anchor: torch.Tensor,
+    ) -> Dict[str, torch.Tensor]:
         if features.dim() != 2 or features.size(1) != self.input_dim:
             raise ValueError(
-                f"features must have shape [N,{self.input_dim}], got {tuple(features.shape)}"
+                f"features must have shape [N,{self.input_dim}], "
+                f"got {tuple(features.shape)}"
             )
         anchor = anchor.view(-1, 1).to(features)
         latent = self.encoder(features)
-        correction = self.residual_max * torch.tanh(self.median_head(latent))
+        correction = self.residual_max * torch.tanh(
+            self.median_head(latent)
+        )
         median = anchor + correction
         gaps = F.softplus(self.gap_head(latent))
-        lower_inner, lower_outer, upper_inner, upper_outer = gaps.split(1, dim=1)
+        lower_inner, lower_outer, upper_inner, upper_outer = gaps.split(
+            1, dim=1
+        )
         q25 = median - lower_inner
         q10 = q25 - lower_outer
         q75 = median + upper_inner
         q90 = q75 + upper_outer
-        quantiles = torch.cat([q10, q25, median, q75, q90], dim=1)
+        quantiles = torch.cat(
+            [q10, q25, median, q75, q90], dim=1
+        )
         return {
             "quantiles": quantiles,
             "median": median,
@@ -107,11 +121,15 @@ def pinball_loss(
     levels: Iterable[float] = QUANTILE_LEVELS,
 ) -> torch.Tensor:
     labels = labels.view(-1, 1).to(quantiles)
-    tau = quantiles.new_tensor(tuple(float(value) for value in levels)).view(1, -1)
+    tau = quantiles.new_tensor(
+        tuple(float(value) for value in levels)
+    ).view(1, -1)
     if quantiles.size(1) != tau.size(1):
         raise ValueError("quantile count does not match levels")
     error = labels - quantiles
-    return torch.maximum(tau * error, (tau - 1.0) * error).mean()
+    return torch.maximum(
+        tau * error, (tau - 1.0) * error
+    ).mean()
 
 
 def distributional_target_loss(
@@ -125,8 +143,12 @@ def distributional_target_loss(
     labels = labels.view(-1, 1).to(output["median"])
     anchor = anchor.view(-1, 1).to(output["median"])
     quantile = pinball_loss(output["quantiles"], labels)
-    median = F.smooth_l1_loss(output["median"], labels, beta=0.25)
-    retention = F.smooth_l1_loss(output["median"], anchor, beta=0.25)
+    median = F.smooth_l1_loss(
+        output["median"], labels, beta=0.25
+    )
+    retention = F.smooth_l1_loss(
+        output["median"], anchor, beta=0.25
+    )
     total = (
         float(quantile_weight) * quantile
         + float(median_weight) * median
@@ -146,10 +168,17 @@ def stack_action_predictions(
 ) -> torch.Tensor:
     """Return [N,5,1] predictions in ACTION_NAMES order."""
     anchor = anchor.view(-1, 1, 1)
-    if expert_predictions.dim() != 3 or expert_predictions.size(1) != 4:
-        raise ValueError("expert_predictions must have shape [N,4,1]")
+    if (
+        expert_predictions.dim() != 3
+        or expert_predictions.size(1) != 4
+    ):
+        raise ValueError(
+            "expert_predictions must have shape [N,4,1]"
+        )
     if expert_predictions.size(0) != anchor.size(0):
-        raise ValueError("action prediction sample count mismatch")
+        raise ValueError(
+            "action prediction sample count mismatch"
+        )
     return torch.cat([anchor, expert_predictions], dim=1)
 
 
@@ -158,17 +187,23 @@ def action_risk(
     target_output: Dict[str, torch.Tensor],
     mode: str,
 ) -> torch.Tensor:
-    """Estimate absolute-error risk of each action from the predicted target distribution."""
+    """Estimate absolute-error risk from the predicted target distribution."""
     if actions.dim() != 3 or actions.size(1) != len(ACTION_NAMES):
         raise ValueError("actions must have shape [N,5,1]")
     action_values = actions.squeeze(-1)
     if mode == "median_distance":
-        return torch.abs(action_values - target_output["median"].view(-1, 1))
+        return torch.abs(
+            action_values - target_output["median"].view(-1, 1)
+        )
     if mode == "quantile_risk":
         quantiles = target_output["quantiles"].to(action_values)
-        return torch.abs(
+        weights = action_values.new_tensor(
+            QUANTILE_RISK_WEIGHTS
+        ).view(1, 1, -1)
+        distances = torch.abs(
             action_values.unsqueeze(-1) - quantiles.unsqueeze(1)
-        ).mean(dim=2)
+        )
+        return (distances * weights).sum(dim=2)
     raise ValueError(f"unknown target-risk mode: {mode}")
 
 
