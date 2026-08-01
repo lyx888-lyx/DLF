@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gc
 import logging
 from pathlib import Path
 from typing import Dict, Mapping, Sequence
@@ -142,17 +143,22 @@ def _collect_split(
     )
     experts: Dict[str, Dict[str, object]] = {}
     for name in ("boundary", "positive"):
+        model = role_models[name].to(args.device)
         rows = collect_role_semantic_rows(
-            role_models[name],
+            model,
             loader,
             args.device,
             ROLE_INDEX[name],
         )
         experts[name] = _role_values(rows, teacher_data["sample_ids"])
+        model.to("cpu")
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
     for name in ("strong_negative", "strong_positive"):
+        model = tail_models[name].to(args.device)
         values = collect_tail_semantics(
-            tail_models[name],
+            model,
             function_data["feature"],
             anchor,
             args.device,
@@ -164,6 +170,9 @@ def _collect_split(
             "correction": values["correction"].float(),
             "signature": values["signature"].float(),
         }
+        model.to("cpu")
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
     expected_shape = anchor.shape
     for name in SPECIALIST_NAMES:
@@ -259,7 +268,15 @@ def build_holdout_expert_pool_v912(
     }
     if resume and final_path.is_file():
         payload = torch.load(final_path, map_location="cpu")
-        if all(payload.get(key) == value for key, value in resume_key.items()):
+        expert_paths = [
+            *payload.get("role_expert_checkpoints", {}).values(),
+            *payload.get("tail_expert_checkpoints", {}).values(),
+        ]
+        if (
+            all(payload.get(key) == value for key, value in resume_key.items())
+            and len(expert_paths) == 4
+            and all(Path(value).is_file() for value in expert_paths)
+        ):
             logger.info("Reusing V9.12 holdout expert pool: %s", final_path)
             return payload
 
@@ -392,8 +409,11 @@ def build_holdout_expert_pool_v912(
             },
             checkpoint,
         )
+        model.to("cpu")
         role_models[name] = model
         role_checkpoint_paths[name] = checkpoint
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
     tail_models = {}
     tail_checkpoint_paths = {}
@@ -423,8 +443,11 @@ def build_holdout_expert_pool_v912(
             },
             checkpoint,
         )
+        model.to("cpu")
         tail_models[name] = model
         tail_checkpoint_paths[name] = checkpoint
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
     split_pools = {
         "router_train": _collect_split(
@@ -509,8 +532,9 @@ def build_holdout_expert_pool_v912(
     }
     torch.save(payload, final_path)
 
-    for model in [*role_models.values(), *tail_models.values()]:
-        del model
+    role_models.clear()
+    tail_models.clear()
+    gc.collect()
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
     logger.info(
