@@ -187,7 +187,7 @@ def _metric_row(
         "expert": str(action_name),
         "expert_index": int(action_id),
         "designated_for_region": bool(
-            DESIGNATED_ACTION_BY_REGION[region_name] == action_name
+            DESIGNATED_ACTION_BY_REGION.get(region_name) == action_name
         ),
         "anchor_mae": anchor_mae,
         "expert_mae": float(local_error.mean().item()),
