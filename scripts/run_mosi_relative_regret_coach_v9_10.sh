@@ -5,7 +5,7 @@ GPU="${GPU:-0}"
 SEED="${SEED:-1111}"
 NUM_WORKERS="${NUM_WORKERS:-1}"
 
-python3 train_relative_regret_coach_v9_10.py \
+python3 train_relative_regret_coach_v9_10_aligned.py \
   --dataset mosi \
   --seed "${SEED}" \
   --gpu "${GPU}" \
