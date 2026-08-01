@@ -23,8 +23,12 @@ Two interpretable action-risk estimates are evaluated:
 
 ```text
 median_distance = abs(action_prediction - q50)
-quantile_risk   = mean_tau abs(action_prediction - q_tau)
+quantile_risk   = integral_0^1 abs(action_prediction - Q(tau)) d tau
 ```
+
+The integral is approximated by midpoint quadrature over the five predicted
+quantiles. It estimates conditional expected absolute error and therefore aligns
+with the final MAE objective.
 
 The coach proposes the action with minimum estimated risk. A specialist is
 actually used only when it improves estimated risk and median distance by a
