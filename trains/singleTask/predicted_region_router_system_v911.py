@@ -188,7 +188,11 @@ class PredictedRegionRouterTrainerV911:
 
     @staticmethod
     def _region_probability_mixture(actions, probabilities, mapping):
-        table = probabilities.new_tensor(tuple(int(value) for value in mapping))
+        table = torch.tensor(
+            tuple(int(value) for value in mapping),
+            dtype=torch.long,
+            device=actions.device,
+        )
         mapped_values = actions.squeeze(-1)[:, table]
         return (probabilities * mapped_values).sum(dim=1, keepdim=True)
 
