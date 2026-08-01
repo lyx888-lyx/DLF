@@ -11,6 +11,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from trains.singleTask.relative_regret_runtime_patch_v910 import (  # noqa: E402
+    install_relative_regret_runtime_patch,
+)
+
+install_relative_regret_runtime_patch()
+
 from trains.singleTask.model.RelativeRegretCoachV910 import (  # noqa: E402
     REGRET_VERSION,
     RelativeRegretCoachV910,
@@ -21,8 +27,12 @@ from trains.singleTask.model.RelativeRegretCoachV910 import (  # noqa: E402
 )
 from trains.singleTask.model.SemanticCostCoachV99 import (  # noqa: E402
     SIGNATURE_DIM,
+    SPECIALIST_NAMES,
     global_context_features,
     stack_action_predictions,
+)
+from trains.singleTask.relative_regret_crossfit_v910 import (  # noqa: E402
+    pool_tensors,
 )
 
 
@@ -43,8 +53,39 @@ def main():
     assert targets["oracle_index"].shape == (n,)
 
     function_space = torch.randn(n, 4)
+    expert_signatures = torch.randn(n, 4, SIGNATURE_DIM)
+
+    # The strict Train OOF pool stores dense tensors.
+    strict_pool = {
+        "anchor": anchor,
+        "function_space": function_space,
+        "expert_predictions": experts,
+        "expert_signatures": expert_signatures,
+    }
+    strict_context, strict_actions, strict_signatures = pool_tensors(strict_pool)
+
+    # Validation/Test pools store the same values under experts[name].
+    frozen_pool = {
+        "anchor": anchor,
+        "function_space": function_space,
+        "experts": {
+            name: {
+                "prediction": experts[:, index],
+                "signature": expert_signatures[:, index],
+            }
+            for index, name in enumerate(SPECIALIST_NAMES)
+        },
+    }
+    frozen_context, frozen_actions, frozen_signatures = pool_tensors(frozen_pool)
+
+    assert torch.allclose(strict_context, frozen_context)
+    assert torch.allclose(strict_actions, frozen_actions)
+    assert torch.allclose(strict_signatures, frozen_signatures)
+    assert strict_actions.shape == (n, 5, 1)
+    assert strict_signatures.shape == (n, 4, SIGNATURE_DIM)
+
     context = global_context_features(function_space, actions)
-    signatures = torch.randn(n, 4, SIGNATURE_DIM)
+    signatures = expert_signatures
     model = RelativeRegretCoachV910(
         context_dim=context.size(1),
         hidden_dim=24,
