@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Sequence
+from typing import Dict, Optional, Sequence
 
 import torch
 import torch.nn as nn
@@ -192,7 +192,7 @@ def predicted_region_router_loss(
     regression_weight: float = 0.35,
     expected_region_weight: float = 0.20,
     confidence_weight: float = 0.05,
-    class_weights: torch.Tensor | None = None,
+    class_weights: Optional[torch.Tensor] = None,
 ) -> Dict[str, torch.Tensor]:
     target_region = region_index(labels).to(output["class_logits"].device)
     target_cumulative = cumulative_targets(labels).to(output["ordinal_logits"])
