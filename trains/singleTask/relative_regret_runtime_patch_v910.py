@@ -1,4 +1,15 @@
-"""Runtime alignment patch for V9.10 policy scales and pre-registered profiles."""
+"""Runtime alignment and pool-compatibility patch for V9.10.
+
+V9.10 consumes two semantically identical pool layouts:
+
+* the strict Train OOF pool stores dense ``expert_predictions`` and
+  ``expert_signatures`` tensors;
+* the frozen Validation/Test pool stores values under ``experts[name]``.
+
+The aligned entry point installs one adapter so the coach sees the same tensors
+from either representation.  It also keeps deployment scale semantics aligned
+with OOF policy calibration.
+"""
 
 from __future__ import annotations
 
@@ -48,20 +59,70 @@ def install_relative_regret_runtime_patch() -> None:
         }
     )
 
+    if not getattr(crossfit, "_v910_pool_patch_installed", False):
+        original_pool_tensors = crossfit.pool_tensors
+
+        def pool_tensors_compatible(pool):
+            # Frozen Validation/Test representation.
+            if isinstance(pool.get("experts"), dict):
+                return original_pool_tensors(pool)
+
+            # Strict Train OOF representation produced by V9.9.
+            required = {
+                "anchor",
+                "function_space",
+                "expert_predictions",
+                "expert_signatures",
+            }
+            missing = sorted(required - set(pool))
+            if missing:
+                raise KeyError(
+                    "V9.10 pool has neither the frozen experts mapping nor the "
+                    f"strict semantic tensors; missing={missing}"
+                )
+
+            predictions = pool["expert_predictions"].float()
+            signatures = pool["expert_signatures"].float()
+            if predictions.dim() != 3 or predictions.shape[1:] != (4, 1):
+                raise ValueError(
+                    "strict expert_predictions must have shape [N,4,1], got "
+                    f"{tuple(predictions.shape)}"
+                )
+            if (
+                signatures.dim() != 3
+                or signatures.shape[1:] != (4, crossfit.SIGNATURE_DIM)
+            ):
+                raise ValueError(
+                    "strict expert_signatures must have shape "
+                    f"[N,4,{crossfit.SIGNATURE_DIM}], got "
+                    f"{tuple(signatures.shape)}"
+                )
+
+            anchor = pool["anchor"].float()
+            actions = crossfit.stack_action_predictions(anchor, predictions)
+            full_signatures = crossfit.stack_action_signatures(anchor, signatures)
+            context = crossfit.global_context_features(
+                pool["function_space"].float(), actions
+            )
+            return context, actions, full_signatures[:, 1:]
+
+        crossfit.pool_tensors = pool_tensors_compatible
+        crossfit._v910_pool_patch_installed = True
+
     cls = crossfit.RelativeRegretCoachCrossFitterV910
-    if getattr(cls, "_v910_scale_patch_installed", False):
-        return
-    original = cls.collect_ensemble
+    if not getattr(cls, "_v910_scale_patch_installed", False):
+        original_collect_ensemble = cls.collect_ensemble
 
-    def collect_ensemble_aligned(self, context, signatures):
-        output = original(self, context, signatures)
-        # OOF policies are calibrated against each model's relative-regret scale.
-        # Keep that same meaning at deployment; model disagreement remains a
-        # separate diagnostic instead of silently inflating the policy scale.
-        if "aleatoric_scale" in output:
-            output["total_scale"] = output["predicted_scale"]
-            output["predicted_scale"] = output["aleatoric_scale"]
-        return output
+        def collect_ensemble_aligned(self, context, signatures):
+            output = original_collect_ensemble(self, context, signatures)
+            # OOF policies are calibrated against each model's relative-regret
+            # scale. Keep that same meaning at deployment; model disagreement is
+            # retained as a separate diagnostic instead of silently inflating the
+            # policy scale.
+            if "aleatoric_scale" in output:
+                output["total_scale"] = output["predicted_scale"]
+                output["predicted_scale"] = output["aleatoric_scale"]
+            return output
 
-    cls.collect_ensemble = collect_ensemble_aligned
-    cls._v910_scale_patch_installed = True
+        cls.collect_ensemble = collect_ensemble_aligned
+        cls._v910_scale_patch_installed = True
