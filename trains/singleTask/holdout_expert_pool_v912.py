@@ -20,7 +20,11 @@ from .model.SemanticCostCoachV99 import (
     SIGNATURE_VERSION,
     SPECIALIST_NAMES,
 )
-from .oof_group_splits_v92 import build_subset_loader, conversation_group_id
+from .oof_group_splits_v92 import (
+    build_subset_loader,
+    canonical_sample_id,
+    conversation_group_id,
+)
 from .semantic_expert_pool_v99 import (
     ROLE_INDEX,
     collect_role_semantic_rows,
@@ -57,15 +61,21 @@ def _all_indices(dataset) -> list[int]:
 
 def _role_values(
     rows,
-    ordered_indices: Sequence[int],
+    ordered_sample_ids: Sequence[str],
 ) -> Dict[str, torch.Tensor]:
-    by_index = {int(row["sample_index"]): row for row in rows}
-    missing = [int(index) for index in ordered_indices if int(index) not in by_index]
+    by_id = {}
+    for row in rows:
+        sample_id = canonical_sample_id(row["sample_id"])
+        if sample_id in by_id:
+            raise RuntimeError(f"duplicate role semantic sample id: {sample_id}")
+        by_id[sample_id] = row
+    expected = [canonical_sample_id(value) for value in ordered_sample_ids]
+    missing = [sample_id for sample_id in expected if sample_id not in by_id]
     if missing:
         raise RuntimeError(
             f"role semantic collection misses {len(missing)} samples"
         )
-    ordered = [by_index[int(index)] for index in ordered_indices]
+    ordered = [by_id[sample_id] for sample_id in expected]
     return {
         "prediction": torch.cat(
             [row["prediction"] for row in ordered], dim=0
@@ -138,7 +148,7 @@ def _collect_split(
             args.device,
             ROLE_INDEX[name],
         )
-        experts[name] = _role_values(rows, indices)
+        experts[name] = _role_values(rows, teacher_data["sample_ids"])
 
     for name in ("strong_negative", "strong_positive"):
         values = collect_tail_semantics(
@@ -243,6 +253,8 @@ def build_holdout_expert_pool_v912(
         "outer_fold": int(outer_fold),
         "role_config": role_config.__dict__,
         "tail_config": tail_config.__dict__,
+        "teacher_fit_steps": int(teacher_fit_steps),
+        "min_region_samples": int(min_region_samples),
         "checkpoint_sha256": checkpoint_sha,
     }
     if resume and final_path.is_file():
@@ -340,7 +352,13 @@ def build_holdout_expert_pool_v912(
     ]
     if development_space["sample_ids"] != expected_development_ids:
         raise RuntimeError("development function-space order is misaligned")
-    selected_anchor = teacher["cache"]["splits"]["train"]["predictions"][
+    teacher_train = teacher["cache"]["splits"]["train"]
+    if not torch.allclose(
+        development_space["labels"].float(),
+        teacher_train["labels"].float(),
+    ):
+        raise RuntimeError("development teacher/function-space labels mismatch")
+    selected_anchor = teacher_train["predictions"][
         :, int(teacher["anchor_index"])
     ].float()
     if len(selected_anchor) != len(development_space["feature"]):
@@ -465,6 +483,9 @@ def build_holdout_expert_pool_v912(
         "teacher_anchor_index": int(teacher["anchor_index"]),
         "teacher_anchor_name": TEACHER_NAMES[int(teacher["anchor_index"])],
         "valid_teacher_mae": dict(teacher["valid_teacher_mae"]),
+        "upstream_checkpoints": {
+            name: str(path) for name, path in checkpoint_paths.items()
+        },
         "role_expert_checkpoints": {
             name: str(path) for name, path in role_checkpoint_paths.items()
         },
