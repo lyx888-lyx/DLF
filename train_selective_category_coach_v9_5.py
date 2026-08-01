@@ -17,7 +17,7 @@ from trains.singleTask.expert_pool_v93 import (
     anchor_checkpoint_from_summary,
     default_expert_paths,
 )
-from trains.singleTask.selective_category_coach_system_v95 import (
+from trains.singleTask.selective_category_coach_safe_v95 import (
     SelectiveCategoryCoachTrainerV95,
 )
 from trains.utils import MetricsTop
