@@ -303,29 +303,17 @@ def crossfit_router_diagnostic(
             pool["region_index"].index_select(0, valid_idx),
             policy.temperature_grid,
         )
-        final_model = train_fixed_epochs(
-            pool["router_features"],
-            pool["labels"],
-            development,
-            device,
-            model_config,
-            seed + 23003 * (fold + 1),
-            trained["best_epoch"],
-        )
+        # Do not retrain on the calibration groups. The exact model whose
+        # probabilities are calibrated on valid_idx also predicts the unseen
+        # holdout, preventing the confidence-scale shift that broke V9.18.
         matrix, _ = action_cost_matrix(
             pool["actions_2d"],
             pool["labels"],
             pool["region_index"],
             development,
         )
-        calibration_logits = predict_logits(
-            final_model,
-            pool["router_features"].index_select(0, valid_idx),
-            device,
-            model_config.batch_size,
-        )
         calibration_probabilities = region_probabilities_from_logits(
-            calibration_logits, temperature
+            valid_logits, temperature
         )
         calibration_expected = expected_action_costs(
             calibration_probabilities, matrix
@@ -336,7 +324,7 @@ def crossfit_router_diagnostic(
             policy,
         )
         holdout_logits = predict_logits(
-            final_model,
+            trained["model"],
             pool["router_features"].index_select(0, holdout),
             device,
             model_config.batch_size,
@@ -397,7 +385,7 @@ def crossfit_router_diagnostic(
         best_epochs.append(int(trained["best_epoch"]))
         temperatures.append(float(temperature))
         cutoffs.append(float(gain_cutoff))
-        del trained, final_model
+        del trained
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
