@@ -1,4 +1,4 @@
-"""Dependency-light smoke test for V9.19 merge, fixed policy, and gates."""
+"""Dependency-light smoke test for V9.19 merge and fixed policy."""
 
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ from trains.singleTask.model.SemanticCostCoachV99 import ACTION_NAMES
 from trains.singleTask.same_stack_nested_router_v919 import (
     FixedPolicyV919,
     apply_fixed_policy,
+    calibrate_gain_cutoff,
     merge_pools,
 )
 
@@ -25,10 +26,14 @@ def make_pool(indices, inner_fold):
     anchor = labels + 0.30
     expert = torch.stack(
         [
-            labels + torch.tensor([0.05, 0.40, 0.50, 0.50, 0.50])[:n].view(-1, 1),
-            labels + torch.tensor([0.50, 0.20, 0.05, 0.15, 0.50])[:n].view(-1, 1),
-            labels + torch.tensor([0.50, 0.15, 0.15, 0.05, 0.50])[:n].view(-1, 1),
-            labels + torch.tensor([0.50, 0.50, 0.50, 0.40, 0.05])[:n].view(-1, 1),
+            labels
+            + torch.tensor([0.05, 0.40, 0.50, 0.50, 0.50])[:n].view(-1, 1),
+            labels
+            + torch.tensor([0.50, 0.20, 0.05, 0.15, 0.50])[:n].view(-1, 1),
+            labels
+            + torch.tensor([0.50, 0.15, 0.15, 0.05, 0.50])[:n].view(-1, 1),
+            labels
+            + torch.tensor([0.50, 0.50, 0.50, 0.40, 0.05])[:n].view(-1, 1),
         ],
         dim=1,
     )
@@ -67,15 +72,22 @@ def main():
     )
     expected = probabilities @ cost
     actions = torch.cat(
-        [merged["anchor"], merged["expert_predictions"].squeeze(-1)], dim=1
+        [merged["anchor"], merged["expert_predictions"].squeeze(-1)],
+        dim=1,
     )
     policy = FixedPolicyV919(
         gain_margin=0.03,
         min_region_confidence=0.55,
         max_coverage=0.40,
     )
+    cutoff = calibrate_gain_cutoff(probabilities, expected, policy)
     result = apply_fixed_policy(
-        probabilities, expected, actions, merged["labels"], policy
+        probabilities,
+        expected,
+        actions,
+        merged["labels"],
+        policy,
+        gain_cutoff=cutoff,
     )
     assert result["coverage"] <= 0.400001
     assert result["gain_vs_anchor"] > 0
