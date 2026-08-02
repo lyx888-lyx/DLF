@@ -29,7 +29,12 @@ def audit_fold(root: Path, fold: int):
     inner_pool_path = fold_dir / "inner_oof_same_stack_pool_v919.pth"
     inner_metrics_path = fold_dir / "inner_router_fold_metrics.csv"
     outer_predictions_path = fold_dir / "outer_holdout_predictions.csv"
-    for path in (summary_path, inner_pool_path, inner_metrics_path, outer_predictions_path):
+    for path in (
+        summary_path,
+        inner_pool_path,
+        inner_metrics_path,
+        outer_predictions_path,
+    ):
         require(path.is_file(), f"missing V9.19 fold artifact: {path}")
     summary = json.loads(summary_path.read_text(encoding="utf-8"))
     provenance = summary["provenance"]
@@ -38,49 +43,132 @@ def audit_fold(root: Path, fold: int):
         "stack mismatch",
     )
     require(
-        provenance["every_inner_oof_row_unseen_by_its_complete_expert_stack"] is True,
+        provenance[
+            "every_inner_oof_row_unseen_by_its_complete_expert_stack"
+        ]
+        is True,
         "inner leakage",
     )
     require(
-        provenance["outer_holdout_unseen_by_anchor_experts_router_and_policy"] is True,
+        provenance[
+            "outer_holdout_unseen_by_anchor_experts_router_and_policy"
+        ]
+        is True,
         "outer leakage",
     )
-    require(provenance["no_policy_grid_search"] is True, "policy search detected")
-    require(provenance["official_validation_used"] is False, "Validation used")
+    require(
+        provenance["no_policy_grid_search"] is True,
+        "policy search detected",
+    )
+    require(
+        provenance["official_validation_used"] is False,
+        "Validation used",
+    )
     require(provenance["official_test_used"] is False, "Test used")
 
     pool = torch.load(inner_pool_path, map_location="cpu")
     require(
-        pool["provenance"]["all_rows_are_unseen_by_their_expert_stack"] is True,
+        pool["provenance"][
+            "all_rows_are_unseen_by_their_expert_stack"
+        ]
+        is True,
         "inner pool provenance",
     )
-    require(len(pool["sample_ids"]) == len(set(pool["sample_ids"])), "duplicate inner IDs")
-    require(bool((pool["fold_index"] >= 0).all()), "inner fold assignment incomplete")
+    require(
+        len(pool["sample_ids"]) == len(set(pool["sample_ids"])),
+        "duplicate inner IDs",
+    )
+    require(
+        bool((pool["fold_index"] >= 0).all()),
+        "inner fold assignment incomplete",
+    )
     outer = pd.read_csv(outer_predictions_path)
-    require(not outer["sample_id"].astype(str).duplicated().any(), "duplicate outer IDs")
-    require(set(pool["sample_ids"]).isdisjoint(set(outer["sample_id"])), "inner/outer overlap")
-    require(len(pd.read_csv(inner_metrics_path)) >= 3, "too few inner router folds")
+    require(
+        not outer["sample_id"].astype(str).duplicated().any(),
+        "duplicate outer IDs",
+    )
+    require(
+        set(pool["sample_ids"]).isdisjoint(set(outer["sample_id"])),
+        "inner/outer overlap",
+    )
+    require(
+        len(pd.read_csv(inner_metrics_path)) >= 3,
+        "too few inner router folds",
+    )
+
     labels = torch.tensor(outer["label"].to_numpy()).float()
     anchor = torch.tensor(outer["anchor_prediction"].to_numpy()).float()
     selected = torch.tensor(outer["selected_prediction"].to_numpy()).float()
     anchor_mae = float(torch.abs(anchor - labels).mean().item())
     selected_mae = float(torch.abs(selected - labels).mean().item())
+    metrics = summary["outer_holdout_metrics"]
     require(
-        abs(anchor_mae - summary["outer_holdout_metrics"]["anchor_mae"]) < 2e-6,
+        abs(anchor_mae - metrics["anchor_mae"]) < 2e-6,
         "anchor MAE mismatch",
     )
     require(
-        abs(selected_mae - summary["outer_holdout_metrics"]["mae"]) < 2e-6,
+        abs(selected_mae - metrics["mae"]) < 2e-6,
         "router MAE mismatch",
     )
+
+    observed_trigger = outer["selected_action"].astype(str) != "anchor"
+    require(
+        abs(float(observed_trigger.mean()) - float(metrics["coverage"]))
+        < 2e-6,
+        "outer coverage mismatch",
+    )
+    if summary["inner_router_accepted"]:
+        cutoff = metrics.get("gain_cutoff")
+        cutoff = float("inf") if cutoff is None else float(cutoff)
+        confidence_threshold = float(
+            summary["fixed_policy"]["min_region_confidence"]
+        )
+        expected_trigger = (
+            outer["predicted_gain"].astype(float) >= cutoff
+        ) & (
+            outer["region_confidence"].astype(float)
+            >= confidence_threshold
+        )
+        require(
+            bool((expected_trigger.to_numpy() == observed_trigger.to_numpy()).all()),
+            "outer trigger is not the frozen per-sample threshold rule",
+        )
+        allowed = list(summary["fixed_policy"]["allowed_specialists"])
+        if observed_trigger.any():
+            expected_columns = [
+                f"expected_cost_{name}" for name in allowed
+            ]
+            proposed = (
+                outer.loc[observed_trigger, expected_columns]
+                .astype(float)
+                .idxmin(axis=1)
+                .str.replace("expected_cost_", "", regex=False)
+            )
+            observed_action = outer.loc[
+                observed_trigger, "selected_action"
+            ].astype(str)
+            require(
+                bool((proposed.to_numpy() == observed_action.to_numpy()).all()),
+                "triggered row did not select minimum expected-cost specialist",
+            )
+    else:
+        require(
+            not observed_trigger.any(),
+            "rejected inner router did not fall back to Anchor",
+        )
+
     print("V9.19 OUTER FOLD ENGINEERING AUDIT PASSED")
     print("outer_fold:", fold)
     print("inner_router_accepted:", summary["inner_router_accepted"])
-    print("inner_oof_gain:", f"{summary['inner_oof_metrics']['gain_vs_anchor']:+.6f}")
+    print(
+        "inner_oof_gain:",
+        f"{summary['inner_oof_metrics']['gain_vs_anchor']:+.6f}",
+    )
     print(
         "outer_holdout_gain:",
-        f"{summary['outer_holdout_metrics']['gain_vs_anchor']:+.6f}",
+        f"{metrics['gain_vs_anchor']:+.6f}",
     )
+    print("outer_holdout_coverage:", f"{metrics['coverage']:.4f}")
 
 
 def audit_aggregate(root: Path):
@@ -96,9 +184,18 @@ def audit_aggregate(root: Path):
         not predictions["sample_id"].astype(str).duplicated().any(),
         "duplicate aggregate IDs",
     )
-    require(len(folds) == summary["outer_fold_count"], "outer fold count mismatch")
-    require(summary["provenance"]["official_validation_used"] is False, "Validation used")
-    require(summary["provenance"]["official_test_used"] is False, "Test used")
+    require(
+        len(folds) == summary["outer_fold_count"],
+        "outer fold count mismatch",
+    )
+    require(
+        summary["provenance"]["official_validation_used"] is False,
+        "Validation used",
+    )
+    require(
+        summary["provenance"]["official_test_used"] is False,
+        "Test used",
+    )
     require(
         summary["provenance"]["no_posthoc_fold_selection"] is True,
         "fold selection detected",
