@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import hashlib
 import math
 from dataclasses import asdict, dataclass
 from statistics import median
-from typing import Mapping, Sequence
+from typing import Dict, Mapping, Sequence
 
 import torch
 
@@ -52,14 +51,7 @@ class InnerGateV919:
     min_trigger_precision: float = 0.55
 
 
-def _stable_bucket(group_id: object, seed: int, buckets: int) -> int:
-    digest = hashlib.sha1(f"{seed}|{group_id}".encode("utf-8")).hexdigest()
-    return int(digest, 16) % int(buckets)
-
-
-def merge_pools(
-    pools: Sequence[Mapping[str, object]], expected_indices: Sequence[int]
-):
+def merge_pools(pools: Sequence[Mapping[str, object]], expected_indices: Sequence[int]):
     """Merge disjoint same-stack holdout pools into global-index order."""
     if not pools:
         raise ValueError("no same-stack pools to merge")
@@ -76,21 +68,14 @@ def merge_pools(
 
     def stack_field(name: str):
         return torch.stack(
-            [by_index[index][0][name][by_index[index][1]] for index in ordered],
-            dim=0,
+            [by_index[index][0][name][by_index[index][1]] for index in ordered], dim=0
         )
 
-    return {
+    result = {
         "version": PROTOCOL_VERSION,
         "sample_indices": ordered,
-        "sample_ids": [
-            by_index[index][0]["sample_ids"][by_index[index][1]]
-            for index in ordered
-        ],
-        "group_ids": [
-            by_index[index][0]["group_ids"][by_index[index][1]]
-            for index in ordered
-        ],
+        "sample_ids": [by_index[index][0]["sample_ids"][by_index[index][1]] for index in ordered],
+        "group_ids": [by_index[index][0]["group_ids"][by_index[index][1]] for index in ordered],
         "labels": stack_field("labels"),
         "anchor": stack_field("anchor"),
         "function_space": stack_field("function_space"),
@@ -100,7 +85,10 @@ def merge_pools(
         "action_names": pools[0]["action_names"],
         "feature_space": pools[0]["feature_space"],
         "fold_index": torch.tensor(
-            [int(by_index[index][0].get("inner_fold", -1)) for index in ordered],
+            [
+                int(by_index[index][0].get("inner_fold", -1))
+                for index in ordered
+            ],
             dtype=torch.long,
         ),
         "provenance": {
@@ -108,6 +96,7 @@ def merge_pools(
             "same_stack_recipe_for_every_inner_fold": True,
         },
     }
+    return result
 
 
 def apply_fixed_policy(
@@ -117,13 +106,11 @@ def apply_fixed_policy(
     labels: torch.Tensor,
     policy: FixedPolicyV919,
 ):
-    """Apply one fixed policy with an unsupervised batch coverage cap."""
     action_to_index = {name: index for index, name in enumerate(ACTION_NAMES)}
     allowed = [action_to_index[name] for name in policy.allowed_specialists]
     specialist_costs = expected_costs[:, allowed]
     local_best_cost, local_offset = specialist_costs.min(dim=1)
-    allowed_tensor = torch.tensor(allowed, dtype=torch.long)
-    proposed_action = allowed_tensor.index_select(0, local_offset)
+    proposed_action = torch.tensor(allowed, dtype=torch.long).index_select(0, local_offset)
     predicted_gain = expected_costs[:, 0] - local_best_cost
     confidence = probabilities.max(dim=1).values
     eligible = (
@@ -136,16 +123,10 @@ def apply_fixed_policy(
     if policy.max_coverage > 0 and max_trigger == 0 and len(actions) > 0:
         max_trigger = 1
     if len(eligible_indices) > max_trigger >= 0:
-        order = torch.argsort(
-            predicted_gain.index_select(0, eligible_indices), descending=True
-        )
+        order = torch.argsort(predicted_gain.index_select(0, eligible_indices), descending=True)
         eligible_indices = eligible_indices.index_select(0, order[:max_trigger])
-    selected_action[eligible_indices] = proposed_action.index_select(
-        0, eligible_indices
-    )
-    selected_prediction = actions.gather(
-        1, selected_action.view(-1, 1)
-    ).view(-1, 1)
+    selected_action[eligible_indices] = proposed_action.index_select(0, eligible_indices)
+    selected_prediction = actions.gather(1, selected_action.view(-1, 1)).view(-1, 1)
     labels = labels.view(-1, 1)
     anchor_prediction = actions[:, 0:1]
     anchor_error = torch.abs(anchor_prediction - labels)
@@ -161,23 +142,11 @@ def apply_fixed_policy(
         "anchor_mae": float(anchor_error.mean().item()),
         "mae": float(selected_error.mean().item()),
         "gain_vs_anchor": float(gain.mean().item()),
-        "harm_over_010_rate": float(
-            (gain.view(-1) < -0.10).float().mean().item()
-        ),
-        "large_gain_rate_010": float(
-            (gain.view(-1) > 0.10).float().mean().item()
-        ),
+        "harm_over_010_rate": float((gain.view(-1) < -0.10).float().mean().item()),
+        "large_gain_rate_010": float((gain.view(-1) > 0.10).float().mean().item()),
         "coverage": float(triggered.float().mean().item()),
-        "trigger_precision": (
-            float((gain.view(-1)[triggered] > 0).float().mean().item())
-            if triggered.any()
-            else 0.0
-        ),
-        "mean_trigger_gain": (
-            float(gain.view(-1)[triggered].mean().item())
-            if triggered.any()
-            else 0.0
-        ),
+        "trigger_precision": float((gain.view(-1)[triggered] > 0).float().mean().item()) if triggered.any() else 0.0,
+        "mean_trigger_gain": float(gain.view(-1)[triggered].mean().item()) if triggered.any() else 0.0,
         "action_counts": {
             name: int((selected_action == index).sum().item())
             for index, name in enumerate(ACTION_NAMES)
@@ -193,17 +162,12 @@ def crossfit_router_diagnostic(
     gate: InnerGateV919,
     seed: int,
 ):
-    """Cross-fit the region model and evaluate the one pre-registered policy."""
     pool = normalize_router_pool(merged_pool, "fully_same_stack_inner_oof")
     fold_index = merged_pool["fold_index"].view(-1)
-    unique_folds = sorted(
-        int(value) for value in torch.unique(fold_index).tolist()
-    )
+    unique_folds = sorted(int(value) for value in torch.unique(fold_index).tolist())
     logits_oof = torch.full((len(pool["labels"]), 4), float("nan"))
     probabilities_oof = torch.full((len(pool["labels"]), 5), float("nan"))
-    expected_oof = torch.full(
-        (len(pool["labels"]), len(ACTION_NAMES)), float("nan")
-    )
+    expected_oof = torch.full((len(pool["labels"]), len(ACTION_NAMES)), float("nan"))
     fold_rows = []
     histories = []
     best_epochs = []
@@ -255,9 +219,7 @@ def crossfit_router_diagnostic(
             pool["region_index"],
             development,
         )
-        probabilities = region_probabilities_from_logits(
-            holdout_logits, temperature
-        )
+        probabilities = region_probabilities_from_logits(holdout_logits, temperature)
         expected = expected_action_costs(probabilities, matrix)
         fold_result = apply_fixed_policy(
             probabilities,
@@ -275,35 +237,19 @@ def crossfit_router_diagnostic(
                 "holdout_count": len(holdout),
                 "best_epoch": int(trained["best_epoch"]),
                 "temperature": float(temperature),
-                **{
-                    key: value
-                    for key, value in fold_result.items()
-                    if key
-                    not in {
-                        "selected_action",
-                        "selected_prediction",
-                        "predicted_gain",
-                        "region_confidence",
-                        "trigger",
-                        "action_counts",
-                    }
-                },
-                **{
-                    f"count_{name}": fold_result["action_counts"][name]
-                    for name in ACTION_NAMES
-                },
+                **{key: value for key, value in fold_result.items() if key not in {
+                    "selected_action", "selected_prediction", "predicted_gain",
+                    "region_confidence", "trigger", "action_counts"
+                }},
+                **{f"count_{name}": fold_result["action_counts"][name] for name in ACTION_NAMES},
             }
         )
-        histories.extend(
-            {"inner_router_fold": fold, **row}
-            for row in trained["history"]
-        )
+        histories.extend({"inner_router_fold": fold, **row} for row in trained["history"])
         best_epochs.append(int(trained["best_epoch"]))
         temperatures.append(float(temperature))
         del trained, final_model
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
-
     if (
         not torch.isfinite(logits_oof).all()
         or not torch.isfinite(probabilities_oof).all()
@@ -323,8 +269,7 @@ def crossfit_router_diagnostic(
     )
     accepted = (
         overall["gain_vs_anchor"] >= float(gate.min_gain)
-        and overall["harm_over_010_rate"]
-        <= float(gate.max_harm_over_010_rate)
+        and overall["harm_over_010_rate"] <= float(gate.max_harm_over_010_rate)
         and positive_fold_fraction >= float(gate.min_positive_fold_fraction)
         and overall["trigger_precision"] >= float(gate.min_trigger_precision)
         and overall["coverage"] > 0.0
@@ -356,21 +301,10 @@ def train_calibrated_outer_router(
 ):
     """Train on disjoint groups and calibrate temperature on held-out groups."""
     pool = normalize_router_pool(merged_pool, "fully_same_stack_inner_oof")
-    calibration = [
-        index
-        for index, group in enumerate(pool["group_ids"])
-        if _stable_bucket(group, seed + 9191, 5) == 0
-    ]
-    calibration_set = set(calibration)
-    training = [
-        index
-        for index in range(len(pool["labels"]))
-        if index not in calibration_set
-    ]
-    if len(calibration) < 30 or len(training) < 100:
-        raise RuntimeError("V9.19 router train/calibration group split too small")
-    training_idx = torch.tensor(training, dtype=torch.long)
-    calibration_idx = torch.tensor(calibration, dtype=torch.long)
+    all_indices = torch.arange(len(pool["labels"]), dtype=torch.long)
+    training_idx, calibration_idx = inner_split_indices(
+        all_indices, pool["group_ids"], seed + 9191
+    )
     model = train_fixed_epochs(
         pool["router_features"],
         pool["labels"],
@@ -415,22 +349,14 @@ def evaluate_outer_pool(
     policy: FixedPolicyV919,
     accepted: bool,
 ):
-    """Evaluate one untouched outer holdout, or fall back to Anchor."""
-    pool = normalize_router_pool(
-        outer_pool, "fully_same_stack_outer_holdout"
-    )
+    pool = normalize_router_pool(outer_pool, "fully_same_stack_outer_holdout")
     logits = predict_logits(
-        trained_router["model"],
-        pool["router_features"],
-        device,
-        model_config.batch_size,
+        trained_router["model"], pool["router_features"], device, model_config.batch_size
     )
     probabilities = region_probabilities_from_logits(
         logits, trained_router["temperature"]
     )
-    expected = expected_action_costs(
-        probabilities, trained_router["cost_matrix"]
-    )
+    expected = expected_action_costs(probabilities, trained_router["cost_matrix"])
     if accepted:
         result = apply_fixed_policy(
             probabilities,
@@ -447,8 +373,7 @@ def evaluate_outer_pool(
         result = {
             "selected_action": selected_action,
             "selected_prediction": anchor,
-            "predicted_gain": expected[:, 0]
-            - expected[:, 1:].min(dim=1).values,
+            "predicted_gain": expected[:, 0] - expected[:, 1:].min(dim=1).values,
             "region_confidence": probabilities.max(dim=1).values,
             "trigger": torch.zeros(len(labels), dtype=torch.bool),
             "anchor_mae": float(anchor_error.mean().item()),
@@ -459,19 +384,14 @@ def evaluate_outer_pool(
             "coverage": 0.0,
             "trigger_precision": 0.0,
             "mean_trigger_gain": 0.0,
-            "action_counts": {
-                name: len(labels) if index == 0 else 0
-                for index, name in enumerate(ACTION_NAMES)
-            },
+            "action_counts": {name: len(labels) if index == 0 else 0 for index, name in enumerate(ACTION_NAMES)},
         }
     return {
         "pool": pool,
         "logits": logits,
         "region_probabilities": probabilities,
         "expected_costs": expected,
-        "region_metrics": region_metrics(
-            probabilities, pool["region_index"]
-        ),
+        "region_metrics": region_metrics(probabilities, pool["region_index"]),
         **result,
     }
 
