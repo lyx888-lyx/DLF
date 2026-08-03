@@ -15,17 +15,29 @@ from trains.singleTask.expert_pool_viability_audit_v929 import (
 
 def main():
     rng = np.random.default_rng(929)
-    action_names = ("anchor", "strong_negative", "boundary", "positive", "strong_positive")
+    action_names = (
+        "anchor",
+        "strong_negative",
+        "boundary",
+        "positive",
+        "strong_positive",
+    )
 
     labels = np.concatenate(
         [rng.normal(-1.0, 0.35, size=80), rng.normal(1.0, 0.35, size=80)]
     )
     anchor = labels + rng.normal(0.0, 0.55, size=len(labels))
-    negative = labels + np.where(labels < 0.0, rng.normal(0.0, 0.18, len(labels)), 0.55)
+    negative = labels + np.where(
+        labels < 0.0, rng.normal(0.0, 0.18, len(labels)), 0.55
+    )
     boundary = labels + rng.normal(0.0, 0.42, size=len(labels))
-    positive = labels + np.where(labels >= 0.0, rng.normal(0.0, 0.18, len(labels)), -0.55)
+    positive = labels + np.where(
+        labels >= 0.0, rng.normal(0.0, 0.18, len(labels)), -0.55
+    )
     strong_positive = labels + rng.normal(0.12, 0.48, size=len(labels))
-    actions = np.column_stack([anchor, negative, boundary, positive, strong_positive])
+    actions = np.column_stack(
+        [anchor, negative, boundary, positive, strong_positive]
+    )
 
     bounds = compute_fold_upper_bounds(actions, labels, action_names)
     best_single_mae = mae(bounds["best_single_prediction"], labels)
@@ -42,9 +54,7 @@ def main():
     assert np.all(pooled_weights >= -1e-12)
     assert abs(float(pooled_weights.sum()) - 1.0) < 1e-9
 
-    closure = oracle_gap_closure(
-        mae(anchor, labels), convex_mae, oracle_mae
-    )
+    closure = oracle_gap_closure(mae(anchor, labels), convex_mae, oracle_mae)
     assert np.isfinite(closure)
 
     verdict = make_viability_verdict(
@@ -63,6 +73,29 @@ def main():
         == "global_fixed_fusion_cannot_hit_target_fold_specific_cheating_can"
     )
     assert verdict["below_target"]["sample_oracle"] is True
+
+    # Convex interpolation and discrete expert selection are different upper
+    # bounds. A convex combination may land between all saved actions and be
+    # closer to the label than the discrete sample oracle.
+    interpolation_actions = np.asarray(
+        [
+            [-1.0, 1.0, 2.0, 3.0, 4.0],
+            [-1.0, 1.0, 2.0, 3.0, 4.0],
+        ]
+    )
+    interpolation_labels = np.zeros(2)
+    interpolation = compute_fold_upper_bounds(
+        interpolation_actions, interpolation_labels, action_names
+    )
+    assert np.isclose(
+        mae(interpolation["sample_oracle_prediction"], interpolation_labels),
+        1.0,
+    )
+    assert np.isclose(
+        mae(interpolation["convex_prediction"], interpolation_labels),
+        0.0,
+        atol=1e-8,
+    )
 
     print("V9.29 SMOKE TEST PASSED")
     print("best_single_action:", bounds["best_single_action"])
