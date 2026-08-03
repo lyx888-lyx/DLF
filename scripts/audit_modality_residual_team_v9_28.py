@@ -91,20 +91,20 @@ def main():
         "text_anchor_abs",
         "text_anchor_squared",
     }
-    for name in features.feature_name.astype(str):
+    for name in features["feature_name"].astype(str):
         if "text" in name.lower() and name not in allowed_anchor_names:
             raise RuntimeError(f"forbidden residual feature: {name}")
 
     coefficients = pd.read_csv(output / "v928_coefficient_inventory.csv")
-    primary = coefficients[coefficients.strategy == PRIMARY_STRATEGY]
+    primary = coefficients[coefficients["strategy"] == PRIMARY_STRATEGY]
     expected = cli.outer_folds * len(HEAD_NAMES)
     if len(primary) != expected:
         raise RuntimeError(
             f"expected {expected} primary coefficients, found {len(primary)}"
         )
-    if set(primary.head.astype(str)) != set(HEAD_NAMES):
+    if set(primary["head"].astype(str)) != set(HEAD_NAMES):
         raise RuntimeError("primary coefficient heads are incomplete")
-    values = primary.coefficient.to_numpy(dtype=np.float64)
+    values = primary["coefficient"].to_numpy(dtype=np.float64)
     if not np.isfinite(values).all() or np.any(values < -1e-9):
         raise RuntimeError("invalid non-negative coefficient")
     upper = float(summary["configs"]["team"]["coefficient_upper_bound"])
@@ -112,23 +112,25 @@ def main():
         raise RuntimeError("coefficient exceeds registered upper bound")
 
     split = pd.read_csv(output / "v928_split_manifest.csv")
-    if set(split.outer_fold.astype(int)) != set(range(cli.outer_folds)):
+    if set(split["outer_fold"].astype(int)) != set(range(cli.outer_folds)):
         raise RuntimeError("outer-fold split manifest is incomplete")
     if bool((split.groupby("outer_fold")["inner_fold"].nunique() < 3).any()):
         raise RuntimeError("each outer fold requires at least three inner folds")
-    if bool((split.sample_count <= 0).any()) or bool((split.group_count <= 0).any()):
+    if bool((split["sample_count"] <= 0).any()) or bool(
+        (split["group_count"] <= 0).any()
+    ):
         raise RuntimeError("empty split in manifest")
 
     sources = pd.read_csv(output / "v928_source_integrity.csv")
     if len(sources) != 2 * cli.outer_folds:
         raise RuntimeError("source integrity rows are incomplete")
-    if bool((sources.dataset_label_max_abs > 1e-6).any()):
+    if bool((sources["dataset_label_max_abs"] > 1e-6).any()):
         raise RuntimeError("dataset/pool label alignment failed")
-    if bool(sources.sha256.astype(str).str.len().ne(64).any()):
+    if bool(sources["sha256"].astype(str).str.len().ne(64).any()):
         raise RuntimeError("invalid source checksum")
 
     predictions = pd.read_csv(output / "v928_outer_predictions.csv")
-    if predictions.sample_id.duplicated().any():
+    if predictions["sample_id"].duplicated().any():
         raise RuntimeError("outer prediction table duplicates sample IDs")
     required_prediction_columns = {
         "text_anchor",
