@@ -37,7 +37,26 @@ def patched_build_config(cli, seed):
 def patched_evaluate_seed(cli, seed, valid_dataset, metadata):
     global _AUDIT_SEQ_LENS
     _AUDIT_SEQ_LENS = valid_dataset.get_seq_len()
-    return _ORIGINAL_EVALUATE_SEED(cli, seed, valid_dataset, metadata)
+    predictions, sources, baseline_row, cf_row = _ORIGINAL_EVALUATE_SEED(
+        cli, seed, valid_dataset, metadata
+    )
+    version = str(sources["compatibility_cache_version"])
+    cache_seed = None if int(seed) == 1111 else int(seed)
+    paths = cache_paths(
+        cli.result_root,
+        "mosi",
+        version=version,
+        seed=cache_seed,
+    )
+    sources.update(
+        {
+            "compatibility_cache_csv": str(paths["csv"].resolve()),
+            "compatibility_cache_csv_sha256": checkpoint_sha256(paths["csv"]),
+            "compatibility_cache_config": str(paths["config"].resolve()),
+            "compatibility_cache_config_sha256": checkpoint_sha256(paths["config"]),
+        }
+    )
+    return predictions, sources, baseline_row, cf_row
 
 
 def legacy_safe_load_counterfactual_cache(
