@@ -1,7 +1,11 @@
 """Hardened independent-audit entry point."""
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import audit_mosi_cfcompat_dataset_mechanism as base
+from trains.singleTask.mosi_cfcompat_audit_utils import sha256_file
 from trains.singleTask.mosi_cfcompat_audit_v2_utils import (
     joint_video_bootstrap,
     mechanism_assessment,
@@ -11,11 +15,38 @@ from trains.singleTask.mosi_cfcompat_audit_v2_utils import (
 
 
 def main():
+    cli = base.parse_args()
     base.prediction_events = prediction_events
     base.joint_video_bootstrap = joint_video_bootstrap
     base.opportunity_ranking = opportunity_ranking
     base.mechanism_assessment = mechanism_assessment
     base.main()
+
+    root = Path(cli.result_dir)
+    manifest = json.loads((root / "source_manifest.json").read_text(encoding="utf-8"))
+    check_path = root / "independent_audit_check.json"
+    payload = json.loads(check_path.read_text(encoding="utf-8"))
+    cache_binding = True
+    for record in manifest["source_records"]:
+        for path_key, sha_key in (
+            ("compatibility_cache_csv", "compatibility_cache_csv_sha256"),
+            ("compatibility_cache_config", "compatibility_cache_config_sha256"),
+        ):
+            path = Path(record[path_key])
+            cache_binding = bool(
+                cache_binding
+                and path.is_file()
+                and sha256_file(path) == record[sha_key]
+            )
+    payload["checks"]["compatibility_cache_binding"] = cache_binding
+    payload["passed"] = bool(all(payload["checks"].values()))
+    check_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    if not payload["passed"]:
+        raise RuntimeError("Compatibility-cache source binding failed.")
+    print("compatibility_cache_binding: True")
 
 
 if __name__ == "__main__":
