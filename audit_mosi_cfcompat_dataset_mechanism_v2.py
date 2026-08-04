@@ -4,8 +4,15 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
+
 import audit_mosi_cfcompat_dataset_mechanism as base
-from trains.singleTask.mosi_cfcompat_audit_utils import sha256_file
+from trains.singleTask.mosi_cfcompat_audit_utils import (
+    FORMAL_SEEDS,
+    MODES,
+    sha256_file,
+)
 from trains.singleTask.mosi_cfcompat_audit_v2_utils import (
     joint_video_bootstrap,
     mechanism_assessment,
@@ -53,8 +60,55 @@ def main():
             and sha256_file(path) == dataset_source.get(sha_key)
         )
 
+    samples = pd.read_csv(root / "dataset_samples_train_valid.csv")
+    events = pd.read_csv(root / "valid_prediction_events.csv")
+    train = samples.loc[samples.Split.astype(str).eq("train")].copy()
+    valid = samples.loc[samples.Split.astype(str).eq("valid")].copy()
+    official_counts = bool(
+        len(train) == 1284
+        and len(valid) == 229
+        and not train.sample_index.duplicated().any()
+        and not valid.sample_index.duplicated().any()
+        and train.sample_id.astype(str).nunique() == len(train)
+        and valid.sample_id.astype(str).nunique() == len(valid)
+    )
+
+    prediction_binding = True
+    expected = valid[
+        ["sample_index", "sample_id", "video_id", "label"]
+    ].sort_values("sample_index", kind="mergesort").reset_index(drop=True)
+    for seed in FORMAL_SEEDS:
+        for mode in MODES:
+            local = events.loc[
+                events.Seed.astype(int).eq(seed)
+                & events.Mode.astype(str).eq(mode),
+                ["sample_index", "sample_id", "video_id", "label"],
+            ].sort_values("sample_index", kind="mergesort").reset_index(drop=True)
+            prediction_binding = bool(
+                prediction_binding
+                and len(local) == len(expected)
+                and np.array_equal(
+                    local.sample_index.to_numpy(dtype=int),
+                    expected.sample_index.to_numpy(dtype=int),
+                )
+                and local.sample_id.astype(str).equals(
+                    expected.sample_id.astype(str)
+                )
+                and local.video_id.astype(str).equals(
+                    expected.video_id.astype(str)
+                )
+                and np.allclose(
+                    local.label.to_numpy(dtype=float),
+                    expected.label.to_numpy(dtype=float),
+                    atol=1e-12,
+                    rtol=0.0,
+                )
+            )
+
     payload["checks"]["compatibility_cache_binding"] = cache_binding
     payload["checks"]["dataset_and_config_source_binding"] = dataset_binding
+    payload["checks"]["official_mosi_train_valid_identity"] = official_counts
+    payload["checks"]["valid_sample_prediction_identity_binding"] = prediction_binding
     payload["passed"] = bool(all(payload["checks"].values()))
     check_path.write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n",
@@ -65,6 +119,8 @@ def main():
         raise RuntimeError("Hardened source binding failed: {}".format(failed))
     print("compatibility_cache_binding: True")
     print("dataset_and_config_source_binding: True")
+    print("official_mosi_train_valid_identity: True")
+    print("valid_sample_prediction_identity_binding: True")
 
 
 if __name__ == "__main__":
