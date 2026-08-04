@@ -33,7 +33,7 @@ if [[ "${SEED}" == "1114" ]]; then
   TRAIN_ARGS+=(--fixed-lambda "${FIXED_LAMBDA}")
 fi
 
-python3 train_cfcompat_video_vrex.py "${TRAIN_ARGS[@]}"
+python3 run_cfcompat_video_vrex_locked.py "${TRAIN_ARGS[@]}"
 
 python3 audit_cfcompat_video_vrex.py \
   --result-dir "${OUTPUT_DIR}"
