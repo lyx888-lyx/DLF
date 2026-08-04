@@ -8,6 +8,7 @@ from trains.singleTask.dlf_tail_risk_utils import (
     FORMAL_SEEDS,
     MODES,
     add_risk_events,
+    bootstrap_diagnostics,
     compute_bin_and_run_metrics,
     coupling_gate,
     joint_video_bootstrap,
@@ -30,7 +31,10 @@ def synthetic_distribution():
 
 
 def synthetic_predictions():
-    labels = np.asarray([-3, -3, -2, -2, -1, -1, 0, 0, 1, 1, 2, 2, 3, 3], dtype=float)
+    labels = np.asarray(
+        [-3, -3, -2, -2, -1, -1, 0, 0, 1, 1, 2, 2, 3, 3],
+        dtype=float,
+    )
     bins = labels.astype(int)
     sample_indices = np.arange(len(labels), dtype=int)
     rows = []
@@ -43,13 +47,18 @@ def synthetic_predictions():
                     prediction += 0.01 * (seed - FORMAL_SEEDS[0])
                 else:
                     prediction = label + 0.05
+                # Each of the two synthetic videos contains every sentiment bin.
+                # Therefore every video-cluster resample has a defined six-bin
+                # Tail/Head macro statistic; invalid-draw handling is tested below
+                # with a separate deliberately sparse construction.
+                video_id = "video{}".format(index % 2)
                 rows.append({
                     "Seed": int(seed),
                     "Split": "valid",
                     "Mode": mode,
                     "sample_index": int(sample_indices[index]),
-                    "sample_id": "video{}[{}]".format(index // 2, index),
-                    "video_id": "video{}".format(index // 2),
+                    "sample_id": "{}[{}]".format(video_id, index),
+                    "video_id": video_id,
                     "label": float(label),
                     "prediction": float(prediction),
                     "sentiment_bin": int(sentiment_bin),
@@ -70,12 +79,26 @@ def main():
     assert len(runs) == len(FORMAL_SEEDS) * len(MODES)
     assert (runs.tail_head_macro_mae_gap.astype(float) > 0).all()
     assert (runs.tail_head_high_cost_rate_gap.astype(float) > 0).all()
+
     first = joint_video_bootstrap(events, definition, replicates=100, seed=123)
     second = joint_video_bootstrap(events, definition, replicates=100, seed=123)
     pd.testing.assert_frame_equal(first, second)
+    assert np.isfinite(
+        first[
+            [
+                "mean_tail_head_macro_mae_gap",
+                "mean_tail_head_high_cost_rate_gap",
+            ]
+        ].to_numpy(dtype=float)
+    ).all()
+    diagnostics = bootstrap_diagnostics(first)
+    assert diagnostics["valid_replicates"] == 100
+    assert diagnostics["invalid_draw_count"] == 0
+
     gate = coupling_gate(runs, first, long_tail_present=True)
     assert gate["mean_tail_head_macro_mae_gap"] > 0
     assert gate["mean_tail_head_high_cost_rate_gap"] > 0
+    assert gate["bootstrap_diagnostics"]["valid_replicates"] == 100
     print("DLF tail-risk coupling utility smoke test passed")
 
 
