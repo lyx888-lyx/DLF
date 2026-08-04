@@ -10,7 +10,7 @@ OUTPUT_DIR="${RESULT_ROOT}/missing_baseline/cfcompat_seed_mechanism_audit_v1/mos
 
 python3 smoke_test_cfcompat_seed_mechanisms.py
 
-python3 analyze_cfcompat_seed_mechanisms.py \
+python3 run_cfcompat_seed_mechanisms_locked.py \
   --dataset mosi \
   --seeds 1111 1114 \
   --gpu-ids "${GPU}" \
