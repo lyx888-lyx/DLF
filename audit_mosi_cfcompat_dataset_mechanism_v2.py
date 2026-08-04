@@ -26,6 +26,7 @@ def main():
     manifest = json.loads((root / "source_manifest.json").read_text(encoding="utf-8"))
     check_path = root / "independent_audit_check.json"
     payload = json.loads(check_path.read_text(encoding="utf-8"))
+
     cache_binding = True
     for record in manifest["source_records"]:
         for path_key, sha_key in (
@@ -38,15 +39,32 @@ def main():
                 and path.is_file()
                 and sha256_file(path) == record[sha_key]
             )
+
+    dataset_source = manifest.get("dataset_source", {})
+    dataset_binding = True
+    for path_key, sha_key in (
+        ("feature_path", "feature_sha256"),
+        ("config_path", "config_sha256"),
+    ):
+        path = Path(str(dataset_source.get(path_key, "")))
+        dataset_binding = bool(
+            dataset_binding
+            and path.is_file()
+            and sha256_file(path) == dataset_source.get(sha_key)
+        )
+
     payload["checks"]["compatibility_cache_binding"] = cache_binding
+    payload["checks"]["dataset_and_config_source_binding"] = dataset_binding
     payload["passed"] = bool(all(payload["checks"].values()))
     check_path.write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
     if not payload["passed"]:
-        raise RuntimeError("Compatibility-cache source binding failed.")
+        failed = [key for key, value in payload["checks"].items() if not value]
+        raise RuntimeError("Hardened source binding failed: {}".format(failed))
     print("compatibility_cache_binding: True")
+    print("dataset_and_config_source_binding: True")
 
 
 if __name__ == "__main__":
