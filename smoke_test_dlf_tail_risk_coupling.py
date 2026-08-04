@@ -47,10 +47,7 @@ def synthetic_predictions():
                     prediction += 0.01 * (seed - FORMAL_SEEDS[0])
                 else:
                     prediction = label + 0.05
-                # Each of the two synthetic videos contains every sentiment bin.
-                # Therefore every video-cluster resample has a defined six-bin
-                # Tail/Head macro statistic; invalid-draw handling is tested below
-                # with a separate deliberately sparse construction.
+                # Both dense synthetic videos contain every sentiment bin.
                 video_id = "video{}".format(index % 2)
                 rows.append({
                     "Seed": int(seed),
@@ -64,6 +61,28 @@ def synthetic_predictions():
                     "sentiment_bin": int(sentiment_bin),
                 })
     return pd.DataFrame(rows)
+
+
+def sparse_video_events(events, definition):
+    """Create draws that are sometimes undefined to test rejection sampling."""
+    sparse = events.copy()
+    tail = set(int(value) for value in definition["tail_bins"])
+    head = set(int(value) for value in definition["head_bins"])
+
+    def video_for_bin(value):
+        value = int(value)
+        if value in tail:
+            return "tail_video"
+        if value in head:
+            return "head_video"
+        return "middle_video"
+
+    sparse["video_id"] = sparse.sentiment_bin.map(video_for_bin)
+    sparse["sample_id"] = [
+        "{}[{}]".format(video, index)
+        for video, index in zip(sparse.video_id, sparse.sample_index)
+    ]
+    return sparse
 
 
 def main():
@@ -94,6 +113,30 @@ def main():
     diagnostics = bootstrap_diagnostics(first)
     assert diagnostics["valid_replicates"] == 100
     assert diagnostics["invalid_draw_count"] == 0
+
+    # The sparse construction omits all Tail or all Head bins in some draws.
+    # The implementation must reject those draws and still return 100 finite,
+    # deterministic accepted replicates.
+    sparse = sparse_video_events(events, definition)
+    sparse_first = joint_video_bootstrap(
+        sparse, definition, replicates=100, seed=456
+    )
+    sparse_second = joint_video_bootstrap(
+        sparse, definition, replicates=100, seed=456
+    )
+    pd.testing.assert_frame_equal(sparse_first, sparse_second)
+    sparse_diagnostics = bootstrap_diagnostics(sparse_first)
+    assert sparse_diagnostics["valid_replicates"] == 100
+    assert sparse_diagnostics["invalid_draw_count"] > 0
+    assert sparse_diagnostics["total_draw_attempts"] > 100
+    assert np.isfinite(
+        sparse_first[
+            [
+                "mean_tail_head_macro_mae_gap",
+                "mean_tail_head_high_cost_rate_gap",
+            ]
+        ].to_numpy(dtype=float)
+    ).all()
 
     gate = coupling_gate(runs, first, long_tail_present=True)
     assert gate["mean_tail_head_macro_mae_gap"] > 0
