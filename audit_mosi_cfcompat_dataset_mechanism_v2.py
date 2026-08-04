@@ -5,10 +5,12 @@ import audit_mosi_cfcompat_dataset_mechanism as base
 from trains.singleTask.mosi_cfcompat_audit_v2_utils import (
     joint_video_bootstrap,
     opportunity_ranking,
+    prediction_events,
 )
 
 
 def main():
+    base.prediction_events = prediction_events
     base.joint_video_bootstrap = joint_video_bootstrap
     base.opportunity_ranking = opportunity_ranking
     base.main()
