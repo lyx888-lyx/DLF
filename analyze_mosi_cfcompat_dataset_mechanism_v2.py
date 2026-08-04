@@ -16,6 +16,7 @@ from trains.singleTask.cf_compat_kd_utils import (
 from trains.singleTask.fixed_kd_utils import checkpoint_sha256
 from trains.singleTask.mosi_cfcompat_audit_v2_utils import (
     joint_video_bootstrap,
+    mechanism_assessment,
     opportunity_ranking,
     prediction_events,
 )
@@ -104,6 +105,7 @@ def main():
     base.prediction_events = prediction_events
     base.joint_video_bootstrap = joint_video_bootstrap
     base.opportunity_ranking = opportunity_ranking
+    base.mechanism_assessment = mechanism_assessment
     base.main()
 
 
