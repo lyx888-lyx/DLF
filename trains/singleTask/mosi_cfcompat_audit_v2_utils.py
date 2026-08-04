@@ -6,6 +6,7 @@ import math
 import numpy as np
 import pandas as pd
 
+from . import mosi_cfcompat_audit_utils as _base_utils
 from .mosi_cfcompat_audit_utils import *  # noqa: F401,F403
 from .mosi_cfcompat_audit_utils import (
     BOOTSTRAP_REPLICATES,
@@ -14,6 +15,8 @@ from .mosi_cfcompat_audit_utils import (
     MIN_GROUP_PER_SEED,
     MODES,
     MISSING_MODES,
+    SENTIMENT_BINS,
+    SENTIMENT_EDGES,
     group_mechanism_summary,
     interval,
     prediction_events as _prediction_events,
@@ -33,6 +36,42 @@ OPPORTUNITY_COLUMNS = (
     "mean_compatibility",
     "recoverable_opportunity_score",
 )
+
+
+def sentiment_bin(labels) -> np.ndarray:
+    """Return fixed sentiment bins for ndarray, Series, or Categorical input."""
+    values = np.asarray(labels, dtype=np.float64).reshape(-1)
+    result = pd.cut(
+        values,
+        bins=list(SENTIMENT_EDGES),
+        labels=list(SENTIMENT_BINS),
+        include_lowest=True,
+        right=False,
+    )
+    if np.asarray(pd.isna(result), dtype=bool).any():
+        raise ValueError("Sentiment values fall outside the fixed MOSI range.")
+    return np.asarray(result.astype(np.int64), dtype=np.int64).reshape(-1)
+
+
+def intensity_label(labels) -> np.ndarray:
+    """Return absolute-intensity labels without pandas return-type assumptions."""
+    values = np.abs(np.asarray(labels, dtype=np.float64).reshape(-1))
+    result = pd.cut(
+        values,
+        bins=[-np.inf, 0.5, 1.5, 2.5, np.inf],
+        labels=["neutral", "weak", "medium", "strong"],
+        right=False,
+    )
+    if np.asarray(pd.isna(result), dtype=bool).any():
+        raise ValueError("Intensity binning produced missing values.")
+    return np.asarray(result.astype(str), dtype=str).reshape(-1)
+
+
+# Imported functions retain the original module's global namespace. Patch these
+# helpers there so dataset_sample_frame() and _prediction_events() also use the
+# hardened conversions.
+_base_utils.sentiment_bin = sentiment_bin
+_base_utils.intensity_label = intensity_label
 
 
 def prediction_events(frame: pd.DataFrame) -> pd.DataFrame:
