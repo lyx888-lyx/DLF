@@ -15,6 +15,7 @@ python3 -m py_compile \
   analyze_mosi_cfcompat_dataset_mechanism_v2.py \
   audit_mosi_cfcompat_dataset_mechanism.py \
   audit_mosi_cfcompat_dataset_mechanism_v2.py \
+  audit_mosi_cfcompat_dataset_mechanism_v3.py \
   smoke_test_mosi_cfcompat_dataset_mechanism.py
 
 required_assets=(
@@ -48,7 +49,7 @@ python3 analyze_mosi_cfcompat_dataset_mechanism_v2.py \
   --model-save-dir "${MODEL_SAVE_DIR}" \
   --bootstrap-replicates 2000
 
-python3 audit_mosi_cfcompat_dataset_mechanism_v2.py \
+python3 audit_mosi_cfcompat_dataset_mechanism_v3.py \
   --result-dir "${OUTPUT_DIR}"
 
 python3 - <<'PY'
