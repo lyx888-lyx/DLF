@@ -9,6 +9,7 @@ import pandas as pd
 
 from trains.singleTask.dlf_role_specialization_utils import long_tail_status
 from trains.singleTask.dlf_tail_risk_utils import (
+    BOOTSTRAP_MAX_ATTEMPT_MULTIPLIER,
     BOOTSTRAP_REPLICATES,
     BOOTSTRAP_SEED,
     CATASTROPHIC_ABS_ERROR,
@@ -126,8 +127,9 @@ def load_source(cli):
 def render_report(summary):
     gate = summary["coupling_gate"]
     definition = summary["frequency_definition"]
+    diagnostics = gate["bootstrap_diagnostics"]
     lines = [
-        "# DLF MOSI tail-risk coupling audit v1",
+        "# DLF MOSI tail-risk coupling audit v1.1",
         "",
         "## Decision",
         "",
@@ -146,6 +148,16 @@ def render_report(summary):
         "- Tail bins: `{}`".format(definition["tail_bins"]),
         "- Head bins: `{}`".format(definition["head_bins"]),
         "- Middle bin: `{}`".format(definition["middle_bins"]),
+        "",
+        "## Video-bootstrap diagnostics",
+        "",
+        "- Accepted replicates: `{}`".format(diagnostics["valid_replicates"]),
+        "- Total draw attempts: `{}`".format(diagnostics["total_draw_attempts"]),
+        "- Rejected draws: `{}`".format(diagnostics["invalid_draw_count"]),
+        "- Rejected-draw fraction: `{:.6f}`".format(
+            diagnostics["invalid_draw_fraction"]
+        ),
+        "- Acceptance rule: every accepted draw contains all six fixed Tail/Head bins.",
         "",
         "## MAE coupling",
         "",
@@ -259,6 +271,10 @@ def main():
         "catastrophic_absolute_error_threshold": CATASTROPHIC_ABS_ERROR,
         "bootstrap_replicates": int(cli.bootstrap_replicates),
         "bootstrap_seed": BOOTSTRAP_SEED,
+        "bootstrap_max_attempt_multiplier": BOOTSTRAP_MAX_ATTEMPT_MULTIPLIER,
+        "bootstrap_invalid_draw_policy": "reject_and_continue_until_fixed_valid_count",
+        "bootstrap_required_bin_coverage": "all_fixed_tail_and_head_bins",
+        "bootstrap_diagnostics": gate["bootstrap_diagnostics"],
         "official_test_constructed": False,
         "test_loader_construction_count": 0,
         "test_loader_traversal_count": 0,
@@ -303,6 +319,10 @@ def main():
             "video_cluster_bootstrap": True,
             "bootstrap_replicates": int(cli.bootstrap_replicates),
             "bootstrap_seed": BOOTSTRAP_SEED,
+            "bootstrap_invalid_draw_policy": (
+                "reject_draws_missing_any_fixed_tail_or_head_bin"
+            ),
+            "bootstrap_valid_replicates_fixed": True,
         },
     }
     (root / "tail_risk_coupling_summary.json").write_text(
@@ -326,6 +346,14 @@ def main():
     print(
         "mean tail-head high-cost gap:",
         "{:+.6f}".format(gate["mean_tail_head_high_cost_rate_gap"]),
+    )
+    diagnostics = gate["bootstrap_diagnostics"]
+    print("valid bootstrap replicates:", diagnostics["valid_replicates"])
+    print("bootstrap draw attempts:", diagnostics["total_draw_attempts"])
+    print("rejected bootstrap draws:", diagnostics["invalid_draw_count"])
+    print(
+        "rejected bootstrap fraction:",
+        "{:.6f}".format(diagnostics["invalid_draw_fraction"]),
     )
     print("official Test was not constructed")
     print("report:", root / "tail_risk_coupling_report.md")
