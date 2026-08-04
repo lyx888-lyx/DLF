@@ -18,8 +18,8 @@ from .dlf_role_specialization_utils import (
 )
 
 
-VERSION = "dlf_tail_risk_coupling_audit_v1"
-METHOD = "DLF-FrozenTailRiskCouplingAudit-v1"
+VERSION = "dlf_tail_risk_coupling_audit_v1_1"
+METHOD = "DLF-FrozenTailRiskCouplingAudit-v1.1"
 OUTPUT_TAG = "dlf_tail_risk_coupling_audit_v1"
 SOURCE_OUTPUT_TAG = "dlf_role_specialization_audit_v1"
 TAIL_BIN_COUNT = 3
@@ -31,6 +31,8 @@ RISK_MEAN_GAP_REQUIRED = 0.01
 RISK_MEAN_SPEARMAN_MAX = -0.20
 BOOTSTRAP_REPLICATES = 2000
 BOOTSTRAP_SEED = 20260804
+BOOTSTRAP_MAX_ATTEMPT_MULTIPLIER = 100
+BOOTSTRAP_MIN_MAX_ATTEMPTS = 10000
 CATASTROPHIC_ABS_ERROR = 2.0
 
 
@@ -293,24 +295,37 @@ def _bootstrap_run_gaps(
         lambda value: int(video_weights.get(str(value), 0))
     )
     local = local.loc[local.bootstrap_weight.astype(int) > 0]
+    if local.empty:
+        return float("nan"), float("nan")
     local["frequency_group"] = local.sentiment_bin.map(
         lambda value: _group_name(int(value), definition)
     )
+
+    required_group_bins = {
+        "tail": tuple(int(value) for value in definition["tail_bins"]),
+        "head": tuple(int(value) for value in definition["head_bins"]),
+    }
+    observed_bins = set(local.sentiment_bin.astype(int))
+    required_bins = set(required_group_bins["tail"]) | set(required_group_bins["head"])
+    if not required_bins.issubset(observed_bins):
+        return float("nan"), float("nan")
+
     macro = {}
-    for group in ("tail", "head"):
+    for group, sentiment_bins in required_group_bins.items():
         per_bin = []
-        group_rows = local.loc[local.frequency_group.eq(group)]
-        for sentiment_bin in sorted(group_rows.sentiment_bin.astype(int).unique()):
-            subset = group_rows.loc[
-                group_rows.sentiment_bin.astype(int).eq(int(sentiment_bin))
+        for sentiment_bin in sentiment_bins:
+            subset = local.loc[
+                local.sentiment_bin.astype(int).eq(int(sentiment_bin))
             ]
             value = _weighted_mean(
                 subset.absolute_error.to_numpy(dtype=float),
                 subset.bootstrap_weight.to_numpy(dtype=float),
             )
-            if math.isfinite(value):
-                per_bin.append(value)
-        macro[group] = float(np.mean(per_bin)) if per_bin else float("nan")
+            if not math.isfinite(value):
+                return float("nan"), float("nan")
+            per_bin.append(value)
+        macro[group] = float(np.mean(per_bin))
+
     tail = local.loc[local.frequency_group.eq("tail")]
     head = local.loc[local.frequency_group.eq("head")]
     tail_risk = _weighted_mean(
@@ -321,6 +336,8 @@ def _bootstrap_run_gaps(
         head.high_cost_event.to_numpy(dtype=float),
         head.bootstrap_weight.to_numpy(dtype=float),
     )
+    if not all(math.isfinite(value) for value in (tail_risk, head_risk)):
+        return float("nan"), float("nan")
     return float(macro["tail"] - macro["head"]), float(tail_risk - head_risk)
 
 
@@ -330,8 +347,15 @@ def joint_video_bootstrap(
     replicates: int = BOOTSTRAP_REPLICATES,
     seed: int = BOOTSTRAP_SEED,
 ) -> pd.DataFrame:
+    """Collect a fixed number of valid joint video-cluster bootstrap replicates.
+
+    A draw is invalid when it omits any train-defined Tail or Head sentiment
+    bin, because the fixed six-bin macro statistic is then undefined. Invalid
+    draws are rejected rather than encoded as zero or NaN.
+    """
     assert_complete_valid_grid(events)
-    if int(replicates) < 100:
+    replicates = int(replicates)
+    if replicates < 100:
         raise ValueError("Formal video bootstrap requires at least 100 replicates.")
     videos = sorted(events.video_id.astype(str).unique())
     if len(videos) < 2:
@@ -340,26 +364,102 @@ def joint_video_bootstrap(
         (int(seed_value), str(mode)): local.copy()
         for (seed_value, mode), local in events.groupby(["Seed", "Mode"], sort=True)
     }
+    expected_run_count = len(FORMAL_SEEDS) * len(MODES)
+    if len(runs) != expected_run_count:
+        raise RuntimeError("Joint bootstrap requires exactly eight seed-view runs.")
+
     generator = np.random.default_rng(int(seed))
     rows = []
-    for replicate in range(int(replicates)):
+    attempts = 0
+    invalid_draws = 0
+    max_attempts = max(
+        BOOTSTRAP_MIN_MAX_ATTEMPTS,
+        replicates * BOOTSTRAP_MAX_ATTEMPT_MULTIPLIER,
+    )
+    while len(rows) < replicates and attempts < max_attempts:
+        attempts += 1
         sampled = generator.choice(videos, size=len(videos), replace=True)
         counts = pd.Series(sampled).value_counts().to_dict()
         mae_gaps = []
         risk_gaps = []
+        valid_draw = True
         for local in runs.values():
             mae_gap, risk_gap = _bootstrap_run_gaps(local, counts, definition)
-            if math.isfinite(mae_gap):
-                mae_gaps.append(mae_gap)
-            if math.isfinite(risk_gap):
-                risk_gaps.append(risk_gap)
+            if not (math.isfinite(mae_gap) and math.isfinite(risk_gap)):
+                valid_draw = False
+                break
+            mae_gaps.append(mae_gap)
+            risk_gaps.append(risk_gap)
+        if (
+            not valid_draw
+            or len(mae_gaps) != expected_run_count
+            or len(risk_gaps) != expected_run_count
+        ):
+            invalid_draws += 1
+            continue
+
+        replicate = len(rows)
         rows.append({
             "Replicate": int(replicate),
+            "DrawAttempt": int(attempts),
+            "InvalidDrawsBeforeAcceptance": int(invalid_draws),
             "mean_tail_head_macro_mae_gap": float(np.mean(mae_gaps)),
             "mean_tail_head_high_cost_rate_gap": float(np.mean(risk_gaps)),
             "unique_videos_sampled": int(len(counts)),
         })
-    return pd.DataFrame(rows)
+
+    if len(rows) != replicates:
+        raise RuntimeError(
+            "Unable to collect {} valid video-bootstrap replicates after {} "
+            "draw attempts; {} draws omitted at least one required Tail/Head "
+            "bin. The Valid video support is too sparse for this frozen "
+            "bootstrap definition.".format(replicates, attempts, invalid_draws)
+        )
+
+    result = pd.DataFrame(rows)
+    numeric = result[
+        [
+            "mean_tail_head_macro_mae_gap",
+            "mean_tail_head_high_cost_rate_gap",
+        ]
+    ].to_numpy(dtype=float)
+    if not np.isfinite(numeric).all():
+        raise FloatingPointError("Accepted video-bootstrap replicates must be finite.")
+    return result
+
+
+def bootstrap_diagnostics(bootstrap: pd.DataFrame) -> Dict[str, float]:
+    required = {
+        "Replicate",
+        "DrawAttempt",
+        "InvalidDrawsBeforeAcceptance",
+        "mean_tail_head_macro_mae_gap",
+        "mean_tail_head_high_cost_rate_gap",
+    }
+    if not required.issubset(bootstrap.columns) or bootstrap.empty:
+        raise ValueError("Bootstrap diagnostics require the accepted-draw table.")
+    expected = np.arange(len(bootstrap), dtype=int)
+    if not np.array_equal(bootstrap.Replicate.to_numpy(dtype=int), expected):
+        raise RuntimeError("Bootstrap replicate IDs must be contiguous from zero.")
+    attempts = bootstrap.DrawAttempt.to_numpy(dtype=int)
+    if (attempts <= 0).any() or (np.diff(attempts) <= 0).any():
+        raise RuntimeError("Accepted bootstrap draw attempts must be strictly increasing.")
+    total_attempts = int(attempts[-1])
+    invalid_draws = int(total_attempts - len(bootstrap))
+    recorded_invalid = bootstrap.InvalidDrawsBeforeAcceptance.to_numpy(dtype=int)
+    if recorded_invalid[-1] != invalid_draws:
+        raise RuntimeError("Bootstrap invalid-draw accounting is inconsistent.")
+    invalid_fraction = (
+        float(invalid_draws) / float(total_attempts)
+        if total_attempts > 0 else 0.0
+    )
+    return {
+        "valid_replicates": int(len(bootstrap)),
+        "total_draw_attempts": total_attempts,
+        "invalid_draw_count": invalid_draws,
+        "invalid_draw_fraction": invalid_fraction,
+        "acceptance_fraction": 1.0 - invalid_fraction,
+    }
 
 
 def _interval(values: Iterable[float]) -> Dict[str, float]:
@@ -382,6 +482,7 @@ def coupling_gate(
     expected_count = len(FORMAL_SEEDS) * len(MODES)
     if len(run_summary) != expected_count:
         raise RuntimeError("Coupling gate requires exactly eight seed-view runs.")
+    diagnostics = bootstrap_diagnostics(bootstrap)
     mae_positive = run_summary.tail_head_macro_mae_gap.astype(float) > 0.0
     mae_negative_rho = run_summary.count_vs_mae_spearman.astype(float) < 0.0
     risk_positive = run_summary.tail_head_high_cost_rate_gap.astype(float) > 0.0
@@ -478,6 +579,7 @@ def coupling_gate(
         "risk_negative_correlation_coverage": float(risk_negative_rho.mean()),
         "mae_bootstrap": mae_bootstrap,
         "risk_bootstrap": risk_bootstrap,
+        "bootstrap_diagnostics": diagnostics,
         "requirements": {
             "positive_coverage": POSITIVE_COVERAGE_REQUIRED,
             "mae_mean_gap": MAE_MEAN_GAP_REQUIRED,
@@ -486,5 +588,6 @@ def coupling_gate(
             "risk_mean_spearman_max": RISK_MEAN_SPEARMAN_MAX,
             "bootstrap_replicates": int(len(bootstrap)),
             "bootstrap_seed": BOOTSTRAP_SEED,
+            "bootstrap_max_attempt_multiplier": BOOTSTRAP_MAX_ATTEMPT_MULTIPLIER,
         },
     }
