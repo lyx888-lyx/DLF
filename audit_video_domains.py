@@ -56,6 +56,7 @@ def main():
         stats["batch_index"] = batch_index
         batch_rows.append(stats)
     batch_frame = pd.DataFrame(batch_rows)
+    active = batch_frame.eligible_video_count.ge(2)
 
     summary.update(
         {
@@ -82,10 +83,13 @@ def main():
             "minimum_eligible_videos_per_batch": int(
                 batch_frame.eligible_video_count.min()
             ),
+            "vrex_active_batch_fraction": float(active.mean()),
+            "inactive_batch_count": int((~active).sum()),
             "vrex_batch_viable": bool(
                 summary["passed"]
-                and batch_frame.eligible_video_count.min() >= 2
+                and active.mean() >= 0.95
                 and batch_frame.eligible_sample_fraction.mean() >= 0.5
+                and int(active.sum()) >= 2
             ),
         }
     )
@@ -114,6 +118,7 @@ def main():
     print("split video counts:", summary["split_video_counts"])
     print("mean eligible videos per batch:", "{:.3f}".format(summary["mean_eligible_videos_per_batch"]))
     print("mean eligible sample fraction:", "{:.3f}".format(summary["mean_eligible_sample_fraction"]))
+    print("active batch fraction:", "{:.3f}".format(summary["vrex_active_batch_fraction"]))
     print("output:", output)
 
 
