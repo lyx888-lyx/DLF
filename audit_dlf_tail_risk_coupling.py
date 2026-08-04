@@ -11,6 +11,7 @@ import pandas as pd
 
 from trains.singleTask.dlf_role_specialization_utils import long_tail_status
 from trains.singleTask.dlf_tail_risk_utils import (
+    BOOTSTRAP_MAX_ATTEMPT_MULTIPLIER,
     BOOTSTRAP_REPLICATES,
     BOOTSTRAP_SEED,
     FORMAL_SEEDS,
@@ -18,6 +19,7 @@ from trains.singleTask.dlf_tail_risk_utils import (
     MODES,
     VERSION,
     add_risk_events,
+    bootstrap_diagnostics,
     compute_bin_and_run_metrics,
     coupling_gate,
     joint_video_bootstrap,
@@ -109,6 +111,15 @@ def main():
         and tuple(manifest["modes"]) == MODES
         and int(manifest["bootstrap_replicates"]) == BOOTSTRAP_REPLICATES
         and int(manifest["bootstrap_seed"]) == BOOTSTRAP_SEED
+        and int(manifest["bootstrap_max_attempt_multiplier"])
+        == BOOTSTRAP_MAX_ATTEMPT_MULTIPLIER
+        and manifest["bootstrap_invalid_draw_policy"]
+        == "reject_and_continue_until_fixed_valid_count"
+        and manifest["bootstrap_required_bin_coverage"]
+        == "all_fixed_tail_and_head_bins"
+        and summary["protocol"]["bootstrap_invalid_draw_policy"]
+        == "reject_draws_missing_any_fixed_tail_or_head_bin"
+        and summary["protocol"]["bootstrap_valid_replicates_fixed"]
         and not manifest["official_test_constructed"]
         and manifest["test_loader_construction_count"] == 0
         and manifest["test_loader_traversal_count"] == 0
@@ -226,6 +237,27 @@ def main():
         }
         == {(seed, mode) for seed in FORMAL_SEEDS for mode in MODES}
     )
+
+    recorded_diagnostics = bootstrap_diagnostics(recorded_bootstrap)
+    checks["bootstrap_finite_and_accounted"] = bool(
+        len(recorded_bootstrap) == BOOTSTRAP_REPLICATES
+        and np.isfinite(
+            recorded_bootstrap[
+                [
+                    "mean_tail_head_macro_mae_gap",
+                    "mean_tail_head_high_cost_rate_gap",
+                ]
+            ].to_numpy(dtype=float)
+        ).all()
+        and nested_close(
+            recorded_diagnostics,
+            summary["coupling_gate"]["bootstrap_diagnostics"],
+        )
+        and nested_close(
+            recorded_diagnostics,
+            manifest["bootstrap_diagnostics"],
+        )
+    )
     checks["no_test_named_artifacts"] = bool(
         not any("test" in path.name.lower() for path in root.iterdir())
     )
@@ -236,6 +268,7 @@ def main():
         "passed": passed,
         "verdict": summary["verdict"],
         "checks": checks,
+        "bootstrap_diagnostics": recorded_diagnostics,
     }
     (root / "tail_risk_audit_check.json").write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n",
@@ -249,6 +282,9 @@ def main():
     print("DLF tail-risk independent audit passed")
     for key, value in checks.items():
         print("{}: {}".format(key, value))
+    print("valid bootstrap replicates:", recorded_diagnostics["valid_replicates"])
+    print("bootstrap draw attempts:", recorded_diagnostics["total_draw_attempts"])
+    print("rejected bootstrap draws:", recorded_diagnostics["invalid_draw_count"])
     print("verdict:", summary["verdict"])
 
 
