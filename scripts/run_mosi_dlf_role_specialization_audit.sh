@@ -19,7 +19,7 @@ python3 analyze_dlf_role_specialization.py \
   --result-root "${RESULT_ROOT}" \
   --model-save-dir "${MODEL_SAVE_DIR}"
 
-python3 audit_dlf_role_specialization.py \
+python3 audit_dlf_role_specialization_v2.py \
   --result-dir "${OUTPUT_DIR}"
 
 echo "DLF role-specialization audit complete: ${OUTPUT_DIR}"
