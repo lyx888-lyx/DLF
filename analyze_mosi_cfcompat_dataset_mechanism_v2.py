@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -118,6 +119,7 @@ def legacy_safe_load_counterfactual_cache(
 
 
 def main():
+    cli = base.parse_args()
     base.build_config = patched_build_config
     base.evaluate_seed = patched_evaluate_seed
     base.load_counterfactual_cache = legacy_safe_load_counterfactual_cache
@@ -126,6 +128,31 @@ def main():
     base.opportunity_ranking = opportunity_ranking
     base.mechanism_assessment = mechanism_assessment
     base.main()
+
+    root = base.output_root(cli)
+    manifest_path = root / "source_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    args = _ORIGINAL_BUILD_CONFIG(cli, 1111)
+    feature_path = Path(str(args.featurePath))
+    if not feature_path.is_file() and not feature_path.is_absolute():
+        feature_path = Path.cwd() / feature_path
+    config_path = Path(str(cli.config_file))
+    if not config_path.is_file() and not config_path.is_absolute():
+        config_path = Path.cwd() / config_path
+    if not feature_path.is_file():
+        raise FileNotFoundError("MOSI feature source is absent: {}".format(feature_path))
+    if not config_path.is_file():
+        raise FileNotFoundError("Configuration source is absent: {}".format(config_path))
+    manifest["dataset_source"] = {
+        "feature_path": str(feature_path.resolve()),
+        "feature_sha256": checkpoint_sha256(feature_path),
+        "config_path": str(config_path.resolve()),
+        "config_sha256": checkpoint_sha256(config_path),
+    }
+    manifest_path.write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
 
 
 if __name__ == "__main__":
