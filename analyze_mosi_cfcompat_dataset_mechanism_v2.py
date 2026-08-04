@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -18,6 +17,7 @@ from trains.singleTask.fixed_kd_utils import checkpoint_sha256
 from trains.singleTask.mosi_cfcompat_audit_v2_utils import (
     joint_video_bootstrap,
     opportunity_ranking,
+    prediction_events,
 )
 
 
@@ -49,7 +49,9 @@ def legacy_safe_load_counterfactual_cache(
     """Load the frozen cache while accepting the historical seed-1111 config."""
     paths = cache_paths(root, dataset, version=version, seed=seed)
     if not paths["csv"].is_file() or not paths["config"].is_file():
-        raise FileNotFoundError("Counterfactual cache has not been built: {}".format(paths["directory"]))
+        raise FileNotFoundError(
+            "Counterfactual cache has not been built: {}".format(paths["directory"])
+        )
     frame = pd.read_csv(paths["csv"])
     config = json.loads(paths["config"].read_text(encoding="utf-8"))
     expected_seed = None if seed is None else int(seed)
@@ -77,11 +79,16 @@ def legacy_safe_load_counterfactual_cache(
         frame.sample_index.to_numpy(dtype=int), np.arange(len(frame), dtype=int)
     ):
         raise ValueError("Counterfactual cache indices are not contiguous.")
-    if config.get("cache_sha256") not in (None, checkpoint_sha256(paths["csv"])):
+    if config.get("cache_sha256") not in (
+        None,
+        checkpoint_sha256(paths["csv"]),
+    ):
         raise ValueError("Counterfactual cache SHA binding is invalid.")
     for mode in MISSING_MODES:
         values = frame["compat_{}".format(mode)].to_numpy(dtype=float)
-        if not np.isfinite(values).all() or not np.all((values > 0) & (values < 1)):
+        if not np.isfinite(values).all() or not np.all(
+            (values > 0) & (values < 1)
+        ):
             raise ValueError("Counterfactual compatibility is outside (0,1).")
     by_index = {
         int(row.sample_index): row._asdict()
@@ -94,6 +101,7 @@ def main():
     base.build_config = patched_build_config
     base.evaluate_seed = patched_evaluate_seed
     base.load_counterfactual_cache = legacy_safe_load_counterfactual_cache
+    base.prediction_events = prediction_events
     base.joint_video_bootstrap = joint_video_bootstrap
     base.opportunity_ranking = opportunity_ranking
     base.main()
