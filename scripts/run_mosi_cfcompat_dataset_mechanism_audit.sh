@@ -7,12 +7,14 @@ GPU="${GPU:-0}"
 RESULT_ROOT="${RESULT_ROOT:-result}"
 MODEL_SAVE_DIR="${MODEL_SAVE_DIR:-pt}"
 OUTPUT_DIR="${RESULT_ROOT}/missing_baseline/mosi_cfcompat_dataset_mechanism_audit_v1/mosi/train_valid_audit"
+export OUTPUT_DIR
 
 python3 -m py_compile \
   trains/singleTask/mosi_cfcompat_audit_utils.py \
   trains/singleTask/mosi_cfcompat_audit_v2_utils.py \
   analyze_mosi_cfcompat_dataset_mechanism.py \
   analyze_mosi_cfcompat_dataset_mechanism_v2.py \
+  canonicalize_mosi_cfcompat_feature_summary.py \
   audit_mosi_cfcompat_dataset_mechanism.py \
   audit_mosi_cfcompat_dataset_mechanism_v2.py \
   audit_mosi_cfcompat_dataset_mechanism_v3.py \
@@ -48,6 +50,11 @@ python3 analyze_mosi_cfcompat_dataset_mechanism_v2.py \
   --result-root "${RESULT_ROOT}" \
   --model-save-dir "${MODEL_SAVE_DIR}" \
   --bootstrap-replicates 2000
+
+# The serialized per-sample feature table is the sole numerical source for the
+# descriptive feature summary.  This step performs no model loading or Test access.
+python3 canonicalize_mosi_cfcompat_feature_summary.py \
+  --result-dir "${OUTPUT_DIR}"
 
 python3 audit_mosi_cfcompat_dataset_mechanism_v3.py \
   --result-dir "${OUTPUT_DIR}"
