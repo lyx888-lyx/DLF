@@ -12,6 +12,7 @@ from .mosi_cfcompat_audit_utils import (
     MIN_GROUP_PER_SEED,
     MODES,
     MISSING_MODES,
+    prediction_events as _prediction_events,
 )
 
 
@@ -30,6 +31,14 @@ OPPORTUNITY_COLUMNS = (
 )
 
 
+def prediction_events(frame: pd.DataFrame) -> pd.DataFrame:
+    """Keep compatibility deciles meaningful only for missing views."""
+    result = _prediction_events(frame)
+    result.loc[result.Mode.astype(str).eq("LAV"), "compatibility_decile"] = 0
+    result["compatibility_decile"] = result.compatibility_decile.astype(int)
+    return result
+
+
 def opportunity_ranking(groups: pd.DataFrame) -> pd.DataFrame:
     candidates = groups.loc[
         groups.GroupType.isin(
@@ -46,6 +55,12 @@ def opportunity_ranking(groups: pd.DataFrame) -> pd.DataFrame:
         )
         & ~groups.Seed.astype(str).eq("POOLED")
     ].copy()
+    candidates = candidates.loc[
+        ~(
+            candidates.GroupType.eq("compatibility_decile")
+            & candidates.GroupValue.astype(str).eq("0")
+        )
+    ]
     rows = []
     for (group_type, group_value), local in candidates.groupby(
         ["GroupType", "GroupValue"], sort=True
@@ -113,8 +128,14 @@ def joint_video_bootstrap(
             lambda value: int(counts.get(value, 0))
         )
         local = local.loc[local.bootstrap_weight > 0]
-        high = local.loc[local.compatibility_decile >= 8]
-        low = local.loc[local.compatibility_decile <= 3]
+        high = local.loc[
+            local.Mode.astype(str).isin(MISSING_MODES)
+            & (local.compatibility_decile >= 8)
+        ]
+        low = local.loc[
+            local.Mode.astype(str).isin(MISSING_MODES)
+            & local.compatibility_decile.between(1, 3)
+        ]
         if high.empty or low.empty:
             continue
         seed_gains = []
