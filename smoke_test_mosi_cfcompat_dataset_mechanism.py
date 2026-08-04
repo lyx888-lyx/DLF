@@ -14,12 +14,14 @@ from trains.singleTask.mosi_cfcompat_audit_utils import (
     mechanism_assessment,
     modality_marginal_value,
     overall_prediction_summary,
-    prediction_events,
     split_shift_summary,
 )
 from trains.singleTask.mosi_cfcompat_audit_v2_utils import (
+    intensity_label,
     joint_video_bootstrap,
     opportunity_ranking,
+    prediction_events,
+    sentiment_bin,
 )
 
 
@@ -82,6 +84,18 @@ def synthetic_events(samples):
 
 
 def main():
+    labels = np.asarray([-3, -2, -1, 0, 1, 2, 3], dtype=float)
+    expected_bins = np.asarray([-3, -2, -1, 0, 1, 2, 3], dtype=int)
+    expected_intensity = np.asarray(
+        ["strong", "medium", "weak", "neutral", "weak", "medium", "strong"]
+    )
+    np.testing.assert_array_equal(sentiment_bin(labels), expected_bins)
+    np.testing.assert_array_equal(sentiment_bin(pd.Series(labels)), expected_bins)
+    np.testing.assert_array_equal(intensity_label(labels), expected_intensity)
+    np.testing.assert_array_equal(
+        intensity_label(pd.Series(labels)), expected_intensity
+    )
+
     compatibility = empirical_compatibility([0.1, 0.2, 0.3, 0.4], [0.05, 0.25, 0.50])
     assert compatibility[0] > compatibility[1] > compatibility[2]
     assert np.all((compatibility > 0) & (compatibility < 1))
