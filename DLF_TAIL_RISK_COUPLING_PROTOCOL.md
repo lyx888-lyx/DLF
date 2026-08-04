@@ -1,4 +1,4 @@
-# DLF MOSI long-tail and semantic-risk coupling audit v1
+# DLF MOSI long-tail and semantic-risk coupling audit v1.1
 
 ## Purpose
 
@@ -78,9 +78,20 @@ estimated by a deterministic joint video-cluster bootstrap:
 - resample source videos with replacement;
 - use the same resampled videos for all seeds and views;
 - preserve all segments from a selected video;
-- recompute the mean eight-run tail-head macro-MAE and high-cost gaps;
-- `2000` replicates with seed `20260804`;
-- report percentile 95% intervals.
+- require every accepted draw to contain all three fixed Tail bins and all three
+  fixed Head bins, so the six-bin macro statistic has the same definition in
+  every replicate;
+- reject a draw that omits any required Tail/Head bin and continue sampling;
+- collect exactly `2000` valid replicates with seed `20260804`;
+- permit at most `100 × requested_replicates` total attempts, with a minimum
+  ceiling of `10000` attempts;
+- record accepted draw attempt numbers, cumulative rejected draws, rejection
+  fraction, and percentile 95% intervals.
+
+Rejected draws are not assigned zero and are not retained as `NaN`. If the fixed
+number of valid replicates cannot be collected within the attempt ceiling, the
+audit stops and reports that Valid video support is too sparse for this frozen
+bootstrap definition.
 
 Segments are not treated as independent bootstrap units.
 
