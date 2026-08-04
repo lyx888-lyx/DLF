@@ -1,13 +1,16 @@
 """Synthetic smoke tests for the MOSI CFCompat dataset-mechanism audit."""
 from __future__ import annotations
 
-from io import StringIO
+import json
+import tempfile
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from audit_mosi_cfcompat_dataset_mechanism_v3 import (
-    feature_summary_diagnostic,
+from audit_mosi_cfcompat_dataset_mechanism_v3 import feature_summary_diagnostic
+from canonicalize_mosi_cfcompat_feature_summary import (
+    canonicalize_result_dir,
     recompute_feature_summary,
 )
 from trains.singleTask.mosi_cfcompat_audit_utils import (
@@ -20,6 +23,7 @@ from trains.singleTask.mosi_cfcompat_audit_utils import (
     mechanism_assessment,
     modality_marginal_value,
     overall_prediction_summary,
+    sha256_file,
     split_shift_summary,
 )
 from trains.singleTask.mosi_cfcompat_audit_v2_utils import (
@@ -89,7 +93,7 @@ def synthetic_events(samples):
     return prediction_events(pd.DataFrame(rows))
 
 
-def feature_roundtrip_smoke():
+def feature_canonicalization_smoke():
     rows = []
     for split_index, split in enumerate(("train", "valid")):
         for modality_index, modality in enumerate(("text_tensor", "audio", "vision")):
@@ -110,11 +114,44 @@ def feature_roundtrip_smoke():
                     }
                 )
     feature_samples = pd.DataFrame(rows)
-    recorded = recompute_feature_summary(feature_samples)
-    serialized = pd.read_csv(StringIO(feature_samples.to_csv(index=False)))
-    recomputed = recompute_feature_summary(serialized)
-    passed, diagnostic = feature_summary_diagnostic(recorded, recomputed)
-    assert passed, diagnostic.to_string(index=False)
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        sample_path = root / "modality_feature_sample_quality.csv"
+        summary_path = root / "modality_feature_summary.csv"
+        manifest_path = root / "source_manifest.json"
+        feature_samples.to_csv(sample_path, index=False)
+        deliberately_noncanonical = recompute_feature_summary(feature_samples)
+        deliberately_noncanonical.loc[0, "mean_abs_value"] += 1e-5
+        deliberately_noncanonical.to_csv(summary_path, index=False)
+        manifest_path.write_text(
+            json.dumps(
+                {
+                    "artifacts": {
+                        sample_path.name: {
+                            "path": str(sample_path.resolve()),
+                            "sha256": sha256_file(sample_path),
+                        },
+                        summary_path.name: {
+                            "path": str(summary_path.resolve()),
+                            "sha256": sha256_file(summary_path),
+                        },
+                    }
+                },
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        result = canonicalize_result_dir(root)
+        recorded = pd.read_csv(summary_path)
+        expected = recompute_feature_summary(pd.read_csv(sample_path))
+        passed, diagnostic = feature_summary_diagnostic(recorded, expected)
+        assert passed, diagnostic.to_string(index=False)
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        assert manifest["artifacts"][summary_path.name]["sha256"] == sha256_file(summary_path)
+        assert manifest["feature_summary_canonicalization"]["official_test_accessed"] is False
+        assert result["group_count"] == 6
 
 
 def main():
@@ -129,7 +166,7 @@ def main():
     np.testing.assert_array_equal(
         intensity_label(pd.Series(labels)), expected_intensity
     )
-    feature_roundtrip_smoke()
+    feature_canonicalization_smoke()
 
     compatibility = empirical_compatibility([0.1, 0.2, 0.3, 0.4], [0.05, 0.25, 0.50])
     assert compatibility[0] > compatibility[1] > compatibility[2]
