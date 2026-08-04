@@ -1,6 +1,8 @@
 """Hardened overrides for the MOSI CFCompat audit utilities."""
 from __future__ import annotations
 
+import math
+
 import numpy as np
 import pandas as pd
 
@@ -12,6 +14,8 @@ from .mosi_cfcompat_audit_utils import (
     MIN_GROUP_PER_SEED,
     MODES,
     MISSING_MODES,
+    group_mechanism_summary,
+    interval,
     prediction_events as _prediction_events,
 )
 
@@ -185,3 +189,77 @@ def joint_video_bootstrap(
             .format(replicates, max_attempts)
         )
     return pd.DataFrame(rows)
+
+
+def mechanism_assessment(
+    events: pd.DataFrame,
+    overall: pd.DataFrame,
+    bootstrap: pd.DataFrame,
+):
+    """Assess compatibility only on LA/LV/L while keeping J over all views."""
+    j_rows = overall.loc[overall.Mode.eq("J")].sort_values("Seed")
+    both_positive = bool(
+        len(j_rows) == len(FORMAL_SEEDS) and (j_rows.cfcompat_gain > 0).all()
+    )
+    pooled = group_mechanism_summary(events)
+    condition = pooled.loc[
+        pooled.Seed.astype(str).eq("POOLED")
+        & pooled.GroupType.eq("teacher_condition")
+    ].set_index("GroupValue")
+    good_gain = (
+        float(condition.loc["better_and_correct", "cfcompat_gain"])
+        if "better_and_correct" in condition.index
+        else float("nan")
+    )
+    bad_values = condition.loc[
+        condition.index != "better_and_correct", "cfcompat_gain"
+    ]
+    bad_gain = float(bad_values.mean()) if len(bad_values) else float("nan")
+    missing = events.loc[events.Mode.astype(str).isin(MISSING_MODES)]
+    high = missing.loc[missing.compatibility_decile >= 8]
+    low = missing.loc[missing.compatibility_decile.between(1, 3)]
+    compatibility_gain_difference = float(
+        high.cfcompat_gain.mean() - low.cfcompat_gain.mean()
+    )
+    compatibility_harm_difference = float(
+        (high.transfer_quadrant == "Q2_harmful_imitation").mean()
+        - (low.transfer_quadrant == "Q2_harmful_imitation").mean()
+    )
+    boot = interval(bootstrap.mean_J_gain)
+    checks = {
+        "cfcompat_J_gain_positive_both_seeds": both_positive,
+        "joint_video_bootstrap_J_gain_ci_low_positive": bool(
+            boot["ci95_low"] > 0.0
+        ),
+        "teacher_better_correct_subset_gain_exceeds_other_conditions": bool(
+            math.isfinite(good_gain)
+            and math.isfinite(bad_gain)
+            and good_gain > bad_gain
+        ),
+        "high_compatibility_gain_exceeds_low_compatibility": bool(
+            compatibility_gain_difference > 0.0
+        ),
+        "high_compatibility_not_more_harmful": bool(
+            compatibility_harm_difference <= 0.0
+        ),
+    }
+    if not both_positive:
+        verdict = "CFCompat_GAIN_NOT_REPRODUCED"
+    elif all(checks.values()):
+        verdict = "CFCompat_IMPROVEMENT_MECHANISM_SUPPORTED"
+    else:
+        verdict = "CFCompat_GAIN_REPRODUCED_MECHANISM_PARTIAL"
+    return {
+        "verdict": verdict,
+        "checks": checks,
+        "mean_two_seed_J_gain": float(j_rows.cfcompat_gain.mean()),
+        "per_seed_J_gain": {
+            str(int(row.Seed)): float(row.cfcompat_gain)
+            for row in j_rows.itertuples(index=False)
+        },
+        "video_bootstrap_J_gain": boot,
+        "better_and_correct_gain": good_gain,
+        "other_teacher_conditions_mean_gain": bad_gain,
+        "high_minus_low_compatibility_gain": compatibility_gain_difference,
+        "high_minus_low_harmful_imitation_rate": compatibility_harm_difference,
+    }
