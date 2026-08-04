@@ -128,13 +128,28 @@ def main():
         and all(not values for values in domain["split_video_overlaps"].values())
     )
 
-    expected_positive = sorted(float(value) for value in VREX_LAMBDAS)
+    seed = int(summary["seed"])
     observed_positive = sorted(
         grid.loc[grid.EligibleForSelection.astype(bool), "LambdaVREx"]
         .astype(float)
         .tolist()
     )
-    checks["frozen_positive_lambda_grid"] = observed_positive == expected_positive
+    if seed == 1111:
+        expected_positive = sorted(float(value) for value in VREX_LAMBDAS)
+        checks["frozen_positive_lambda_grid"] = (
+            observed_positive == expected_positive
+            and sorted(float(value) for value in summary["lambda_grid"])
+            == expected_positive
+        )
+    else:
+        declared = [float(value) for value in summary["lambda_grid"]]
+        checks["frozen_positive_lambda_grid"] = bool(
+            len(declared) == 1
+            and len(observed_positive) == 1
+            and np.isclose(declared[0], observed_positive[0])
+            and any(np.isclose(declared[0], value) for value in VREX_LAMBDAS)
+        )
+
     checks["one_sampler_control"] = bool(
         len(grid.loc[np.isclose(grid.LambdaVREx.astype(float), 0.0)]) == 1
         and not grid.loc[
@@ -180,7 +195,7 @@ def main():
 
     baseline_frame = pd.read_csv(source["baseline_result"])
     baseline_rows = baseline_frame.loc[
-        baseline_frame.Seed.astype(int).eq(int(summary["seed"]))
+        baseline_frame.Seed.astype(int).eq(seed)
     ]
     if len(baseline_rows) != 1:
         raise RuntimeError("Baseline seed row is not unique.")
@@ -253,10 +268,10 @@ def main():
         )
         expected_verdict = (
             "PROMOTE_SEED1111_RUN_SEED1114"
-            if test_gate["passed"] and int(summary["seed"]) == 1111
+            if test_gate["passed"] and seed == 1111
             else (
                 "PROMOTE_TWO_SEEDS_RUN_MOSEI"
-                if test_gate["passed"] and int(summary["seed"]) == 1114
+                if test_gate["passed"] and seed == 1114
                 else "STOP_VIDEO_VREX_TEST_GATE_FAILED"
             )
         )
@@ -264,6 +279,7 @@ def main():
             summary["protocol"]["test_constructed"]
             and summary["protocol"]["test_loader_traversal_count"] == 1
             and source["test_constructed_after_valid_gate"]
+            and source.get("test_loader_traversal_count") == 1
         )
     else:
         checks["test_gate_recomputed"] = test_gate is None
@@ -272,6 +288,7 @@ def main():
             and not summary["protocol"]["test_constructed"]
             and summary["protocol"]["test_loader_traversal_count"] == 0
             and not source["test_constructed_after_valid_gate"]
+            and source.get("test_loader_traversal_count") == 0
         )
         expected_verdict = "STOP_VIDEO_VREX_VALID_GATE_FAILED"
 
