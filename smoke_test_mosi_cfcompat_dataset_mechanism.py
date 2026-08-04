@@ -1,9 +1,15 @@
 """Synthetic smoke tests for the MOSI CFCompat dataset-mechanism audit."""
 from __future__ import annotations
 
+from io import StringIO
+
 import numpy as np
 import pandas as pd
 
+from audit_mosi_cfcompat_dataset_mechanism_v3 import (
+    feature_summary_diagnostic,
+    recompute_feature_summary,
+)
 from trains.singleTask.mosi_cfcompat_audit_utils import (
     FORMAL_SEEDS,
     MODES,
@@ -83,6 +89,34 @@ def synthetic_events(samples):
     return prediction_events(pd.DataFrame(rows))
 
 
+def feature_roundtrip_smoke():
+    rows = []
+    for split_index, split in enumerate(("train", "valid")):
+        for modality_index, modality in enumerate(("text_tensor", "audio", "vision")):
+            for sample_index in range(4):
+                base = 0.123456789012345 + 0.01 * split_index + 0.001 * modality_index
+                rows.append(
+                    {
+                        "Split": split,
+                        "Modality": modality,
+                        "sample_index": sample_index,
+                        "finite_fraction": 1.0,
+                        "effective_length": float(10 + sample_index + modality_index),
+                        "zero_fraction": base + sample_index * 1e-12,
+                        "mean_abs_value": base * 2.0 + sample_index * 1e-12,
+                        "sample_std": base * 3.0 + sample_index * 1e-12,
+                        "all_zero": 0,
+                        "near_constant": int(sample_index == 0 and modality == "vision"),
+                    }
+                )
+    feature_samples = pd.DataFrame(rows)
+    recorded = recompute_feature_summary(feature_samples)
+    serialized = pd.read_csv(StringIO(feature_samples.to_csv(index=False)))
+    recomputed = recompute_feature_summary(serialized)
+    passed, diagnostic = feature_summary_diagnostic(recorded, recomputed)
+    assert passed, diagnostic.to_string(index=False)
+
+
 def main():
     labels = np.asarray([-3, -2, -1, 0, 1, 2, 3], dtype=float)
     expected_bins = np.asarray([-3, -2, -1, 0, 1, 2, 3], dtype=int)
@@ -95,6 +129,7 @@ def main():
     np.testing.assert_array_equal(
         intensity_label(pd.Series(labels)), expected_intensity
     )
+    feature_roundtrip_smoke()
 
     compatibility = empirical_compatibility([0.1, 0.2, 0.3, 0.4], [0.05, 0.25, 0.50])
     assert compatibility[0] > compatibility[1] > compatibility[2]
