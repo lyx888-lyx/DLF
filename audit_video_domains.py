@@ -6,7 +6,6 @@ import argparse
 import json
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 from data_loader import MMDataset
@@ -98,20 +97,35 @@ def main():
     if not summary["vrex_batch_viable"]:
         raise RuntimeError("Video-aware batches are not viable for V-REx.")
 
-    output = (
+    base = (
         Path(cli.result_root)
         / "missing_baseline"
         / "cfcompat_video_vrex_v1"
         / cli.dataset
-        / "domain_audit"
     )
+    output = base / "seed{}".format(cli.seed) / "domain_audit"
+    compatibility_output = base / "domain_audit"
     output.mkdir(parents=True, exist_ok=True)
+    compatibility_output.mkdir(parents=True, exist_ok=True)
+
+    payload = json.dumps(summary, indent=2, sort_keys=True) + "\n"
     (output / "video_domain_audit.json").write_text(
-        json.dumps(summary, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
+        payload, encoding="utf-8"
     )
     counts.to_csv(output / "video_domain_counts.csv", index=False)
     batch_frame.to_csv(output / "video_aware_batch_audit.csv", index=False)
+
+    # The training entrypoint reads this compatibility copy before its immutable
+    # per-seed source manifest is finalized by the locked wrapper.
+    (compatibility_output / "video_domain_audit.json").write_text(
+        payload, encoding="utf-8"
+    )
+    counts.to_csv(
+        compatibility_output / "video_domain_counts.csv", index=False
+    )
+    batch_frame.to_csv(
+        compatibility_output / "video_aware_batch_audit.csv", index=False
+    )
 
     print("Video-domain audit passed")
     print("dataset:", cli.dataset)
