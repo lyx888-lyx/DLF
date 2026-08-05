@@ -15,7 +15,7 @@ function Invoke-CheckedPython {
     param([Parameter(Mandatory = $true)][string[]]$PythonArgs)
     & python @PythonArgs
     if ($LASTEXITCODE -ne 0) {
-        throw "Python command failed with exit code $LASTEXITCODE: python $($PythonArgs -join ' ')"
+        throw ("Python command failed with exit code {0}: python {1}" -f $LASTEXITCODE, ($PythonArgs -join ' '))
     }
 }
 
