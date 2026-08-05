@@ -12,10 +12,10 @@ $ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 Set-Location $ProjectRoot
 
 function Invoke-CheckedPython {
-    param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Arguments)
-    & python @Arguments
+    param([Parameter(Mandatory = $true)][string[]]$PythonArgs)
+    & python @PythonArgs
     if ($LASTEXITCODE -ne 0) {
-        throw "Python command failed with exit code $LASTEXITCODE: python $($Arguments -join ' ')"
+        throw "Python command failed with exit code $LASTEXITCODE: python $($PythonArgs -join ' ')"
     }
 }
 
@@ -24,17 +24,23 @@ Write-Host "Branch:  $(git branch --show-current)"
 Write-Host "Commit:  $(git rev-parse HEAD)"
 Write-Host "Seed:    $Seed"
 
-Invoke-CheckedPython -m py_compile `
-    .\rebuild_windows_valid_only_prerequisites.py `
-    .\trains\singleTask\windows_valid_only_clean_dlf.py
+$compileArgs = @(
+    "-m", "py_compile",
+    ".\rebuild_windows_valid_only_prerequisites.py",
+    ".\trains\singleTask\windows_valid_only_clean_dlf.py"
+)
+Invoke-CheckedPython -PythonArgs $compileArgs
 
-Invoke-CheckedPython .\rebuild_windows_valid_only_prerequisites.py `
-    --action preflight `
-    --seed $Seed `
-    --gpu-ids 0 `
-    --num-workers 1
+$preflightArgs = @(
+    ".\rebuild_windows_valid_only_prerequisites.py",
+    "--action", "preflight",
+    "--seed", "$Seed",
+    "--gpu-ids", "0",
+    "--num-workers", "1"
+)
+Invoke-CheckedPython -PythonArgs $preflightArgs
 
-$arguments = @(
+$runArgs = @(
     ".\rebuild_windows_valid_only_prerequisites.py",
     "--action", "clean-dlf",
     "--seed", "$Seed",
@@ -43,10 +49,10 @@ $arguments = @(
 )
 
 if (-not $Formal) {
-    $arguments += "--smoke-test"
+    $runArgs += "--smoke-test"
 }
 if ($Overwrite) {
-    $arguments += "--overwrite"
+    $runArgs += "--overwrite"
 }
 
-Invoke-CheckedPython @arguments
+Invoke-CheckedPython -PythonArgs $runArgs
