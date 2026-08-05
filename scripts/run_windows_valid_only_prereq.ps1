@@ -19,40 +19,53 @@ function Invoke-CheckedPython {
     }
 }
 
-Write-Host "Project: $ProjectRoot"
-Write-Host "Branch:  $(git branch --show-current)"
-Write-Host "Commit:  $(git rev-parse HEAD)"
-Write-Host "Seed:    $Seed"
+$PreviousPythonWarnings = $env:PYTHONWARNINGS
+$env:PYTHONWARNINGS = "ignore::FutureWarning"
 
-$compileArgs = @(
-    "-m", "py_compile",
-    ".\rebuild_windows_valid_only_prerequisites.py",
-    ".\trains\singleTask\windows_valid_only_clean_dlf.py"
-)
-Invoke-CheckedPython -PythonArgs $compileArgs
+try {
+    Write-Host "Project: $ProjectRoot"
+    Write-Host "Branch:  $(git branch --show-current)"
+    Write-Host "Commit:  $(git rev-parse HEAD)"
+    Write-Host "Seed:    $Seed"
 
-$preflightArgs = @(
-    ".\rebuild_windows_valid_only_prerequisites.py",
-    "--action", "preflight",
-    "--seed", "$Seed",
-    "--gpu-ids", "0",
-    "--num-workers", "1"
-)
-Invoke-CheckedPython -PythonArgs $preflightArgs
+    $compileArgs = @(
+        "-m", "py_compile",
+        ".\rebuild_windows_valid_only_prerequisites.py",
+        ".\trains\singleTask\windows_valid_only_clean_dlf.py"
+    )
+    Invoke-CheckedPython -PythonArgs $compileArgs
 
-$runArgs = @(
-    ".\rebuild_windows_valid_only_prerequisites.py",
-    "--action", "clean-dlf",
-    "--seed", "$Seed",
-    "--gpu-ids", "0",
-    "--num-workers", "1"
-)
+    $preflightArgs = @(
+        ".\rebuild_windows_valid_only_prerequisites.py",
+        "--action", "preflight",
+        "--seed", "$Seed",
+        "--gpu-ids", "0",
+        "--num-workers", "1"
+    )
+    Invoke-CheckedPython -PythonArgs $preflightArgs
 
-if (-not $Formal) {
-    $runArgs += "--smoke-test"
+    $runArgs = @(
+        ".\rebuild_windows_valid_only_prerequisites.py",
+        "--action", "clean-dlf",
+        "--seed", "$Seed",
+        "--gpu-ids", "0",
+        "--num-workers", "1"
+    )
+
+    if (-not $Formal) {
+        $runArgs += "--smoke-test"
+    }
+    if ($Overwrite) {
+        $runArgs += "--overwrite"
+    }
+
+    Invoke-CheckedPython -PythonArgs $runArgs
 }
-if ($Overwrite) {
-    $runArgs += "--overwrite"
+finally {
+    if ($null -eq $PreviousPythonWarnings) {
+        Remove-Item Env:PYTHONWARNINGS -ErrorAction SilentlyContinue
+    }
+    else {
+        $env:PYTHONWARNINGS = $PreviousPythonWarnings
+    }
 }
-
-Invoke-CheckedPython -PythonArgs $runArgs
