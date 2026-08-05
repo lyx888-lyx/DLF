@@ -14,6 +14,7 @@ python3 -m py_compile \
   trains/singleTask/cfcompat_safe_projection_utils.py \
   train_cfcompat_safe_projection_valid_screen.py \
   train_cfcompat_safe_projection_valid_screen_v2.py \
+  train_cfcompat_safe_projection_valid_screen_v3.py \
   audit_cfcompat_safe_projection_valid_screen.py \
   smoke_test_cfcompat_safe_projection.py
 
@@ -37,7 +38,7 @@ python3 smoke_test_cfcompat_safe_projection.py
 
 rm -rf "${OUTPUT_DIR}" "${MODEL_DIR}"
 
-python3 train_cfcompat_safe_projection_valid_screen_v2.py \
+python3 train_cfcompat_safe_projection_valid_screen_v3.py \
   --dataset mosi \
   --seeds 1112 1113 1115 \
   --gpu-ids "${GPU}" \
