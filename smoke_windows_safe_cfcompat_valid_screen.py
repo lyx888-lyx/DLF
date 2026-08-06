@@ -75,7 +75,22 @@ def main() -> None:
     base.reference_prediction_rows = memory_safe.reference_prediction_rows
     base.train_trajectory = memory_safe.train_trajectory
 
-    output_root, model_root = base.result_paths(cli)
+    output_root = (
+        Path(cli.result_root)
+        / "missing_baseline"
+        / "cfcompat_safe_projection_v1"
+        / cli.dataset
+        / "valid_screen"
+        / "smoke"
+    )
+    model_root = (
+        Path(cli.model_save_dir)
+        / "missing_baseline"
+        / "cfcompat_safe_projection_v1"
+        / cli.dataset
+        / "valid_screen"
+        / "smoke"
+    )
     if output_root.exists() or model_root.exists():
         if not cli.overwrite:
             raise FileExistsError(
