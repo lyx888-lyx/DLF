@@ -119,8 +119,10 @@ try {
         projection_mean_final_gate, `
         projection_active_compatibility_utility_spearman
 
-    Write-Host "`n================ Student-safe utility v3 grid ================"n    $Grid | Format-Table -AutoSize
-    Write-Host "`n================ Candidate gates ================"n    foreach ($Run in @(
+    Write-Host "`n================ Student-safe utility v3 grid ================"
+    $Grid | Format-Table -AutoSize
+    Write-Host "`n================ Candidate gates ================"
+    foreach ($Run in @(
         "student_safe_uniform",
         "student_safe_utility",
         "student_safe_utility_residual_cfcompat"
