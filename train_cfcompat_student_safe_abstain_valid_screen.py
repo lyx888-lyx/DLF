@@ -12,7 +12,6 @@ import argparse
 import gc
 import json
 import logging
-import math
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -330,9 +329,19 @@ def render_report(summary):
         "- Anchor: detached current missing-modality Student prediction",
         "- Unsafe/equal target: explicit KD abstention (`gate=0`)",
         "",
-        "## Candidate gates",
-        "",
     ]
+    if not summary["candidate_gates"]:
+        lines.extend(
+            [
+                "## Smoke run",
+                "",
+                "- Candidate gates intentionally skipped for the two-epoch smoke.",
+                "",
+            ]
+        )
+        return "\n".join(lines) + "\n"
+
+    lines.extend(["## Candidate gates", ""])
     for run in CANDIDATE_RUNS:
         gate = summary["candidate_gates"][run]
         lines.extend(
