@@ -105,30 +105,32 @@ def main():
     assert_close(summary["preserve_fraction"], 0.4)
     assert_close(summary["decision_abstain_fraction"], 0.4)
 
-    # A tiny Valid-event fixture verifies the new negative-transfer metric.
-    raw = pd.DataFrame(
-        [
-            {
-                "Seed": 1113,
-                "Run": "candidate",
-                "Mode": mode,
-                "sample_index": 0,
-                "sample_id": "x",
-                "label": 0.0,
-                "baseline_prediction": 0.2,
-                "candidate_prediction": prediction,
-                "teacher_prediction": 0.1,
-                "Split": "valid",
-                "SelectedBy": "validation_J",
-            }
-            for mode, prediction in zip(("LAV", "LA", "LV", "L"), (0.2, 0.25, 0.1, 0.4))
-        ]
-    )
-    events = derive_valid_events(raw)
+    # Four samples per modality keep the baseline quartile derivation valid.
+    # For each missing mode the candidate regrets are +0.05, -0.10, +0.20, 0;
+    # therefore 2/4 missing-modality events exceed the frozen +0.02 threshold.
+    rows = []
+    candidate_by_sample = (0.25, 0.10, 0.40, 0.20)
+    for sample_index, prediction in enumerate(candidate_by_sample):
+        for mode in ("LAV", "LA", "LV", "L"):
+            rows.append(
+                {
+                    "Seed": 1113,
+                    "Run": "candidate",
+                    "Mode": mode,
+                    "sample_index": sample_index,
+                    "sample_id": "x{}".format(sample_index),
+                    "label": 0.0,
+                    "baseline_prediction": 0.2,
+                    "candidate_prediction": prediction,
+                    "teacher_prediction": 0.1,
+                    "Split": "valid",
+                    "SelectedBy": "validation_J",
+                }
+            )
+    events = derive_valid_events(pd.DataFrame(rows))
     negative = negative_transfer_summary(events)
     missing = negative.loc[negative.Mode.eq("MISSING_ALL")].iloc[0]
-    # LA regret +0.05 and L regret +0.20 exceed the frozen 0.02 margin; LV improves.
-    assert_close(missing.negative_transfer_rate, 2.0 / 3.0)
+    assert_close(missing.negative_transfer_rate, 0.5)
 
     print("Regret-aware preserve-or-distill v4 utility smoke test passed")
 
