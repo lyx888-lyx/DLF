@@ -94,7 +94,7 @@ def add_transfer_risk_features(frame: pd.DataFrame) -> pd.DataFrame:
     if missing:
         raise ValueError("Transfer-risk raw frame lacks: {}".format(sorted(missing)))
     result = frame.copy()
-    if not set(result.mode.astype(str)).issubset(set(MISSING_MODES)):
+    if not set(result["mode"].astype(str)).issubset(set(MISSING_MODES)):
         raise ValueError("Transfer-risk rows may contain only LA/LV/L.")
 
     b = result.baseline_missing_prediction.to_numpy(dtype=np.float64)
@@ -117,7 +117,7 @@ def add_transfer_risk_features(frame: pd.DataFrame) -> pd.DataFrame:
     result["abs_teacher_full_prediction"] = np.abs(t)
     result["abs_initial_student_missing_prediction"] = np.abs(s0)
     for mode in MISSING_MODES:
-        result["mode_{}".format(mode)] = result.mode.astype(str).eq(mode).astype(np.float64)
+        result["mode_{}".format(mode)] = result["mode"].astype(str).eq(mode).astype(np.float64)
 
     baseline_error = np.abs(b - y)
     teacher_error = np.abs(t - y)
@@ -345,7 +345,7 @@ def crossfit_projection_summary(records: Sequence[Mapping]) -> dict:
         }
     )
     for mode in MISSING_MODES:
-        local = frame.loc[frame.mode.astype(str).eq(mode)]
+        local = frame.loc[frame["mode"].astype(str).eq(mode)]
         if local.empty:
             raise RuntimeError("No {} events in cross-fit projection records.".format(mode))
         summary["{}_effective_distill_fraction".format(mode)] = float(
