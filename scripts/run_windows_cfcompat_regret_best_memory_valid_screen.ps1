@@ -71,6 +71,7 @@ try {
         ".\trains\singleTask\cfcompat_regret_best_memory_utils.py",
         ".\train_cfcompat_regret_best_memory_valid_screen.py",
         ".\audit_cfcompat_regret_best_memory_valid_screen.py",
+        ".\audit_cfcompat_regret_best_memory_valid_screen_precision_fixed.py",
         ".\smoke_test_cfcompat_regret_best_memory.py"
     )
 
@@ -114,10 +115,7 @@ try {
         return
     }
 
-    Invoke-CheckedPython -PythonArgs @(
-        ".\audit_cfcompat_regret_best_memory_valid_screen.py",
-        "--result-dir", $OutputDir
-    )
+    & ".\scripts\audit_windows_cfcompat_regret_best_memory_valid_screen.ps1"
 
     $Summary = Get-Content (Join-Path $OutputDir "regret_best_memory_v4p2_valid_screen_summary.json") -Raw | ConvertFrom-Json
     $Grid = Import-Csv (Join-Path $OutputDir "regret_best_memory_v4p2_candidate_grid.csv")
