@@ -12,7 +12,6 @@ import argparse
 import gc
 import json
 import logging
-import math
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -159,31 +158,46 @@ def create_logger(cli):
 
 
 def train_baseline_prediction_rows(evaluator, loader, device):
-    """Cache the frozen ModDrop baseline for every Train sample and missing mode."""
+    """Cache frozen ModDrop Train predictions without advancing Train shuffle state."""
     evaluator.eval()
     rows = []
-    with preserve_rng_state():
-        for batch in loader:
-            text, audio, vision, labels = batch_to_device(batch, device)
-            baseline = {
-                mode: evaluator_prediction(
-                    evaluator, text, audio, vision, mode
-                ).view(-1)
-                for mode in MISSING_MODES
-            }
-            indices = batch["index"].view(-1).cpu().numpy().astype(int)
-            identifiers = list(batch["id"])
-            for offset, index in enumerate(indices):
-                row = {
-                    "sample_index": int(index),
-                    "sample_id": str(identifiers[offset]),
-                    "label": float(labels[offset].item()),
+    train_generator = getattr(loader, "generator", None)
+    generator_state = (
+        train_generator.get_state().clone()
+        if train_generator is not None
+        else None
+    )
+    try:
+        with preserve_rng_state():
+            for batch in loader:
+                text, audio, vision, labels = batch_to_device(batch, device)
+                baseline = {
+                    mode: evaluator_prediction(
+                        evaluator, text, audio, vision, mode
+                    ).view(-1)
+                    for mode in MISSING_MODES
                 }
-                for mode in MISSING_MODES:
-                    row["baseline_{}_pred".format(mode)] = float(
-                        baseline[mode][offset].detach().cpu()
-                    )
-                rows.append(row)
+                indices = batch["index"].view(-1).cpu().numpy().astype(int)
+                identifiers = list(batch["id"])
+                for offset, index in enumerate(indices):
+                    row = {
+                        "sample_index": int(index),
+                        "sample_id": str(identifiers[offset]),
+                        "label": float(labels[offset].item()),
+                    }
+                    for mode in MISSING_MODES:
+                        row["baseline_{}_pred".format(mode)] = float(
+                            baseline[mode][offset].detach().cpu()
+                        )
+                    rows.append(row)
+    finally:
+        if generator_state is not None:
+            train_generator.set_state(generator_state)
+    if generator_state is not None and not torch.equal(
+        train_generator.get_state(), generator_state
+    ):
+        raise RuntimeError("Train DataLoader generator was not restored after v4 baseline caching.")
+
     frame = pd.DataFrame(rows).sort_values("sample_index", kind="mergesort").reset_index(drop=True)
     if len(frame) != 1284 or frame.sample_index.nunique() != 1284:
         raise RuntimeError("v4 Train baseline cache must contain exactly 1284 unique samples.")
@@ -221,6 +235,7 @@ def load_assets(cli, args, loaders, seed):
 
     assets["baseline_valid_cache_sample_count"] = int(len(valid_reference))
     assets["baseline_train_cache_sample_count"] = int(len(train_baseline))
+    assets["train_loader_generator_preserved"] = True
     assets["regret_anchor"] = "frozen_validation_best_moddrop_missing_prediction"
     assets["three_way_policy"] = "distill_preserve_abstain"
     return teacher, student, bundle, assets
@@ -370,9 +385,6 @@ def forward_objective(
         "kd_loss": float(kd_loss.detach().cpu()),
         "mean_gate": float(decision["distill_gate"].detach().mean().cpu()),
         "weighted_kd": float(kd_loss.detach().cpu()),
-        # Frozen trajectory compatibility keys.  Here the baseline key really
-        # is the frozen ModDrop anchor, while current Student error is tracked
-        # explicitly in the Train decision artifact.
         "baseline_missing_MAE": float(
             torch.abs(baseline_prediction.view(-1) - labels.view(-1)).mean().cpu()
         ),
@@ -430,6 +442,7 @@ def train_trajectory(cli, logger, output_root, model_root, seed, run):
             "Method": METHOD,
             "RegretAnchor": "frozen_validation_best_moddrop_missing_prediction",
             "ThreeWayPolicy": "distill_preserve_abstain",
+            "TrainLoaderGeneratorPreserved": True,
             "DistillMargin": DISTILL_MARGIN,
             "PreserveMargin": PRESERVE_MARGIN,
             "LambdaPreserve": LAMBDA_PRESERVE,
@@ -536,6 +549,7 @@ def render_report(summary):
         "- PRESERVE margin: `0.02`",
         "- Preservation coefficient: `0.25`",
         "- Mild CFCompat prior: `0.75 + 0.25 * compatibility`",
+        "- Train baseline pre-pass restores the dedicated Train DataLoader generator exactly",
         "",
     ]
     if not gate:
@@ -660,6 +674,7 @@ def main():
         "test_loader_construction_count": 0,
         "test_loader_traversal_count": 0,
         "additional_inference_parameters": 0,
+        "train_loader_generator_preserved": True,
         "reference_sources": reference_sources,
         "source_record": source_record,
         "artifacts": {},
@@ -693,6 +708,7 @@ def main():
             "teacher_target": "teacher_clipped_to_current_student_to_train_label_interval",
             "preserve_target": "frozen_moddrop_prediction_clipped_to_current_student_to_train_label_interval",
             "mild_cfcompat": "0.75_plus_0.25_times_compatibility_on_distill_only",
+            "train_loader_generator_preserved": True,
             "lambda_kd": 1.0,
             "lambda_preserve": LAMBDA_PRESERVE,
             "optimizer": "Adam",
