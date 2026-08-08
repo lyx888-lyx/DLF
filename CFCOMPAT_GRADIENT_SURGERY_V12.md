@@ -32,10 +32,11 @@ Everything below is frozen to v10 unless explicitly stated:
 - Train-video-holdout evaluation and early stopping;
 - v10 conservative selector: earliest epoch within 1% of the absolute best Train-holdout J;
 - 4-of-5 same-sign median residual consensus;
-- official Valid first used only after all five fold banks are frozen;
+- official Valid is not used for fold gradients or checkpoint selection;
+- the legacy v4 asset loader may materialize a frozen Valid reference before fold training, but no Valid metric or reference enters the fold optimizer/selector; the v12 Valid J/transfer screen is computed only after all five fold banks are frozen;
 - official Test is never constructed or accessed.
 
-The only intervention is the residual optimizer gradient at each original update window.
+The only optimization intervention is the residual optimizer gradient at each original update window.
 
 ## Gradient decomposition
 
