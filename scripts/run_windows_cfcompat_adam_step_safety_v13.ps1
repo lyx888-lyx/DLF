@@ -39,16 +39,10 @@ if ($LASTEXITCODE -ne 0) {
     throw "v13 py_compile failed with exit code $LASTEXITCODE"
 }
 
+# Synthetic only: no dataset loader and therefore no extra Valid observation.
 python .\smoke_test_cfcompat_adam_step_safety.py
 if ($LASTEXITCODE -ne 0) {
     throw "v13 synthetic safety smoke failed with exit code $LASTEXITCODE"
-}
-
-Write-Host ""
-Write-Host "================ v13 two-epoch integration smoke ============="
-python .\train_cfcompat_adam_step_safety_valid_screen_v13.py --gpu-ids $GpuId --smoke-test --overwrite
-if ($LASTEXITCODE -ne 0) {
-    throw "v13 integration smoke failed with exit code $LASTEXITCODE"
 }
 
 $argsList = @(
@@ -130,5 +124,5 @@ Write-Host ("verdict:                             {0}" -f $data.verdict)
 Write-Host ""
 Write-Host "Direct metric gate was frozen before this Valid run: J, Teacher-beneficial NTR, and overall NTR must strictly improve over v12; Teacher-nonbeneficial NTR may degrade by at most 3pp."
 Write-Host "Legacy target gate is unchanged from v12. Official Valid is first used after all five folds are frozen."
-Write-Host "Official Test was never constructed or accessed."
+Write-Host "Synthetic smoke does not load Valid. Official Test was never constructed or accessed."
 Write-Host "Result root: $root"
