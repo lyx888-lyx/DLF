@@ -99,7 +99,8 @@ Import-Csv $transfer |
     Format-Table -AutoSize
 
 Write-Host ""
-Write-Host "================ Route decision ================================"n$data = Get-Content $summary -Raw | ConvertFrom-Json
+Write-Host "================ Route decision ================================"
+$data = Get-Content $summary -Raw | ConvertFrom-Json
 Write-Host ("route verdict:                              {0}" -f $data.route_decision.verdict)
 Write-Host ("v13 Test-J minus Original:                 {0}" -f $data.route_decision.delta_J_v13_minus_original)
 Write-Host ("v13 beneficial NTR reduction vs Original: {0}" -f $data.route_decision.beneficial_NTR_reduction_v13_vs_original)
