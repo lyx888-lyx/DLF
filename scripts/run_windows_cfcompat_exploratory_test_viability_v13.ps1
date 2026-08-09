@@ -57,8 +57,15 @@ if ($LASTEXITCODE -ne 0) {
     throw "Exploratory Test aggregate smoke failed with exit code $LASTEXITCODE"
 }
 
+# Resolve every frozen checkpoint and verify its recorded SHA before constructing Test.
+python -c "from types import SimpleNamespace; import evaluate_cfcompat_exploratory_test_viability_v13 as p; b=p.load_frozen_paths(SimpleNamespace(result_root='result', dataset='mosi')); print('Frozen checkpoint preflight: PASS'); print('methods:', ', '.join(p.METHOD_ORDER))"
+if ($LASTEXITCODE -ne 0) {
+    throw "Frozen checkpoint preflight failed with exit code $LASTEXITCODE; official Test was not entered by the evaluator"
+}
+
 Write-Host ""
-Write-Host "Synthetic aggregate checks passed. Official Test access starts now."
+Write-Host "Synthetic aggregate checks and frozen-checkpoint preflight passed."
+Write-Host "Official Test access starts now."
 Write-Host "No sample-level Test artifact will be written."
 Write-Host ""
 
