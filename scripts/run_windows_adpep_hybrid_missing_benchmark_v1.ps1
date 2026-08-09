@@ -21,13 +21,30 @@ Write-Host ""
 $required = @(
     ".\result\missing_baseline\cfcompat_exploratory_test_viability_v13\mosi\exploratory_test\seed1113\exploratory_test_viability_v13_summary.json",
     ".\result\missing_baseline\cfcompat_exploratory_test_viability_v13\mosi\exploratory_test\seed1113\exploratory_test_viability_v13_comparison.csv",
-    ".\result\missing_baseline\cfcompat_prediction_ensemble_v1\mosi\individual_predictions_manifest.json",
     ".\result\missing_baseline\anchor_decision_preserving_ensemble_v1\mosi\output_prediction_manifest.json"
 )
 foreach ($path in $required) {
     if (-not (Test-Path $path)) {
         throw "Required frozen artifact missing: $path"
     }
+}
+
+$stage9Manifest = ".\result\missing_baseline\cfcompat_prediction_ensemble_v1\mosi\individual_predictions_manifest.json"
+$stage8Root = ".\result\missing_baseline\cfcompat_stability_v1\mosi"
+if (Test-Path $stage9Manifest) {
+    Write-Host "Frozen member source preflight: Stage9A manifest found."
+} else {
+    Write-Warning "Stage9A intermediate manifest is absent. Falling back to frozen Stage8 Online Test predictions."
+    foreach ($seed in 1111,1112,1113,1114,1115) {
+        $seedDir = Join-Path $stage8Root ("seed{0}" -f $seed)
+        foreach ($name in "online_test_predictions.csv","online_replay_audit.json","per_seed_all_methods.csv") {
+            $path = Join-Path $seedDir $name
+            if (-not (Test-Path $path)) {
+                throw "Stage8 fallback artifact missing: $path"
+            }
+        }
+    }
+    Write-Host "Frozen member source preflight: Stage8 fallback complete for seeds 1111-1115."
 }
 
 $hybridRoot = ".\result\complementarity_v71\mosi\seed_1111"
@@ -37,6 +54,7 @@ if (-not (Test-Path (Join-Path $hybridRoot "complementarity_v71_summary.json")))
 
 python -m py_compile `
     .\benchmark_adpep_hybrid_missing_offline_v1.py `
+    .\benchmark_adpep_hybrid_missing_offline_v1_stage8fallback.py `
     .\smoke_test_adpep_hybrid_missing_benchmark_v1.py
 if ($LASTEXITCODE -ne 0) {
     throw "py_compile failed with exit code $LASTEXITCODE"
@@ -48,7 +66,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $argsList = @(
-    ".\benchmark_adpep_hybrid_missing_offline_v1.py",
+    ".\benchmark_adpep_hybrid_missing_offline_v1_stage8fallback.py",
     "--dataset", "mosi",
     "--hybrid-root", $hybridRoot
 )
@@ -76,6 +94,11 @@ Import-Csv $comparison |
     Format-Table -AutoSize
 
 $data = Get-Content $summary -Raw | ConvertFrom-Json
+
+Write-Host ""
+Write-Host "================ Frozen member source =========================="
+Write-Host ("source root: {0}" -f $data.stage9a_root)
+$data.stage9a_members | ConvertTo-Json -Depth 5
 
 Write-Host ""
 Write-Host "================ ADPEP-All paired vs Original ================="
