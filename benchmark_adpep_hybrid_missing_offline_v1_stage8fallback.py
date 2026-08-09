@@ -16,6 +16,9 @@ import pandas as pd
 import benchmark_adpep_hybrid_missing_offline_v1 as base
 
 
+_ORIGINAL_STAGE9_LOADER = base.load_stage9_members
+
+
 def _load_stage8_members(result_root: Path, dataset: str):
     root = Path(result_root) / "missing_baseline" / "cfcompat_stability_v1" / dataset
     frames = {}
@@ -97,7 +100,7 @@ def load_stage9_or_stage8_members(result_root: Path, dataset: str):
     )
     if stage9_manifest.is_file():
         print("Frozen member source: Stage9A manifest")
-        return base.load_stage9_members(result_root, dataset)
+        return _ORIGINAL_STAGE9_LOADER(result_root, dataset)
 
     print("Frozen Stage9A manifest absent; using exact Stage8 Online prediction fallback")
     return _load_stage8_members(result_root, dataset)
