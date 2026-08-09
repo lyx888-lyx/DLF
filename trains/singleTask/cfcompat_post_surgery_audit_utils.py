@@ -18,8 +18,6 @@ supervised-vs-selective conflict has been removed.
 """
 from __future__ import annotations
 
-from typing import Mapping
-
 import numpy as np
 import pandas as pd
 import torch
@@ -110,6 +108,15 @@ def replay_asymmetric_projection(
             )
         )
 
+    norm_reduction_fraction = (
+        float(max(0.0, 1.0 - projected_norm / sup_norm))
+        if sup_norm > 0.0
+        else 0.0
+    )
+    removed_component_fraction = (
+        float(removed_norm / sup_norm) if sup_norm > 0.0 else 0.0
+    )
+
     return {
         "SUPERVISED_ALL_RAW": supervised,
         "SELECTIVE_ONLY": selective,
@@ -129,9 +136,12 @@ def replay_asymmetric_projection(
             "projected_supervised_gradient_l2": projected_norm,
             "removed_gradient_l2": removed_norm,
             "surgery_update_gradient_l2": update_norm,
-            "supervised_l2_removed_fraction": (
-                float(removed_norm / sup_norm) if sup_norm > 0.0 else 0.0
-            ),
+            # This matches the v12 diagnostic definition: reduction in the L2
+            # norm of the supervised gradient after projection.
+            "supervised_l2_removed_fraction": norm_reduction_fraction,
+            # This second field is geometrically different and is retained
+            # explicitly rather than overloading the v12 name.
+            "removed_component_l2_fraction": removed_component_fraction,
         },
     }
 
@@ -198,6 +208,9 @@ def headline_findings(aggregate: pd.DataFrame, projection_frame: pd.DataFrame) -
         ),
         "all_mode_mean_supervised_l2_removed_fraction": float(
             all_projection.supervised_l2_removed_fraction.mean()
+        ),
+        "all_mode_mean_removed_component_l2_fraction": float(
+            all_projection.removed_component_l2_fraction.mean()
         ),
         "projected_supervised_harm_teacher_beneficial_folds": int(
             matrix["SUPERVISED_PROJECTED"]["OOF_TEACHER_BENEFICIAL"]["harm_fold_count"]
