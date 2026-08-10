@@ -1,7 +1,7 @@
 """MOSEI Stage-1 DLF-ModDrop training, Valid-only and Windows-safe.
 
 This is a cross-dataset port of the frozen Stage-1 ModDrop mathematics in
-``train_missing.py``.  It deliberately does NOT construct Test.
+``train_missing.py``. It deliberately does NOT construct Test.
 
 The only execution adaptation is sequential-equivalent backward within each
 minibatch:
@@ -10,7 +10,7 @@ minibatch:
     gradient-accumulation boundary as the original trainer.
 
 Thus the accumulated parameter gradient is still grad(L_full + L_missing), while
-only one forward graph needs to be resident at a time.  This materially reduces
+only one forward graph needs to be resident at a time. This materially reduces
 activation memory on an 8 GiB Windows laptop GPU without changing the objective,
 checkpoint criterion, scheduler metric, or early-stop rule.
 """
@@ -215,7 +215,7 @@ def train_one_seed(cli: argparse.Namespace, logger: logging.Logger) -> tuple[Dic
         raise RuntimeError(f"Stage-1 must construct exactly train/valid, got {sorted(dataloader)}")
 
     backbone = DLF(args).to(args.device)
-    backbone.load_state_dict(torch.load(clean_checkpoint, map_location=args.device), strict=True)
+    backbone.load_state_dict(torch.load(clean_checkpoint, map_location="cpu"), strict=True)
     model = MissingModalityWrapper(backbone, args.feature_dims[1], args.feature_dims[2]).to(args.device)
 
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
@@ -262,8 +262,6 @@ def train_one_seed(cli: argparse.Namespace, logger: logging.Logger) -> tuple[Dic
             vision = batch_data["vision"].to(args.device)
             labels = batch_data["labels"]["M"].to(args.device).view(-1, 1)
 
-            # Full view: same Stage-1 objective term, but backward immediately so
-            # its graph can be released before constructing the missing-view graph.
             full_mask = mode_to_mask("LAV", batch_size=labels.size(0), device=args.device, dtype=audio.dtype)
             full_output = model(text, audio, vision, full_mask)
             full_loss, full_details = compute_full_dlf_loss(full_output, labels, criterion, cosine, sim_loss)
@@ -273,7 +271,6 @@ def train_one_seed(cli: argparse.Namespace, logger: logging.Logger) -> tuple[Dic
             full_loss.backward()
             del full_output, full_details, full_loss
 
-            # Missing view: dedicated seeded LA/LV/L sampling, exactly as Stage-1.
             missing_mask = sample_missing_masks(
                 labels.size(0), missing_generator, device=args.device, dtype=audio.dtype
             )
@@ -344,13 +341,20 @@ def train_one_seed(cli: argparse.Namespace, logger: logging.Logger) -> tuple[Dic
     if last_token_gradients["audio"] <= 0.0 or last_token_gradients["vision"] <= 0.0:
         raise RuntimeError("Missing tokens did not receive non-zero gradients.")
 
-    # Fresh strict reload + Valid audit.  Still no Test loader exists.
-    del model
+    # Release every GPU owner from training before constructing the strict audit copy.
+    # Adam keeps parameter/state references even after ``del model``; ``backbone`` is
+    # another explicit alias to the wrapped DLF.  Releasing all three prevents a
+    # late audit-only OOM on the 8 GiB laptop GPU.
+    del optimizer, scheduler
+    del cosine, sim_loss
+    del model, backbone
     torch.cuda.empty_cache()
+
+    audit_backbone = DLF(args).to(args.device)
     audit_model = MissingModalityWrapper(
-        DLF(args).to(args.device), args.feature_dims[1], args.feature_dims[2]
+        audit_backbone, args.feature_dims[1], args.feature_dims[2]
     ).to(args.device)
-    audit_model.load_state_dict(torch.load(checkpoint, map_location=args.device), strict=True)
+    audit_model.load_state_dict(torch.load(checkpoint, map_location="cpu"), strict=True)
     audit_metrics = evaluate_all_modes(audit_model, dataloader["valid"], args.device, "moddrop", criterion)
     audit_j = float(validation_objective(audit_metrics))
     if abs(audit_j - best_j_val) > 1e-8:
