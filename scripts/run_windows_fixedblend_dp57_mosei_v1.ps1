@@ -72,7 +72,8 @@ foreach ($path in @($metrics,$diag,$summary)) {
 }
 
 Write-Host ""
-Write-Host "================ MOSEI LAV / MissingMacro ============================"nImport-Csv $metrics |
+Write-Host "================ MOSEI LAV / MissingMacro ============================"
+Import-Csv $metrics |
     Where-Object { $_.Mode -in @("LAV","MissingMacro") } |
     Select-Object Method,Mode,J,MAE,Corr,acc_2,F1_score,acc_7,acc_5 |
     Format-Table -AutoSize
