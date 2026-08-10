@@ -4,6 +4,7 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$V13Predictions,
     [string]$Raw5Root = ".\result\missing_baseline\cfcompat_prediction_ensemble_v1\mosei",
+    [int]$AnchorSeed = 0,
     [switch]$Overwrite
 )
 
@@ -12,6 +13,10 @@ $ExpectedBranch = "analysis/fixedblend-dp57-mosei-ready-v1"
 $branch = (git rev-parse --abbrev-ref HEAD).Trim()
 if ($branch -ne $ExpectedBranch) {
     throw "Wrong branch: $branch. Expected $ExpectedBranch"
+}
+
+if ($Split -eq "test" -and $AnchorSeed -notin @(1111,1112,1113,1114,1115)) {
+    throw "MOSEI Test requires -AnchorSeed frozen from the completed MOSEI Valid run. Never select the anchor on Test."
 }
 
 foreach ($seed in @(1111,1112,1113,1114,1115)) {
@@ -24,20 +29,33 @@ if (-not (Test-Path $V13Predictions)) {
     throw "Missing frozen MOSEI v13 predictions: $V13Predictions"
 }
 
-python -m py_compile .\evaluate_fixedblend_dp57_v1.py .\trains\singleTask\anchor_decision_projection.py
+python -m py_compile `
+    .\evaluate_fixedblend_dp57_v1.py `
+    .\evaluate_fixedblend_dp57_mosei_test_v1.py `
+    .\trains\singleTask\anchor_decision_projection.py
 if ($LASTEXITCODE -ne 0) {
     throw "FixedBlend-DP57 py_compile failed with exit code $LASTEXITCODE"
 }
 
 $output = ".\result\missing_baseline\fixedblend_dp57_v1\mosei\$Split"
-$argsList = @(
-    ".\evaluate_fixedblend_dp57_v1.py",
-    "--dataset", "mosei",
-    "--split", $Split,
-    "--raw5-root", $Raw5Root,
-    "--v13-predictions", $V13Predictions,
-    "--output-root", $output
-)
+if ($Split -eq "valid") {
+    $argsList = @(
+        ".\evaluate_fixedblend_dp57_v1.py",
+        "--dataset", "mosei",
+        "--split", "valid",
+        "--raw5-root", $Raw5Root,
+        "--v13-predictions", $V13Predictions,
+        "--output-root", $output
+    )
+} else {
+    $argsList = @(
+        ".\evaluate_fixedblend_dp57_mosei_test_v1.py",
+        "--anchor-seed", "$AnchorSeed",
+        "--raw5-root", $Raw5Root,
+        "--v13-predictions", $V13Predictions,
+        "--output-root", $output
+    )
+}
 if ($Overwrite) {
     $argsList += "--overwrite"
 }
@@ -54,8 +72,7 @@ foreach ($path in @($metrics,$diag,$summary)) {
 }
 
 Write-Host ""
-Write-Host "================ MOSEI LAV / MissingMacro ============================"
-Import-Csv $metrics |
+Write-Host "================ MOSEI LAV / MissingMacro ============================"nImport-Csv $metrics |
     Where-Object { $_.Mode -in @("LAV","MissingMacro") } |
     Select-Object Method,Mode,J,MAE,Corr,acc_2,F1_score,acc_7,acc_5 |
     Format-Table -AutoSize
@@ -78,5 +95,8 @@ Write-Host ("DP57 LAV Acc2:                  {0}" -f $data.dp57_LAV.acc_2)
 Write-Host ("DP57 LAV F1:                    {0}" -f $data.dp57_LAV.F1_score)
 Write-Host ("DP57 LAV Corr:                  {0}" -f $data.dp57_LAV.Corr)
 Write-Host ("DP57 LAV MAE:                   {0}" -f $data.dp57_LAV.MAE)
+if ($Split -eq "test") {
+    Write-Host ("TEST ANCHOR SELECTED ON TEST:    False (frozen seed {0})" -f $AnchorSeed)
+}
 Write-Host "SAMPLE-LEVEL PROJECTED OUTPUT WRITTEN: False"
 Write-Host "Result root: $output"
