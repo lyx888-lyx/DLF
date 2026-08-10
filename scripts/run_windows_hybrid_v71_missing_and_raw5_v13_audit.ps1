@@ -40,7 +40,15 @@ if (-not (Test-Path $v13Raw)) {
 
 python -m py_compile .\reconstruct_hybrid_v71_missing_and_raw5_v13_audit.py
 if ($LASTEXITCODE -ne 0) {
-    throw "py_compile failed with exit code $LASTEXITCODE"
+    throw "Main py_compile failed with exit code $LASTEXITCODE"
+}
+python -m py_compile .\trains\singleTask\complementarity_v71.py
+if ($LASTEXITCODE -ne 0) {
+    throw "V7.1 compatibility-module py_compile failed with exit code $LASTEXITCODE"
+}
+python -c "from trains.singleTask.complementarity_v71 import apply_global_committee, apply_region_committee, fit_committee_cv, selection_stats; print('V7.1 committee import preflight: PASS')"
+if ($LASTEXITCODE -ne 0) {
+    throw "V7.1 committee import preflight failed with exit code $LASTEXITCODE"
 }
 
 $argsList = @(
