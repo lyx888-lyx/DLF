@@ -28,7 +28,7 @@ $RepoRoot = Split-Path -Parent $PSScriptRoot
 Push-Location $RepoRoot
 try {
     $pythonArgs = @(
-        ".\train_mosei_cfcompat_v1.py",
+        ".\train_mosei_cfcompat_v1_hotfix.py",
         "--action", $Action.ToLowerInvariant(),
         "--seed", [string]$Seed,
         "--gpu-id", [string]$GpuId,
