@@ -21,7 +21,7 @@ $RepoRoot = Split-Path -Parent $PSScriptRoot
 Push-Location $RepoRoot
 try {
     $pythonArgs = @(
-        ".\train_mosei_v13.py",
+        ".\train_mosei_v13_hotfix.py",
         "--seed", "1113",
         "--gpu-id", [string]$GpuId,
         "--num-workers", [string]$NumWorkers,
@@ -46,6 +46,7 @@ try {
     Write-Host ("Preflight:         {0}" -f [bool]$Preflight)
     Write-Host ("Smoke:             {0}" -f [bool]$Smoke)
     Write-Host ("Overwrite:         {0}" -f [bool]$Overwrite)
+    Write-Host "Initial LAV audit: teacher/student compared in eval mode"
     Write-Host "Official Valid:    fold training/selection NEVER uses it"
     Write-Host "Official Test:     WILL NOT BE CONSTRUCTED"
     Write-Host "Downstream blend:  Raw5 0.5 + v13 0.5 (NO MOSEI weight search)"
