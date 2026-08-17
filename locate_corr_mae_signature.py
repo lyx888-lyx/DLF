@@ -2,9 +2,9 @@
 
 Read-only diagnostic. Searches CSV/JSON artifacts under result/ for records whose
 Corr and MAE are closest to target values (default Corr=.802, MAE=.693).
-Post-hoc analysis artifacts and obvious target/expected audit objects are excluded
-by default so the script reports historical experiment evidence rather than the
-query itself.
+Post-hoc analysis artifacts, generated provenance reports, and obvious
+query/expected audit objects are excluded by default so the script reports
+historical experiment evidence rather than the query itself.
 """
 from __future__ import annotations
 
@@ -16,6 +16,13 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple
 
 import pandas as pd
+
+
+GENERATED_REPORT_NAMES = {
+    "main_table_metric_signature_matches.json",
+    "corr_mae_signature_matches.json",
+    "sentiment_artifact_discovery_mosi.json",
+}
 
 
 def norm_key(key: Any) -> str:
@@ -64,13 +71,24 @@ def is_excluded_location(path: Path, location: str, include_posthoc: bool) -> bo
     loc = str(location).lower()
     if not include_posthoc and "/posthoc_analysis/" in f"/{p}":
         return True
-    forbidden = ("expected", "target", "signature", "paper_table_audit")
+    if path.name.lower() in GENERATED_REPORT_NAMES:
+        return True
+    forbidden = (
+        "expected",
+        "target",
+        "signature",
+        "paper_table_audit",
+        "main_table_identity_audit",
+    )
     return any(token in loc for token in forbidden)
 
 
 def context_from_mapping(mapping: Dict[str, Any]) -> str:
     labels = []
-    for key in ("Method", "method", "Name", "name", "Mode", "mode", "Split", "split", "Seed", "seed"):
+    for key in (
+        "Method", "method", "Name", "name", "Mode", "mode",
+        "Split", "split", "Seed", "seed",
+    ):
         if key in mapping:
             value = mapping[key]
             try:
@@ -110,15 +128,23 @@ def scan_json(path: Path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Find historical records near a Corr/MAE signature")
+    parser = argparse.ArgumentParser(
+        description="Find historical records near a Corr/MAE signature"
+    )
     parser.add_argument("--result-root", default="result")
     parser.add_argument("--corr", type=float, default=0.802)
     parser.add_argument("--mae", type=float, default=0.693)
-    parser.add_argument("--display-tol", type=float, default=0.0005,
-                        help="Tolerance for a value to display as the requested 3-decimal target")
+    parser.add_argument(
+        "--display-tol",
+        type=float,
+        default=0.0005,
+        help="Tolerance for a value to display as the requested 3-decimal target",
+    )
     parser.add_argument("--top-k", type=int, default=40)
     parser.add_argument("--include-posthoc", action="store_true")
-    parser.add_argument("--write-report", default="result/corr_mae_signature_matches.json")
+    parser.add_argument(
+        "--write-report", default="result/corr_mae_signature_matches.json"
+    )
     args = parser.parse_args()
 
     root = Path(args.result_root)
@@ -128,6 +154,8 @@ def main():
     candidates: List[dict] = []
     files = sorted(list(root.rglob("*.csv")) + list(root.rglob("*.json")))
     for path in files:
+        if path.name.lower() in GENERATED_REPORT_NAMES:
+            continue
         rows = scan_csv(path) if path.suffix.lower() == ".csv" else scan_json(path)
         for location, context, (corr, mae) in rows:
             if is_excluded_location(path, location, args.include_posthoc):
@@ -149,10 +177,23 @@ def main():
                 "display_match_both": dc < args.display_tol and dm < args.display_tol,
             })
 
-    candidates.sort(key=lambda x: (x["max_pair_diff"], x["mean_pair_diff"], x["file"], x["location"]))
+    candidates.sort(
+        key=lambda x: (
+            x["max_pair_diff"],
+            x["mean_pair_diff"],
+            x["file"],
+            x["location"],
+        )
+    )
     both = [x for x in candidates if x["display_match_both"]]
-    corr_only = [x for x in candidates if x["display_match_corr"] and not x["display_match_mae"]]
-    mae_only = [x for x in candidates if x["display_match_mae"] and not x["display_match_corr"]]
+    corr_only = [
+        x for x in candidates
+        if x["display_match_corr"] and not x["display_match_mae"]
+    ]
+    mae_only = [
+        x for x in candidates
+        if x["display_match_mae"] and not x["display_match_corr"]
+    ]
 
     def show(title: str, rows: List[dict], limit: int):
         print(f"\n== {title} ({len(rows)}) ==")
@@ -160,17 +201,39 @@ def main():
             print("  (none found)")
             return
         for rank, item in enumerate(rows[:limit], 1):
-            print(f"{rank:2d}. Corr={item['corr']:.9f} MAE={item['mae']:.9f} "
-                  f"dCorr={item['corr_abs_diff']:.9f} dMAE={item['mae_abs_diff']:.9f}")
-            print(f"    {item['file']}  [{item['location']}] {item['context']}")
+            print(
+                f"{rank:2d}. Corr={item['corr']:.9f} MAE={item['mae']:.9f} "
+                f"dCorr={item['corr_abs_diff']:.9f} "
+                f"dMAE={item['mae_abs_diff']:.9f}"
+            )
+            print(
+                f"    {item['file']}  [{item['location']}] {item['context']}"
+            )
 
-    show(f"Historical records matching displayed Corr={args.corr:.3f} AND MAE={args.mae:.3f}", both, args.top_k)
-    show(f"Historical records matching displayed Corr={args.corr:.3f} only", corr_only, min(args.top_k, 20))
-    show(f"Historical records matching displayed MAE={args.mae:.3f} only", mae_only, min(args.top_k, 20))
+    show(
+        f"Historical records matching displayed Corr={args.corr:.3f} "
+        f"AND MAE={args.mae:.3f}",
+        both,
+        args.top_k,
+    )
+    show(
+        f"Historical records matching displayed Corr={args.corr:.3f} only",
+        corr_only,
+        min(args.top_k, 20),
+    )
+    show(
+        f"Historical records matching displayed MAE={args.mae:.3f} only",
+        mae_only,
+        min(args.top_k, 20),
+    )
     show("Closest historical Corr/MAE pairs overall", candidates, args.top_k)
 
     report = {
-        "target": {"Corr": args.corr, "MAE": args.mae, "display_tolerance": args.display_tol},
+        "target": {
+            "Corr": args.corr,
+            "MAE": args.mae,
+            "display_tolerance": args.display_tol,
+        },
         "scanned_files": len(files),
         "candidate_pairs": len(candidates),
         "display_match_both": both,
@@ -178,10 +241,13 @@ def main():
         "display_match_mae_only": mae_only,
         "closest": candidates[: max(1, args.top_k)],
         "posthoc_excluded": not args.include_posthoc,
+        "generated_reports_excluded": sorted(GENERATED_REPORT_NAMES),
     }
     output = Path(args.write_report)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     print(f"\nWrote report: {output}")
 
 
