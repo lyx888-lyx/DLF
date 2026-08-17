@@ -1,7 +1,8 @@
 """Locate aggregate result artifacts that best match the paper-table MOSI rows.
 
 This is a read-only diagnostic. It recursively scans CSV/JSON files under a result
-root and ranks rows/objects by distance to two frozen target signatures:
+root and ranks *observed historical result rows* by distance to two frozen target
+signatures:
 
 DLF  : Acc7 47.08, Acc5 52.33, Acc2 85.06, F1 85.04, Corr .781, MAE .731
 Ours : Acc7 49.47, Acc5 55.10, Acc2 85.06, F1 85.01, Corr .802, MAE .693
@@ -9,6 +10,10 @@ Ours : Acc7 49.47, Acc5 55.10, Acc2 85.06, F1 85.01, Corr .802, MAE .693
 The purpose is provenance only: identify which saved aggregate artifact/method
 most likely produced the numbers already placed in the table. It never selects,
 trains, tunes, or changes a model.
+
+Important: post-hoc analysis outputs and embedded target/expected signatures are
+excluded. Otherwise a replay summary that merely stores the target numbers for
+an identity audit would appear as a false exact match.
 """
 from __future__ import annotations
 
@@ -34,6 +39,15 @@ ALIASES = {
     "corr": ("lavcorr", "corr", "lavcorrelation", "correlation"),
     "mae": ("lavmae", "mae"),
 }
+
+# JSON/object locations carrying target constants rather than observed metrics.
+FORBIDDEN_LOCATION_TOKENS = (
+    "expected",
+    "target",
+    "signature",
+    "paper_table_audit",
+    "paper_table_identity",
+)
 
 
 def norm_key(key: Any) -> str:
@@ -87,6 +101,21 @@ def json_objects(value: Any, path: str = "$") -> Iterable[Tuple[str, Dict[str, A
             yield from json_objects(child, f"{path}[{i}]")
 
 
+def is_forbidden_location(location: str) -> bool:
+    lowered = str(location).lower()
+    return any(token in lowered for token in FORBIDDEN_LOCATION_TOKENS)
+
+
+def row_is_lav_compatible(mapping: Dict[str, Any]) -> bool:
+    """Main-table matching should not be driven by LA/LV/L/MissingMacro rows."""
+    mode = None
+    for key in ("Mode", "mode"):
+        if key in mapping and pd.notna(mapping[key]):
+            mode = str(mapping[key]).strip().upper()
+            break
+    return mode in (None, "", "LAV", "FULL", "COMPLETE")
+
+
 def scan_csv(path: Path) -> List[Dict[str, Any]]:
     try:
         frame = pd.read_csv(path)
@@ -95,6 +124,8 @@ def scan_csv(path: Path) -> List[Dict[str, Any]]:
     results = []
     for idx, row in frame.iterrows():
         mapping = row.to_dict()
+        if not row_is_lav_compatible(mapping):
+            continue
         metrics = extract_metrics(mapping)
         if len(metrics) >= 4:
             labels = []
@@ -112,6 +143,10 @@ def scan_json(path: Path) -> List[Dict[str, Any]]:
         return []
     results = []
     for obj_path, mapping in json_objects(value):
+        if is_forbidden_location(obj_path):
+            continue
+        if not row_is_lav_compatible(mapping):
+            continue
         metrics = extract_metrics(mapping)
         if len(metrics) >= 4:
             labels = []
@@ -123,10 +158,15 @@ def scan_json(path: Path) -> List[Dict[str, Any]]:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Locate result artifacts matching main-table MOSI metric signatures")
+    parser = argparse.ArgumentParser(description="Locate historical result artifacts matching main-table MOSI metric signatures")
     parser.add_argument("--result-root", default="result")
     parser.add_argument("--top-k", type=int, default=20)
     parser.add_argument("--write-report", default="result/main_table_metric_signature_matches.json")
+    parser.add_argument(
+        "--include-posthoc",
+        action="store_true",
+        help="Include result/posthoc_analysis artifacts. Default excludes them to avoid circular target-signature matches.",
+    )
     args = parser.parse_args()
 
     root = Path(args.result_root)
@@ -135,13 +175,31 @@ def main():
 
     candidates = []
     files = sorted(list(root.rglob("*.csv")) + list(root.rglob("*.json")))
+    scanned = 0
+    excluded_posthoc = 0
     for path in files:
+        parts_lower = {part.lower() for part in path.parts}
+        if not args.include_posthoc and "posthoc_analysis" in parts_lower:
+            excluded_posthoc += 1
+            continue
+        scanned += 1
         rows = scan_csv(path) if path.suffix.lower() == ".csv" else scan_json(path)
         for row in rows:
             row["file"] = str(path)
             candidates.append(row)
 
-    report = {"scanned_files": len(files), "candidate_objects": len(candidates), "targets": TARGETS, "matches": {}}
+    report = {
+        "scanned_files": scanned,
+        "excluded_posthoc_files": excluded_posthoc,
+        "candidate_objects": len(candidates),
+        "targets": TARGETS,
+        "notes": [
+            "Post-hoc analysis artifacts are excluded by default.",
+            "JSON locations containing expected/target/signature/paper_table_audit are excluded.",
+            "Rows explicitly marked as LA/LV/L/MissingMacro are excluded from main-table provenance ranking.",
+        ],
+        "matches": {},
+    }
     for target_name, target in TARGETS.items():
         ranked = []
         for candidate in candidates:
@@ -159,7 +217,7 @@ def main():
         ranked.sort(key=lambda x: (x["max_abs_diff"], x["mean_abs_diff"], -x["metric_count"], x["file"], x["location"]))
         top = ranked[: max(1, int(args.top_k))]
         report["matches"][target_name] = top
-        print(f"\n== Closest matches to {target_name} main-table row ==")
+        print(f"\n== Closest historical matches to {target_name} main-table row ==")
         for rank, item in enumerate(top, 1):
             m = item["metrics"]
             pretty = ", ".join(f"{k}={m[k]:.6f}" for k in sorted(m))
@@ -170,7 +228,8 @@ def main():
     out = Path(args.write_report)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(f"\nWrote report: {out}")
+    print(f"\nScanned historical files: {scanned}; excluded post-hoc files: {excluded_posthoc}")
+    print(f"Wrote report: {out}")
 
 
 if __name__ == "__main__":
