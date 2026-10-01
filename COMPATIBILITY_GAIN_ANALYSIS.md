@@ -69,3 +69,21 @@ Please send back:
 
 The main pattern to inspect is whether low-compatibility regions show weak or
 negative uniform-KD gains while CFCompat improves over uniform KD.
+
+
+## Negative-transfer mitigation
+
+The script also writes:
+
+`result/analysis/compatibility_gain_v2/mosi/seed1114/mosi_seed1114_negative_transfer_mitigation.csv`
+
+For each condition and overall, it reports:
+
+- `negative_transfer_rate`: fraction of samples where Uniform KD is worse than No KD.
+- `recovery_rate_vs_uniform`: among those harmful Uniform-KD samples, fraction where CFCompat lowers the error relative to Uniform KD.
+- `full_recovery_rate_vs_nokd`: among harmful samples, fraction where CFCompat returns to or beats the No-KD error.
+- `mean_uniform_harm`: average error increase caused by Uniform KD on harmful samples.
+- `mean_cfcompat_recovery`: average amount of that error reduced by CFCompat.
+- `mean_net_gain_after_cfcompat`: CFCompat gain over No KD restricted to the harmful-Uniform-KD subset.
+
+This is a diagnostic analysis, not a significance test. Interpret it together with the bootstrap intervals reported in the main summary.
