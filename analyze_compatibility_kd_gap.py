@@ -412,6 +412,85 @@ def make_plot(summary, output_path):
     plt.close(fig)
 
 
+
+def make_two_line_normalized_plot(summary, output_path):
+    """Plot both discrepancy measures on one comparable Q1-normalized scale."""
+    import matplotlib.pyplot as plt
+
+    q = summary.loc[summary.group_type == "compat_quartile"].copy()
+    order = {name: i for i, name in enumerate(QUARTILE_LABELS)}
+    q["order"] = q["group"].map(order)
+    q = q.sort_values("order")
+
+    abs_values = q["mean_abs_gap"].to_numpy(float)
+    smooth_values = q["mean_smoothl1_gap"].to_numpy(float)
+    abs_norm = abs_values / abs_values[0]
+    smooth_norm = smooth_values / smooth_values[0]
+
+    x = np.arange(len(q))
+    fig, ax = plt.subplots(figsize=(5.4, 3.6))
+    ax.plot(x, abs_norm, marker="o", linewidth=2.0, label="Absolute prediction gap")
+    ax.plot(x, smooth_norm, marker="s", linewidth=2.0, linestyle="--", label="SmoothL1 discrepancy")
+    ax.set_xticks(x)
+    ax.set_xticklabels(["Low", "Q2", "Q3", "High"])
+    ax.set_xlabel("Compatibility quartile")
+    ax.set_ylabel("Normalized discrepancy (Q1 = 1.0)")
+    ax.set_title("Compatibility vs. Distillation Discrepancy")
+    ax.grid(axis="y", alpha=0.25)
+    ax.legend(frameon=True, fontsize=8)
+
+    for xi, yi in zip(x, abs_norm):
+        ax.annotate(f"{yi:.3f}", (xi, yi), xytext=(0, 6),
+                    textcoords="offset points", ha="center", fontsize=8)
+    for xi, yi in zip(x, smooth_norm):
+        ax.annotate(f"{yi:.3f}", (xi, yi), xytext=(0, -12),
+                    textcoords="offset points", ha="center", fontsize=8)
+
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
+def make_two_line_raw_plot(summary, output_path):
+    """Plot raw absolute-gap and SmoothL1 trends with separate y axes."""
+    import matplotlib.pyplot as plt
+
+    q = summary.loc[summary.group_type == "compat_quartile"].copy()
+    order = {name: i for i, name in enumerate(QUARTILE_LABELS)}
+    q["order"] = q["group"].map(order)
+    q = q.sort_values("order")
+
+    x = np.arange(len(q))
+    abs_values = q["mean_abs_gap"].to_numpy(float)
+    smooth_values = q["mean_smoothl1_gap"].to_numpy(float)
+
+    fig, ax1 = plt.subplots(figsize=(5.4, 3.6))
+    ax2 = ax1.twinx()
+
+    line1 = ax1.plot(
+        x, abs_values, marker="o", linewidth=2.0,
+        label="Absolute prediction gap"
+    )[0]
+    line2 = ax2.plot(
+        x, smooth_values, marker="s", linewidth=2.0, linestyle="--",
+        label="SmoothL1 discrepancy"
+    )[0]
+
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(["Low", "Q2", "Q3", "High"])
+    ax1.set_xlabel("Compatibility quartile")
+    ax1.set_ylabel("Absolute prediction gap")
+    ax2.set_ylabel("SmoothL1 discrepancy")
+    ax1.set_title("Compatibility vs. Distillation Discrepancy")
+    ax1.grid(axis="y", alpha=0.25)
+    ax1.legend([line1, line2], [line1.get_label(), line2.get_label()],
+               loc="best", frameon=True, fontsize=8)
+
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
 def main():
     args = parse_args()
     evaluator_path, fixed_pred_path, fixed_ckpt, teacher_pred_path, teacher_ckpt, cache_path, output_dir = default_paths(args)
@@ -428,6 +507,8 @@ def main():
     summary_path = output_dir / f"{args.dataset}_seed{args.seed}_compatibility_kd_gap_summary.csv"
     diagnostics_path = output_dir / f"{args.dataset}_seed{args.seed}_compatibility_kd_gap_diagnostics.json"
     plot_path = output_dir / f"{args.dataset}_seed{args.seed}_compatibility_kd_gap.png"
+    two_line_norm_path = output_dir / f"{args.dataset}_seed{args.seed}_compatibility_kd_gap_two_lines_normalized.png"
+    two_line_raw_path = output_dir / f"{args.dataset}_seed{args.seed}_compatibility_kd_gap_two_lines_raw.png"
 
     frame.to_csv(samples_path, index=False)
     summary.to_csv(summary_path, index=False)
@@ -442,6 +523,8 @@ def main():
     diagnostics_path.write_text(json.dumps(diagnostics, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     if not args.no_plot:
         make_plot(summary, plot_path)
+        make_two_line_normalized_plot(summary, two_line_norm_path)
+        make_two_line_raw_plot(summary, two_line_raw_path)
 
     cols = [
         "group_type", "group", "count_rows", "mean_compatibility",
@@ -453,6 +536,8 @@ def main():
     print(f"diagnostics={diagnostics_path}")
     if not args.no_plot:
         print(f"plot={plot_path}")
+        print(f"two_line_normalized={two_line_norm_path}")
+        print(f"two_line_raw={two_line_raw_path}")
     print()
     print(summary.loc[
         summary.group_type.isin(["overall", "compat_quartile"]), cols
