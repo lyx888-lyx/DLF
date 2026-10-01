@@ -234,6 +234,9 @@ def build_long_frame(baseline, fixedkd, cfcompat, cache):
             "uniform_better_than_nokd": eu < e0,
             "cfcompat_better_than_uniform": ec < eu,
             "cfcompat_better_than_nokd": ec < e0,
+            "uniform_negative_transfer": eu > e0,
+            "recovered_vs_uniform": (eu > e0) & (ec < eu),
+            "fully_recovered_vs_nokd": (eu > e0) & (ec <= e0),
         })
         rows.append(local)
 
@@ -356,6 +359,40 @@ def summarize(frame, reps, seed):
     return summary, diagnostics
 
 
+
+def negative_transfer_analysis(frame):
+    """Summarize how often CFCompat mitigates harmful uniform KD."""
+    rows = []
+    groups = [("overall", "all", frame)]
+    groups.extend(("mode", mode, frame.loc[frame["mode"] == mode]) for mode in MODES)
+
+    for group_type, group_name, local in groups:
+        negative = local.loc[local["uniform_negative_transfer"]].copy()
+        row = {
+            "group_type": group_type,
+            "group": group_name,
+            "count_rows": int(len(local)),
+            "negative_transfer_count": int(len(negative)),
+            "negative_transfer_rate": float(len(negative) / len(local)) if len(local) else np.nan,
+            "recovery_rate_vs_uniform": np.nan,
+            "full_recovery_rate_vs_nokd": np.nan,
+            "mean_uniform_harm": np.nan,
+            "mean_cfcompat_recovery": np.nan,
+            "mean_net_gain_after_cfcompat": np.nan,
+        }
+        if len(negative):
+            row.update({
+                "recovery_rate_vs_uniform": float(negative["recovered_vs_uniform"].mean()),
+                "full_recovery_rate_vs_nokd": float(negative["fully_recovered_vs_nokd"].mean()),
+                "mean_uniform_harm": float((-negative["uniform_gain"]).mean()),
+                "mean_cfcompat_recovery": float(negative["compat_gain"].mean()),
+                "mean_net_gain_after_cfcompat": float(negative["total_gain"].mean()),
+            })
+        rows.append(row)
+
+    return pd.DataFrame(rows)
+
+
 def make_plot(summary, output_path):
     import matplotlib.pyplot as plt
 
@@ -392,15 +429,18 @@ def main():
     )
     frame = build_long_frame(baseline, fixedkd, cfcompat, cache)
     summary, diagnostics = summarize(frame, args.bootstrap_reps, args.bootstrap_seed)
+    mitigation = negative_transfer_analysis(frame)
 
     output_dir.mkdir(parents=True, exist_ok=True)
     sample_path = output_dir / f"{args.dataset}_seed{args.seed}_valid_distillation_effect_samples.csv"
     summary_path = output_dir / f"{args.dataset}_seed{args.seed}_valid_distillation_effect_summary.csv"
     json_path = output_dir / f"{args.dataset}_seed{args.seed}_valid_distillation_effect_diagnostics.json"
     plot_path = output_dir / f"{args.dataset}_seed{args.seed}_valid_distillation_effect.png"
+    mitigation_path = output_dir / f"{args.dataset}_seed{args.seed}_negative_transfer_mitigation.csv"
 
     frame.to_csv(sample_path, index=False)
     summary.to_csv(summary_path, index=False)
+    mitigation.to_csv(mitigation_path, index=False)
     diagnostics["baseline_predictions"] = str(baseline_path)
     diagnostics["fixedkd_predictions"] = fixed_source
     diagnostics["cfcompat_predictions"] = str(cfcompat_path)
@@ -423,6 +463,7 @@ def main():
     print(f"train_cache={cache_path}")
     print(f"summary={summary_path}")
     print(f"diagnostics={json_path}")
+    print(f"negative_transfer={mitigation_path}")
     if not args.no_plot:
         print(f"plot={plot_path}")
     print()
@@ -431,6 +472,9 @@ def main():
     ].to_string(index=False))
     print()
     print(json.dumps(diagnostics, indent=2, sort_keys=True))
+    print()
+    print("Negative-transfer mitigation:")
+    print(mitigation.to_string(index=False))
 
 
 if __name__ == "__main__":
