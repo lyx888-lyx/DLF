@@ -148,6 +148,68 @@ def analyze(cache):
     return raw_summary, long_frame, diagnostics
 
 
+
+def make_raw_scale_bar(raw_summary, output_path):
+    """Paper-facing summary of condition-dependent raw discrepancy scales."""
+    import matplotlib.pyplot as plt
+
+    x = np.arange(len(MODES))
+    means = [
+        float(raw_summary.loc[raw_summary["mode"] == mode, "delta_mean"].iloc[0])
+        for mode in MODES
+    ]
+    medians = [
+        float(raw_summary.loc[raw_summary["mode"] == mode, "delta_median"].iloc[0])
+        for mode in MODES
+    ]
+    width = 0.34
+
+    fig, ax = plt.subplots(figsize=(4.9, 3.5))
+    ax.bar(x - width / 2, means, width=width, label="Mean")
+    ax.bar(x + width / 2, medians, width=width, label="Median")
+    ax.set_xticks(x)
+    ax.set_xticklabels(MODES)
+    ax.set_xlabel("Target condition")
+    ax.set_ylabel("Raw counterfactual discrepancy")
+    ax.set_title("Condition-dependent Raw Discrepancy")
+    ax.grid(axis="y", alpha=0.25)
+    ax.legend(frameon=True, fontsize=8)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
+def make_global_vs_modewise_bar(raw_summary, output_path):
+    """Show condition bias from pooled calibration and its removal by mode-wise calibration."""
+    import matplotlib.pyplot as plt
+
+    x = np.arange(len(MODES))
+    global_values = [
+        float(raw_summary.loc[raw_summary["mode"] == mode, "global_compat_mean"].iloc[0])
+        for mode in MODES
+    ]
+    modewise_values = [
+        float(raw_summary.loc[raw_summary["mode"] == mode, "modewise_compat_mean"].iloc[0])
+        for mode in MODES
+    ]
+    width = 0.34
+
+    fig, ax = plt.subplots(figsize=(4.9, 3.5))
+    ax.bar(x - width / 2, global_values, width=width, label="Pooled calibration")
+    ax.bar(x + width / 2, modewise_values, width=width, label="Mode-wise calibration")
+    ax.set_xticks(x)
+    ax.set_xticklabels(MODES)
+    ax.set_xlabel("Target condition")
+    ax.set_ylabel("Mean compatibility")
+    ax.set_ylim(0.0, 0.8)
+    ax.set_title("Effect of Compatibility Calibration")
+    ax.grid(axis="y", alpha=0.25)
+    ax.legend(frameon=True, fontsize=8)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
 def make_raw_ecdf(long_frame, output_path):
     import matplotlib.pyplot as plt
 
@@ -241,6 +303,8 @@ def main():
     raw_ecdf_path = output_dir / f"{args.dataset}_seed{args.seed}_raw_discrepancy_ecdf.png"
     mapping_path = output_dir / f"{args.dataset}_seed{args.seed}_modewise_calibration_mapping.png"
     bias_path = output_dir / f"{args.dataset}_seed{args.seed}_global_calibration_bias.png"
+    raw_scale_bar_path = output_dir / f"{args.dataset}_seed{args.seed}_raw_discrepancy_scale_bar.png"
+    calibration_compare_path = output_dir / f"{args.dataset}_seed{args.seed}_global_vs_modewise_calibration.png"
 
     raw_summary.to_csv(summary_path, index=False)
     long_frame.to_csv(samples_path, index=False)
@@ -248,6 +312,13 @@ def main():
     diagnostics_path.write_text(json.dumps(diagnostics, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
     if not args.no_plot:
+        # The two bar charts below are the recommended paper-facing figures.
+        make_raw_scale_bar(raw_summary, raw_scale_bar_path)
+        make_global_vs_modewise_bar(raw_summary, calibration_compare_path)
+
+        # Keep the ECDF and mapping plots as diagnostics. Note that the mapping
+        # is approximately 1 - ECDF within each mode, so these two are
+        # intentionally redundant and should not be used together in the paper.
         make_raw_ecdf(long_frame, raw_ecdf_path)
         make_calibration_mapping(long_frame, mapping_path)
         make_global_bias_plot(raw_summary, bias_path)
@@ -260,9 +331,11 @@ def main():
     print(f"summary={summary_path}")
     print(f"diagnostics={diagnostics_path}")
     if not args.no_plot:
-        print(f"raw_ecdf={raw_ecdf_path}")
-        print(f"calibration_mapping={mapping_path}")
-        print(f"global_bias={bias_path}")
+        print(f"recommended_raw_scale={raw_scale_bar_path}")
+        print(f"recommended_calibration_compare={calibration_compare_path}")
+        print(f"diagnostic_raw_ecdf={raw_ecdf_path}")
+        print(f"diagnostic_calibration_mapping={mapping_path}")
+        print(f"diagnostic_global_bias={bias_path}")
     print()
     print(raw_summary[cols].to_string(index=False))
     print()
