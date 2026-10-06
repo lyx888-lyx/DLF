@@ -1,53 +1,72 @@
-# Rank-offset sensitivity: why use 0.5?
+# Quantile-interpolation sensitivity: why use alpha = 0.5?
 
-CFCompat uses the empirical-rank transform
+CFCompat calibrates each condition-wise counterfactual discrepancy through an
+empirical tied interval. For sample i under target condition m, let
 
-[
-q_i^m = rac{r_i^m - 0.5}{N_m}, qquad C_i^m = 1 - q_i^m.
-]
+- L_i^m be the number of training discrepancies strictly smaller than delta_i^m;
+- T_i^m be the size of the tied group containing delta_i^m;
+- N_m be the number of training samples under condition m.
 
-This experiment generalizes the offset to
+The generalized empirical quantile is
 
-[
-q_i^m(\alpha) = rac{r_i^m - \alpha}{N_m}, qquad
-C_i^m(\alpha) = 1 - q_i^m(\alpha),
-]
+```text
+q_i^m(alpha) = (L_i^m + alpha * T_i^m) / N_m
+C_i^m(alpha) = 1 - q_i^m(alpha),     alpha in [0, 1].
+```
 
-and evaluates \(\alpha\in\{0.10,0.25,0.50,0.75,0.90\}\).
+The default alpha = 0.5 is the midpoint configuration. The sensitivity sweep is
+now the symmetric set
 
-## Why 0.5?
+```text
+{0.00, 0.25, 0.50, 0.75, 1.00}
+```
 
-The value 0.5 is the midpoint rank correction. It places each empirical rank
-at the center of its rank interval and keeps both the quantile and
-compatibility strictly inside (0,1) for finite training sets.
+so that the experiment explicitly covers both empirical-interval boundaries,
+the two quarter positions, and the midpoint.
 
-It should therefore be treated as a standard symmetric convention, not as a
-performance-tuned hyperparameter.
+## Why alpha = 0.5?
 
-## Expected sensitivity
+The midpoint follows from the symmetry condition inside a tied empirical
+interval: the assigned position is equidistant from the interval's lower and
+upper boundaries. It is therefore a principled default rather than a value
+chosen from test performance.
 
-For a fixed rank and training size \(N_m\),
+For a fixed sample,
 
-[
-C_i^m(\alpha)-C_i^m(0.5)=rac{\alpha-0.5}{N_m}.
-]
+```text
+C_i^m(alpha) - C_i^m(0.5)
+    = (0.5 - alpha) * T_i^m / N_m.
+```
 
-For MOSI, \(N_m=1284\), so even changing \(\alpha\) from 0.5 to 0.1 shifts
-every compatibility value by only about \(-3.12\times10^{-4}\). Because the
-KD loss also normalizes by the sum of compatibility weights, performance should
-be largely insensitive to this offset.
+Hence the effect of alpha depends on the tied-group size T_i^m. When ties are
+small relative to N_m, the compatibility perturbation is correspondingly
+small.
 
-The useful result is therefore robustness, not necessarily that 0.5 wins every
-metric.
+## Endpoint handling
+
+At alpha = 0 or alpha = 1, samples at an empirical boundary may receive exact
+compatibility values of 1 or 0. This is intentional for the endpoint
+sensitivity experiment. The runner therefore permits compatibility in the
+closed interval [0, 1] locally for this analysis. The main CFCompat pipeline
+remains unchanged.
+
+A zero compatibility weight is valid in the normalized KD objective: it simply
+removes that sample's teacher contribution from the weighted numerator. The
+existing epsilon in the denominator maintains numerical stability.
 
 ## Protocol
 
+- dataset: CMU-MOSI
 - seed: 1114
-- train and validation only
-- no MOSI test access
+- Train + Validation only
+- no Test access
 - same clean teacher, student initialization, optimizer, missing-mask RNG,
   KD objective, and validation checkpoint criterion for every alpha
 - target metrics are macro-averaged over LA/LV/L
+
+Because the mathematical definition of alpha has been updated from the old
+rank-offset form to tied-interval interpolation, rerun all five settings rather
+than reusing the previous 0.25/0.50/0.75 rows.
 
 ## Run
 
@@ -62,15 +81,42 @@ python run_rank_offset_sensitivity.py \
   --num-workers 1
 ```
 
+For a one-epoch smoke test first:
+
+```bash
+python run_rank_offset_sensitivity.py \
+  --dataset mosi \
+  --seed 1114 \
+  --gpu-ids 0 \
+  --num-workers 1 \
+  --max-epochs 1 \
+  --overwrite
+```
+
 ## Outputs
 
-`result/analysis/rank_offset_sensitivity_v1/mosi/seed1114/`
+Results are written to:
+
+```text
+result/analysis/quantile_interpolation_sensitivity_v2/mosi/seed1114/
+```
 
 Key files:
 
-- `mosi_seed1114_rank_offset_sensitivity.csv`
-- `mosi_seed1114_rank_offset_sensitivity_conditions.csv`
-- `mosi_seed1114_rank_offset_sensitivity_epochs.csv`
-- `mosi_seed1114_rank_offset_sensitivity_table.tex`
+- `mosi_seed1114_quantile_interpolation_sensitivity.csv`
+- `mosi_seed1114_quantile_interpolation_sensitivity_conditions.csv`
+- `mosi_seed1114_quantile_interpolation_sensitivity_epochs.csv`
+- `mosi_seed1114_quantile_interpolation_sensitivity_table.tex`
 
-Send back the main CSV and the terminal summary after the run.
+Checkpoints are written under:
+
+```text
+pt/analysis/quantile_interpolation_sensitivity_v2/mosi/seed1114/
+```
+
+The generated LaTeX table uses the paper terminology “quantile interpolation
+coefficient alpha” rather than the obsolete “rank offset”.
+
+Report the observed results directly. The purpose of the sweep is to test the
+robustness of the symmetry-derived midpoint configuration, not to select alpha
+from validation or test outcomes after the fact.
