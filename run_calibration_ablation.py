@@ -1,18 +1,19 @@
-"""Validation-only calibration ablation for CFCompat.
+"""Calibration-design ablation for CFCompat.
 
-Compare:
-  1) pooled/global rank calibration across LA/LV/L deltas;
-  2) proposed mode-wise rank calibration.
+Compare six pre-declared strategies formed by:
+  - calibration scope: pooled/global vs. mode-wise;
+  - mapping: Min-Max vs. Gaussian-CDF vs. empirical-CDF.
 
-The training objective, initialization, missing-mask RNG, optimizer, and
-validation checkpoint selection are otherwise identical to CFCompat.
-
-IMPORTANT: this script constructs TRAIN and VALID loaders only. It never reads
-or evaluates the MOSI test split.
+Training, initialization, missing-mask RNG, optimizer, KD loss, and checkpoint
+selection are identical across variants. Checkpoints are selected exclusively
+on validation data. When --evaluate-test is supplied, the MOSI test split is
+constructed only after the validation-best checkpoint has been fixed, and is
+used once per pre-declared variant for final aggregate reporting only.
 """
 
 import argparse
 import logging
+import math
 from pathlib import Path
 
 import numpy as np
@@ -45,6 +46,7 @@ from trains.singleTask.fixed_kd_utils import (
 )
 from trains.singleTask.missing_utils import (
     MISSING_MODES,
+    build_single_split_loader,
     compute_full_dlf_loss,
     compute_task_loss,
     evaluate_all_modes,
@@ -55,14 +57,28 @@ from trains.singleTask.missing_utils import (
 from utils.functions import setup_seed
 
 
-CALIBRATIONS = ("pooled", "modewise")
+SCOPES = ("pooled", "modewise")
+MAPPINGS = ("minmax", "gaussian", "empirical")
+CALIBRATIONS = tuple(
+    f"{scope}_{mapping}"
+    for scope in SCOPES
+    for mapping in MAPPINGS
+)
+COMPAT_EPS = 1e-6
 
 
 def parse_args():
-    p = argparse.ArgumentParser(description="Validation-only pooled vs mode-wise calibration ablation.")
+    p = argparse.ArgumentParser(
+        description="Pooled/mode-wise x Min-Max/Gaussian/empirical calibration ablation."
+    )
     p.add_argument("--dataset", choices=("mosi",), default="mosi")
     p.add_argument("--seed", type=int, default=1114)
-    p.add_argument("--calibrations", nargs="+", choices=CALIBRATIONS, default=list(CALIBRATIONS))
+    p.add_argument(
+        "--calibrations",
+        nargs="+",
+        choices=CALIBRATIONS,
+        default=list(CALIBRATIONS),
+    )
     p.add_argument("--max-epochs", type=int)
     p.add_argument("--num-workers", type=int, default=1)
     p.add_argument("--gpu-ids", nargs="*", type=int, default=[0])
@@ -71,6 +87,14 @@ def parse_args():
     p.add_argument("--config-file", default="config/config.json")
     p.add_argument("--output-dir")
     p.add_argument("--overwrite", action="store_true")
+    p.add_argument(
+        "--evaluate-test",
+        action="store_true",
+        help=(
+            "After validation-only checkpoint selection, evaluate the fixed "
+            "checkpoint once on MOSI test and report aggregate metrics."
+        ),
+    )
     args = p.parse_args()
     if args.max_epochs is not None and args.max_epochs < 1:
         p.error("--max-epochs must be positive.")
@@ -103,7 +127,7 @@ def output_root(args):
     return (
         Path(args.result_root)
         / "analysis"
-        / "calibration_ablation_v1"
+        / "calibration_ablation_v2"
         / args.dataset
         / f"seed{args.seed}"
     )
@@ -124,24 +148,93 @@ def make_logger(output):
     return logger
 
 
-def calibrated_cache(cache_frame, calibration):
-    """Return a cache lookup with either pooled or mode-wise compatibility."""
-    frame = cache_frame.copy()
+def _clip_compatibility(values):
+    values = np.asarray(values, dtype=np.float64)
+    if not np.isfinite(values).all():
+        raise FloatingPointError("Compatibility contains non-finite values.")
+    return np.clip(values, COMPAT_EPS, 1.0 - COMPAT_EPS)
 
-    if calibration == "modewise":
-        pass
-    elif calibration == "pooled":
-        pooled = np.concatenate(
+
+def minmax_compatibility(reference, values):
+    """Map discrepancy to compatibility using train-reference Min-Max scaling."""
+    ref = np.asarray(reference, dtype=np.float64).reshape(-1)
+    vals = np.asarray(values, dtype=np.float64).reshape(-1)
+    if ref.size == 0 or not np.isfinite(ref).all() or not np.isfinite(vals).all():
+        raise ValueError("Min-Max calibration requires finite non-empty values.")
+    lo = float(ref.min())
+    hi = float(ref.max())
+    if hi <= lo:
+        return np.full_like(vals, 0.5, dtype=np.float64)
+    q = (vals - lo) / (hi - lo)
+    return _clip_compatibility(1.0 - np.clip(q, 0.0, 1.0))
+
+
+def gaussian_compatibility(reference, values):
+    """Map discrepancy to compatibility using a Gaussian CDF fitted on train."""
+    ref = np.asarray(reference, dtype=np.float64).reshape(-1)
+    vals = np.asarray(values, dtype=np.float64).reshape(-1)
+    if ref.size == 0 or not np.isfinite(ref).all() or not np.isfinite(vals).all():
+        raise ValueError("Gaussian calibration requires finite non-empty values.")
+    mu = float(ref.mean())
+    sigma = float(ref.std(ddof=0))
+    if sigma <= 0:
+        return np.full_like(vals, 0.5, dtype=np.float64)
+    z = (vals - mu) / sigma
+    cdf = np.asarray(
+        [0.5 * (1.0 + math.erf(float(v) / math.sqrt(2.0))) for v in z],
+        dtype=np.float64,
+    )
+    return _clip_compatibility(1.0 - cdf)
+
+
+def empirical_compatibility(reference, values):
+    """Compatibility = 1 - empirical midpoint CDF under the train reference."""
+    ref = np.sort(np.asarray(reference, dtype=np.float64).reshape(-1))
+    vals = np.asarray(values, dtype=np.float64).reshape(-1)
+    if ref.size == 0 or not np.isfinite(ref).all() or not np.isfinite(vals).all():
+        raise ValueError("Empirical calibration requires finite non-empty values.")
+    left = np.searchsorted(ref, vals, side="left").astype(np.float64)
+    right = np.searchsorted(ref, vals, side="right").astype(np.float64)
+    q = (left + 0.5 * (right - left)) / float(len(ref))
+    lo = 0.5 / float(len(ref))
+    hi = 1.0 - lo
+    q = np.clip(q, lo, hi)
+    return _clip_compatibility(1.0 - q)
+
+
+def calibrated_cache(cache_frame, calibration):
+    """Return a train-cache lookup for one pre-declared calibration strategy."""
+    frame = cache_frame.copy()
+    scope, mapping = calibration.split("_", 1)
+    if scope not in SCOPES or mapping not in MAPPINGS:
+        raise ValueError(f"Unknown calibration: {calibration}")
+
+    pooled_reference = None
+    if scope == "pooled":
+        pooled_reference = np.concatenate(
             [frame[f"delta_{mode}"].to_numpy(dtype=np.float64) for mode in MISSING_MODES]
         )
-        _, _, pooled_compat = compatibility_from_deltas(pooled)
-        n = len(frame)
-        if len(pooled_compat) != n * len(MISSING_MODES):
-            raise RuntimeError("Unexpected pooled compatibility length.")
-        for j, mode in enumerate(MISSING_MODES):
-            frame[f"compat_{mode}"] = pooled_compat[j * n:(j + 1) * n]
-    else:
-        raise ValueError(calibration)
+
+    for mode in MISSING_MODES:
+        values = frame[f"delta_{mode}"].to_numpy(dtype=np.float64)
+        reference = pooled_reference if scope == "pooled" else values
+
+        if mapping == "minmax":
+            compat = minmax_compatibility(reference, values)
+        elif mapping == "gaussian":
+            compat = gaussian_compatibility(reference, values)
+        elif mapping == "empirical":
+            compat = empirical_compatibility(reference, values)
+            if scope == "modewise":
+                _, _, audited = compatibility_from_deltas(values)
+                if not np.allclose(compat, audited, atol=1e-12, rtol=0):
+                    raise RuntimeError(
+                        f"{calibration}/{mode} disagrees with audited empirical compatibility."
+                    )
+        else:
+            raise ValueError(mapping)
+
+        frame[f"compat_{mode}"] = compat
 
     for mode in MISSING_MODES:
         values = frame[f"compat_{mode}"].to_numpy(dtype=np.float64)
@@ -153,7 +246,6 @@ def calibrated_cache(cache_frame, calibration):
         for row in frame.itertuples(index=False)
     }
 
-
 def macro_metrics(metrics):
     """Arithmetic macro over target conditions LA/LV/L."""
     keys = ("acc_7", "acc_5", "acc_2", "F1_score", "Corr", "MAE")
@@ -164,7 +256,8 @@ def macro_metrics(metrics):
 
 
 def train_one(args, calibration, cache_frame, logger):
-    """Train one calibration variant using train/valid only."""
+    """Train one fixed variant; select on valid, optionally report test once."""
+    scope, mapping = calibration.split("_", 1)
     setup_seed(args.seed)
     cli = build_cli(args)
     cfg = build_config(cli, args.seed)
@@ -192,7 +285,7 @@ def train_one(args, calibration, cache_frame, logger):
     checkpoint_dir = (
         Path(args.model_save_dir)
         / "analysis"
-        / "calibration_ablation_v1"
+        / "calibration_ablation_v2"
         / args.dataset
         / f"seed{args.seed}"
     )
@@ -208,8 +301,10 @@ def train_one(args, calibration, cache_frame, logger):
     epoch_rows = []
 
     logger.info(
-        "start calibration=%s seed=%s teacher=%s teacher_sha=%s split=train+valid-only",
-        calibration, args.seed, teacher_checkpoint, teacher_sha
+        "start calibration=%s scope=%s mapping=%s seed=%s teacher=%s "
+        "teacher_sha=%s selection_split=valid test_requested=%s",
+        calibration, scope, mapping, args.seed, teacher_checkpoint, teacher_sha,
+        bool(args.evaluate_test),
     )
 
     for epoch in range(1, (args.max_epochs or 1000) + 1):
@@ -294,74 +389,138 @@ def train_one(args, calibration, cache_frame, logger):
     final_valid = evaluate_all_modes(
         student, loaders["valid"], cfg.device, "moddrop", criterion
     )
-    final_macro = macro_metrics(final_valid)
+    valid_macro = macro_metrics(final_valid)
+
+    final_test = None
+    test_macro = None
+    if args.evaluate_test:
+        logger.info(
+            "validation selection frozen: calibration=%s best_epoch=%s J_valid=%.6f; "
+            "constructing test loader for aggregate final reporting",
+            calibration, best_epoch, float(validation_objective(final_valid)),
+        )
+        test_loader = build_single_split_loader(
+            cfg, split="test", num_workers=args.num_workers
+        )
+        final_test = evaluate_all_modes(
+            student, test_loader, cfg.device, "moddrop", criterion
+        )
+        test_macro = macro_metrics(final_test)
 
     result = {
+        "Scope": scope,
+        "Mapping": mapping,
         "Calibration": calibration,
         "Seed": args.seed,
         "BestValidEpoch": best_epoch,
         "J_valid": float(validation_objective(final_valid)),
-        "TargetMacro_Acc7": final_macro["acc_7"],
-        "TargetMacro_Acc5": final_macro["acc_5"],
-        "TargetMacro_Acc2": final_macro["acc_2"],
-        "TargetMacro_F1": final_macro["F1_score"],
-        "TargetMacro_Corr": final_macro["Corr"],
-        "TargetMacro_MAE": final_macro["MAE"],
-        "LAV_Acc7": float(final_valid["LAV"]["acc_7"]),
-        "LAV_Acc2": float(final_valid["LAV"]["acc_2"]),
-        "LAV_F1": float(final_valid["LAV"]["F1_score"]),
-        "LAV_Corr": float(final_valid["LAV"]["Corr"]),
-        "LAV_MAE": float(final_valid["LAV"]["MAE"]),
+        "ValidMacro_Acc7": valid_macro["acc_7"],
+        "ValidMacro_Acc5": valid_macro["acc_5"],
+        "ValidMacro_Acc2": valid_macro["acc_2"],
+        "ValidMacro_F1": valid_macro["F1_score"],
+        "ValidMacro_Corr": valid_macro["Corr"],
+        "ValidMacro_MAE": valid_macro["MAE"],
+        "ValidLAV_Acc7": float(final_valid["LAV"]["acc_7"]),
+        "ValidLAV_Acc5": float(final_valid["LAV"]["acc_5"]),
+        "ValidLAV_Acc2": float(final_valid["LAV"]["acc_2"]),
+        "ValidLAV_F1": float(final_valid["LAV"]["F1_score"]),
+        "ValidLAV_Corr": float(final_valid["LAV"]["Corr"]),
+        "ValidLAV_MAE": float(final_valid["LAV"]["MAE"]),
+        "TestEvaluated": bool(args.evaluate_test),
         "Checkpoint": str(checkpoint),
     }
 
-    condition_rows = []
-    for mode in MISSING_MODES:
-        m = final_valid[mode]
-        condition_rows.append({
-            "Calibration": calibration,
-            "Condition": mode,
-            "Acc7": float(m["acc_7"]),
-            "Acc5": float(m["acc_5"]),
-            "Acc2": float(m["acc_2"]),
-            "F1": float(m["F1_score"]),
-            "Corr": float(m["Corr"]),
-            "MAE": float(m["MAE"]),
+    if test_macro is not None:
+        result.update({
+            "TestMacro_Acc7": test_macro["acc_7"],
+            "TestMacro_Acc5": test_macro["acc_5"],
+            "TestMacro_Acc2": test_macro["acc_2"],
+            "TestMacro_F1": test_macro["F1_score"],
+            "TestMacro_Corr": test_macro["Corr"],
+            "TestMacro_MAE": test_macro["MAE"],
+            "TestLAV_Acc7": float(final_test["LAV"]["acc_7"]),
+            "TestLAV_Acc5": float(final_test["LAV"]["acc_5"]),
+            "TestLAV_Acc2": float(final_test["LAV"]["acc_2"]),
+            "TestLAV_F1": float(final_test["LAV"]["F1_score"]),
+            "TestLAV_Corr": float(final_test["LAV"]["Corr"]),
+            "TestLAV_MAE": float(final_test["LAV"]["MAE"]),
         })
+
+    condition_rows = []
+    for split_name, metrics in (("valid", final_valid), ("test", final_test)):
+        if metrics is None:
+            continue
+        for mode in MISSING_MODES:
+            m = metrics[mode]
+            condition_rows.append({
+                "Scope": scope,
+                "Mapping": mapping,
+                "Calibration": calibration,
+                "Split": split_name,
+                "Condition": mode,
+                "Acc7": float(m["acc_7"]),
+                "Acc5": float(m["acc_5"]),
+                "Acc2": float(m["acc_2"]),
+                "F1": float(m["F1_score"]),
+                "Corr": float(m["Corr"]),
+                "MAE": float(m["MAE"]),
+            })
 
     return result, condition_rows, epoch_rows
 
 
 def latex_table(results):
     frame = pd.DataFrame(results).copy()
-    frame["Calibration"] = frame["Calibration"].map({
-        "pooled": "Pooled rank",
-        "modewise": "Mode-wise rank (ours)",
-    })
+    use_test = "TestMacro_Acc7" in frame.columns and frame["TestMacro_Acc7"].notna().all()
+    prefix = "TestMacro" if use_test else "ValidMacro"
+    split_label = "test" if use_test else "validation"
+
+    scope_names = {"pooled": "Pooled", "modewise": "Mode-wise"}
+    mapping_names = {
+        "minmax": "Min-Max",
+        "gaussian": "Gaussian-CDF",
+        "empirical": "Empirical-CDF",
+    }
+
     lines = [
         r"\begin{table}[t]",
         r"\centering",
-        r"\caption{Validation-only ablation of compatibility calibration on CMU-MOSI. Target Macro averages LA/LV/L.}",
+        rf"\caption{{Calibration-design ablation on CMU-MOSI {split_label} data. Metrics are macro-averaged over LA/LV/L.}}",
         r"\label{tab:calibration_ablation}",
-        r"\begin{tabular}{lccccc}",
+        r"\resizebox{\columnwidth}{!}{",
+        r"\begin{tabular}{llcccccc}",
         r"\toprule",
-        r"Calibration & Acc-7 $\uparrow$ & Acc-2 $\uparrow$ & F1 $\uparrow$ & Corr $\uparrow$ & MAE $\downarrow$ \\",
+        r"Scope & Mapping & Acc-7 $\uparrow$ & Acc-5 $\uparrow$ & Acc-2 $\uparrow$ & F1 $\uparrow$ & Corr $\uparrow$ & MAE $\downarrow$ \\",
         r"\midrule",
     ]
+
     for _, row in frame.iterrows():
+        scope = scope_names[row["Scope"]]
+        mapping = mapping_names[row["Mapping"]]
+        if row["Scope"] == "modewise" and row["Mapping"] == "empirical":
+            mapping = r"\textbf{Empirical-CDF (Ours)}"
+            scope = r"\textbf{Mode-wise}"
         lines.append(
-            "{} & {:.2f} & {:.2f} & {:.2f} & {:.3f} & {:.4f} \\".format(
-                row["Calibration"],
-                row["TargetMacro_Acc7"],
-                row["TargetMacro_Acc2"],
-                row["TargetMacro_F1"],
-                row["TargetMacro_Corr"],
-                row["TargetMacro_MAE"],
+            "{} & {} & {:.2f} & {:.2f} & {:.2f} & {:.2f} & {:.4f} & {:.4f} \\".format(
+                scope,
+                mapping,
+                100.0 * row[f"{prefix}_Acc7"],
+                100.0 * row[f"{prefix}_Acc5"],
+                100.0 * row[f"{prefix}_Acc2"],
+                100.0 * row[f"{prefix}_F1"],
+                row[f"{prefix}_Corr"],
+                row[f"{prefix}_MAE"],
             )
         )
-    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
-    return "\n".join(lines)
 
+    lines.extend([
+        r"\bottomrule",
+        r"\end{tabular}",
+        r"}",
+        r"\end{table}",
+        "",
+    ])
+    return "\n".join(lines)
 
 def main():
     args = parse_args()
@@ -403,19 +562,26 @@ def main():
     epoch_frame.to_csv(epoch_path, index=False)
     latex_path.write_text(latex_table(results), encoding="utf-8")
 
-    print("Validation-only calibration ablation complete.")
+    print("Calibration-design ablation complete.")
     print(f"results={result_path}")
     print(f"conditions={condition_path}")
     print(f"latex={latex_path}")
     print()
-    display_cols = [
-        "Calibration", "BestValidEpoch", "J_valid",
-        "TargetMacro_Acc7", "TargetMacro_Acc2", "TargetMacro_F1",
-        "TargetMacro_Corr", "TargetMacro_MAE"
-    ]
+    if args.evaluate_test:
+        display_cols = [
+            "Scope", "Mapping", "BestValidEpoch", "J_valid",
+            "TestMacro_Acc7", "TestMacro_Acc5", "TestMacro_Acc2",
+            "TestMacro_F1", "TestMacro_Corr", "TestMacro_MAE",
+        ]
+    else:
+        display_cols = [
+            "Scope", "Mapping", "BestValidEpoch", "J_valid",
+            "ValidMacro_Acc7", "ValidMacro_Acc5", "ValidMacro_Acc2",
+            "ValidMacro_F1", "ValidMacro_Corr", "ValidMacro_MAE",
+        ]
     print(result_frame[display_cols].to_string(index=False))
     print()
-    print("Condition-wise validation metrics:")
+    print("Condition-wise metrics:")
     print(condition_frame.to_string(index=False))
 
 
