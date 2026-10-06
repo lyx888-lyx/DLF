@@ -501,7 +501,7 @@ def latex_table(results):
             mapping = r"\textbf{Empirical-CDF (Ours)}"
             scope = r"\textbf{Mode-wise}"
         lines.append(
-            "{} & {} & {:.2f} & {:.2f} & {:.2f} & {:.2f} & {:.4f} & {:.4f} \\".format(
+            "{} & {} & {:.2f} & {:.2f} & {:.2f} & {:.2f} & {:.4f} & {:.4f} \\\\".format(
                 scope,
                 mapping,
                 100.0 * row[f"{prefix}_Acc7"],
