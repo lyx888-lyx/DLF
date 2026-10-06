@@ -1,12 +1,15 @@
-"""Validation-only sensitivity analysis for the rank offset alpha in CFCompat.
+"""Validation-only sensitivity analysis for the quantile interpolation coefficient alpha.
 
-Generalized empirical-rank calibration:
-    q_i^m(alpha) = (r_i^m - alpha) / N_m
-    C_i^m(alpha) = 1 - q_i^m(alpha)
+For each target condition m, let L_i^m be the number of train discrepancies
+strictly smaller than delta_i^m and T_i^m the size of its tied group. The
+generalized empirical calibration is
 
-The paper uses alpha=0.5 (midpoint rank correction). This runner tests
-alpha in {0.10, 0.25, 0.50, 0.75, 0.90} while keeping all other training
-settings fixed.
+    q_i^m(alpha) = (L_i^m + alpha * T_i^m) / N_m
+    C_i^m(alpha) = 1 - q_i^m(alpha),   alpha in [0, 1].
+
+The paper uses alpha=0.5, the midpoint of each tied empirical interval. This
+runner tests the symmetric set {0.00, 0.25, 0.50, 0.75, 1.00} while keeping
+all other training settings fixed.
 
 IMPORTANT: TRAIN and VALID only. The MOSI test split is never constructed.
 """
@@ -31,8 +34,6 @@ from train_cf_compat_kd import (
 from trains.singleTask.HingeLoss import HingeLoss
 from trains.singleTask.cf_compat_kd_utils import (
     MULTISEED_CACHE_VERSION,
-    compatibility_for_modes,
-    gate_weights,
     gated_kd_loss,
     load_counterfactual_cache,
     modes_from_masks,
@@ -54,11 +55,13 @@ from trains.singleTask.missing_utils import (
 from utils.functions import setup_seed
 
 
-DEFAULT_ALPHAS = (0.10, 0.25, 0.50, 0.75, 0.90)
+DEFAULT_ALPHAS = (0.00, 0.25, 0.50, 0.75, 1.00)
 
 
 def parse_args():
-    p = argparse.ArgumentParser(description="Validation-only rank-offset sensitivity for CFCompat.")
+    p = argparse.ArgumentParser(
+        description="Validation-only quantile-interpolation sensitivity for CFCompat."
+    )
     p.add_argument("--dataset", choices=("mosi",), default="mosi")
     p.add_argument("--seed", type=int, default=1114)
     p.add_argument("--alphas", nargs="+", type=float, default=list(DEFAULT_ALPHAS))
@@ -77,8 +80,8 @@ def parse_args():
     if not args.alphas:
         p.error("--alphas cannot be empty.")
     for alpha in args.alphas:
-        if not (0.0 < alpha < 1.0):
-            p.error("Each alpha must lie strictly in (0,1) so compatibility remains in (0,1).")
+        if not (0.0 <= alpha <= 1.0):
+            p.error("Each alpha must lie in the closed interval [0,1].")
     if len(set(args.alphas)) != len(args.alphas):
         p.error("--alphas must be unique.")
     return args
@@ -110,7 +113,7 @@ def output_root(args):
     return (
         Path(args.result_root)
         / "analysis"
-        / "rank_offset_sensitivity_v1"
+        / "quantile_interpolation_sensitivity_v2"
         / args.dataset
         / f"seed{args.seed}"
     )
@@ -118,12 +121,12 @@ def output_root(args):
 
 def make_logger(output):
     output.mkdir(parents=True, exist_ok=True)
-    logger = logging.getLogger("rank_offset_sensitivity")
+    logger = logging.getLogger("quantile_interpolation_sensitivity")
     logger.handlers.clear()
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
     for handler in (
-        logging.FileHandler(output / "rank_offset_sensitivity.log"),
+        logging.FileHandler(output / "quantile_interpolation_sensitivity.log"),
         logging.StreamHandler(),
     ):
         handler.setFormatter(formatter)
@@ -131,27 +134,72 @@ def make_logger(output):
     return logger
 
 
+def _interpolated_compatibility(deltas, alpha):
+    """Compute q=(L+alpha*T)/N and compatibility=1-q for one condition."""
+    values = np.asarray(deltas, dtype=np.float64).reshape(-1)
+    if values.size == 0 or not np.isfinite(values).all():
+        raise ValueError("Interpolation requires a non-empty finite discrepancy vector.")
+
+    _, inverse, counts = np.unique(
+        values,
+        return_inverse=True,
+        return_counts=True,
+    )
+    lower_by_group = np.concatenate(
+        ([0], np.cumsum(counts[:-1], dtype=np.int64))
+    )
+    lower = lower_by_group[inverse].astype(np.float64)
+    ties = counts[inverse].astype(np.float64)
+
+    q = (lower + float(alpha) * ties) / float(len(values))
+    compat = 1.0 - q
+
+    tol = 1e-12
+    if np.any(q < -tol) or np.any(q > 1.0 + tol):
+        raise ValueError(f"alpha={alpha} produces q outside [0,1].")
+    if np.any(compat < -tol) or np.any(compat > 1.0 + tol):
+        raise ValueError(f"alpha={alpha} produces compatibility outside [0,1].")
+
+    q = np.clip(q, 0.0, 1.0)
+    compat = np.clip(compat, 0.0, 1.0)
+    return q, compat, ties
+
+
 def cache_with_alpha(cache_frame, alpha):
-    """Recompute mode-wise compatibility from cached empirical ranks."""
+    """Recompute mode-wise compatibility using tied-interval interpolation."""
     frame = cache_frame.copy()
-    n = float(len(frame))
 
     for mode in MISSING_MODES:
-        rank = frame[f"rank_{mode}"].to_numpy(dtype=np.float64)
-        q = (rank - float(alpha)) / n
-        compat = 1.0 - q
-        if not np.all((q > 0) & (q < 1)):
-            raise ValueError(f"alpha={alpha} produces q outside (0,1) for {mode}.")
-        if not np.all((compat > 0) & (compat < 1)):
-            raise ValueError(f"alpha={alpha} produces compatibility outside (0,1) for {mode}.")
+        deltas = frame[f"delta_{mode}"].to_numpy(dtype=np.float64)
+        q, compat, ties = _interpolated_compatibility(deltas, alpha)
         frame[f"q_{mode}"] = q
         frame[f"compat_{mode}"] = compat
+        frame[f"tie_size_{mode}"] = ties
 
     lookup = {
         int(row.sample_index): row._asdict()
         for row in frame.itertuples(index=False)
     }
     return frame, lookup
+
+
+def compatibility_for_modes_inclusive(cache_by_index, indices, modes, device, dtype):
+    """Sensitivity-only lookup that permits the endpoint scores 0 and 1."""
+    if len(indices) != len(modes):
+        raise ValueError("Indices and modes differ in length.")
+
+    values = []
+    for index, mode in zip(indices, modes):
+        if mode not in MISSING_MODES or int(index) not in cache_by_index:
+            raise KeyError(f"Invalid cache binding index={index} mode={mode}")
+        values.append(float(cache_by_index[int(index)][f"compat_{mode}"]))
+
+    result = torch.as_tensor(values, device=device, dtype=dtype)
+    if not torch.isfinite(result).all():
+        raise FloatingPointError("Compatibility must be finite.")
+    if torch.any(result < 0) or torch.any(result > 1):
+        raise FloatingPointError("Endpoint sensitivity requires compatibility in [0,1].")
+    return result
 
 
 def macro_metrics(metrics):
@@ -193,7 +241,7 @@ def train_one(args, alpha, cache_frame, logger):
     checkpoint_dir = (
         Path(args.model_save_dir)
         / "analysis"
-        / "rank_offset_sensitivity_v1"
+        / "quantile_interpolation_sensitivity_v2"
         / args.dataset
         / f"seed{args.seed}"
     )
@@ -251,10 +299,13 @@ def train_one(args, alpha, cache_frame, logger):
                 teacher, text, audio, vision
             )
             indices = batch["index"].view(-1).cpu().numpy().astype(int).tolist()
-            compatibility = compatibility_for_modes(
+            compatibility = compatibility_for_modes_inclusive(
                 cache_by_index, indices, modes, cfg.device, labels.dtype
             )
-            gate, _ = gate_weights(compatibility, gate_mode="compat")
+            # For the endpoint sensitivity settings alpha=0 or 1, exact
+            # empirical-boundary samples may receive compatibility 1 or 0.
+            # Zero weight is valid in the normalized KD objective.
+            gate = compatibility.detach()
             kd_loss, _ = gated_kd_loss(
                 missing_output["output_logit"], teacher_prediction, gate
             )
@@ -309,8 +360,13 @@ def train_one(args, alpha, cache_frame, logger):
     )
     final_macro = macro_metrics(final_valid)
 
-    n = len(cache_frame)
-    theoretical_shift_from_midpoint = (float(alpha) - 0.5) / float(n)
+    midpoint_frame, _ = cache_with_alpha(cache_frame, 0.5)
+    midpoint_mean = float(np.mean([
+        midpoint_frame[f"compat_{mode}"].mean()
+        for mode in MISSING_MODES
+    ]))
+    mean_compatibility = float(np.mean(list(compatibility_means.values())))
+    mean_shift_from_midpoint = mean_compatibility - midpoint_mean
 
     result = {
         "Alpha": float(alpha),
@@ -323,10 +379,10 @@ def train_one(args, alpha, cache_frame, logger):
         "TargetMacro_F1": final_macro["F1_score"],
         "TargetMacro_Corr": final_macro["Corr"],
         "TargetMacro_MAE": final_macro["MAE"],
-        "MeanCompatibility": float(np.mean(list(compatibility_means.values()))),
+        "MeanCompatibility": mean_compatibility,
         "MinCompatibility": compatibility_min,
         "MaxCompatibility": compatibility_max,
-        "CompatShiftVsAlpha0p5": theoretical_shift_from_midpoint,
+        "MeanCompatShiftVsAlpha0p5": mean_shift_from_midpoint,
         "Checkpoint": str(checkpoint),
     }
 
@@ -352,8 +408,8 @@ def latex_table(results):
     lines = [
         r"\begin{table}[t]",
         r"\centering",
-        r"\caption{Sensitivity to the rank-offset $\alpha$ on the CMU-MOSI validation set. Target Macro averages LA/LV/L.}",
-        r"\label{tab:rank_offset_sensitivity}",
+        r"\caption{Sensitivity to the quantile interpolation coefficient $\alpha$ on the CMU-MOSI validation set.}",
+        r"\label{tab:quantile_interpolation_sensitivity}",
         r"\begin{tabular}{lcccccc}",
         r"\toprule",
         r"$\alpha$ & Acc-7 $\uparrow$ & Acc-5 $\uparrow$ & Acc-2 $\uparrow$ & F1 $\uparrow$ & Corr $\uparrow$ & MAE $\downarrow$ \\",
@@ -413,10 +469,10 @@ def main():
     condition_frame = pd.DataFrame(conditions).sort_values(["Alpha", "Condition"]).reset_index(drop=True)
     epoch_frame = pd.DataFrame(epochs).sort_values(["Alpha", "Epoch"]).reset_index(drop=True)
 
-    result_path = output / f"{args.dataset}_seed{args.seed}_rank_offset_sensitivity.csv"
-    condition_path = output / f"{args.dataset}_seed{args.seed}_rank_offset_sensitivity_conditions.csv"
-    epoch_path = output / f"{args.dataset}_seed{args.seed}_rank_offset_sensitivity_epochs.csv"
-    latex_path = output / f"{args.dataset}_seed{args.seed}_rank_offset_sensitivity_table.tex"
+    result_path = output / f"{args.dataset}_seed{args.seed}_quantile_interpolation_sensitivity.csv"
+    condition_path = output / f"{args.dataset}_seed{args.seed}_quantile_interpolation_sensitivity_conditions.csv"
+    epoch_path = output / f"{args.dataset}_seed{args.seed}_quantile_interpolation_sensitivity_epochs.csv"
+    latex_path = output / f"{args.dataset}_seed{args.seed}_quantile_interpolation_sensitivity_table.tex"
 
     result_frame.to_csv(result_path, index=False)
     condition_frame.to_csv(condition_path, index=False)
@@ -427,10 +483,10 @@ def main():
         "Alpha", "BestValidEpoch", "J_valid",
         "TargetMacro_Acc7", "TargetMacro_Acc5", "TargetMacro_Acc2",
         "TargetMacro_F1", "TargetMacro_Corr", "TargetMacro_MAE",
-        "MeanCompatibility", "CompatShiftVsAlpha0p5"
+        "MeanCompatibility", "MeanCompatShiftVsAlpha0p5"
     ]
 
-    print("Validation-only rank-offset sensitivity complete.")
+    print("Validation-only quantile-interpolation sensitivity complete.")
     print(f"results={result_path}")
     print(f"conditions={condition_path}")
     print(f"latex={latex_path}")
