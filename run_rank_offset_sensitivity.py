@@ -221,7 +221,7 @@ def train_one(args, alpha, cache_frame, logger):
 
     loaders = MMDataLoader(cfg, args.num_workers)
     if set(loaders) != {"train", "valid"}:
-        raise RuntimeError("Rank-offset sensitivity must expose exactly train/valid loaders.")
+        raise RuntimeError("Quantile-interpolation sensitivity must expose exactly train/valid loaders.")
 
     alpha_frame, cache_by_index = cache_with_alpha(cache_frame, alpha)
 
@@ -313,7 +313,7 @@ def train_one(args, alpha, cache_frame, logger):
 
             total_loss = full_loss + missing_loss + kd_loss
             if not torch.isfinite(total_loss):
-                raise FloatingPointError("Non-finite rank-offset sensitivity loss.")
+                raise FloatingPointError("Non-finite quantile-interpolation sensitivity loss.")
             total_loss.backward()
 
             if teacher_grad_count(teacher):
@@ -448,10 +448,12 @@ def main():
     if len(cache_frame) != 1284:
         raise RuntimeError("Expected the audited 1284-sample MOSI train cache.")
 
-    required = [f"rank_{mode}" for mode in MISSING_MODES]
-    missing = [c for c in required if c not in cache_frame.columns]
+    required = [f"delta_{mode}" for mode in MISSING_MODES]
+    missing = [name for name in required if name not in cache_frame.columns]
     if missing:
-        raise ValueError(f"Counterfactual cache is missing rank columns: {missing}")
+        raise ValueError(
+            f"Counterfactual cache is missing discrepancy columns: {missing}"
+        )
 
     results = []
     conditions = []
