@@ -47,7 +47,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from matplotlib.patches import Rectangle
-from matplotlib.colors import PowerNorm
+from matplotlib.colors import Normalize
 
 from data_loader import MMDataset
 from train_cf_compat_kd import build_config
@@ -61,6 +61,33 @@ from utils.functions import setup_seed
 
 
 DEFAULT_OUTPUT = Path("result/analysis/crossmodal_interaction_v1")
+
+
+# Visualization-only lexical filtering. These words are not removed from the
+# model input or from the interaction computation; they are hidden only in the
+# final qualitative figure to reduce clutter, following the presentation style
+# of PMR Figure 4.
+DISPLAY_STOPWORDS = {
+    "a", "an", "and", "are", "as", "at", "be", "been", "being", "but",
+    "by", "do", "does", "did", "for", "from", "he", "her", "hers", "him",
+    "his", "i", "if", "in", "is", "it", "its", "me", "mean", "my", "of",
+    "on", "or", "other", "our", "ours", "she", "so", "that", "the", "their",
+    "theirs", "them", "then", "these", "they", "this", "those", "to", "too",
+    "us", "very", "was", "we", "were", "with", "you", "your", "yours",
+}
+
+# A compact visualization lexicon used only to color clearly sentiment-bearing
+# words in red, analogous to the qualitative annotation in PMR Figure 4.
+DISPLAY_SENTIMENT_WORDS = {
+    "amazing", "awful", "bad", "beautiful", "boring", "comedy", "disappointed",
+    "disappointing", "excellent", "fantastic", "funny", "good", "great", "hate",
+    "hated", "horrible", "horror", "love", "loved", "poor", "successful",
+    "terrible", "terrific", "atrocious", "wonderful", "worst",
+}
+
+
+def _display_token(token):
+    return str(token).lower().strip().replace("##", "")
 
 
 def parse_args():
@@ -97,13 +124,22 @@ def parse_args():
         default=10,
         help="Minimum number of non-padding visual steps for automatic case selection.",
     )
-    p.add_argument("--max-words", type=int, default=16)
+    p.add_argument(
+        "--max-words",
+        type=int,
+        default=8,
+        help="Maximum number of content words displayed after stopword filtering.",
+    )
     p.add_argument("--visual-bins", type=int, default=10)
     p.add_argument(
         "--display-gamma",
         type=float,
-        default=0.45,
-        help="Shared PowerNorm gamma; <1 reveals weaker but non-zero interactions.",
+        default=1.0,
+        help=(
+            "Backward-compatible argument. The publication figure now uses a "
+            "linear shared color scale so 0.0--0.2, ..., 0.8--1.0 have equal "
+            "visual length."
+        ),
     )
     p.add_argument("--occlusion-batch-size", type=int, default=16)
     p.add_argument("--num-workers", type=int, default=0)
@@ -545,16 +581,75 @@ def choose_display_words(
     cfcompat_pack,
     max_words,
 ):
-    n = len(labels)
-    if n <= int(max_words):
-        return np.arange(n, dtype=np.int64)
+    """Choose a compact, method-symmetric set of content words for display.
 
-    # Selection is method-symmetric: average marginal text influence.
-    score = 0.5 * (
-        baseline_pack["text_effect"] + cfcompat_pack["text_effect"]
+    The interaction is still computed for every word.  Stopword removal is a
+    visualization-only operation. Among the remaining content words, ranking
+    uses the maximum cross-modal interaction observed in either model, so the
+    selection does not favor Uniform KD or CFCompat.
+    """
+    n = len(labels)
+    if n == 0:
+        return np.asarray([], dtype=np.int64)
+
+    content = []
+    for i, label in enumerate(labels):
+        token = _display_token(label)
+        if not token:
+            continue
+        if token in DISPLAY_STOPWORDS:
+            continue
+        if len(token) <= 1:
+            continue
+        content.append(i)
+
+    # Never fail on an unusual utterance consisting almost entirely of
+    # function words.
+    if not content:
+        content = list(range(n))
+
+    base_strength = np.max(
+        baseline_pack["interaction"],
+        axis=1,
     )
-    chosen = np.argsort(-score, kind="mergesort")[: int(max_words)]
-    return np.sort(chosen.astype(np.int64))
+    ours_strength = np.max(
+        cfcompat_pack["interaction"],
+        axis=1,
+    )
+    score = np.maximum(base_strength, ours_strength)
+
+    limit = max(1, int(max_words))
+    if len(content) > limit:
+        ranked = sorted(
+            content,
+            key=lambda i: (-float(score[i]), int(i)),
+        )
+        chosen = ranked[:limit]
+
+        # Clearly sentiment-bearing words are useful anchors in the qualitative
+        # figure. If one was pushed out by a near-tied interaction score, keep
+        # it by replacing the weakest currently selected non-sentiment word.
+        sentiment_candidates = [
+            i for i in content
+            if _display_token(labels[i]) in DISPLAY_SENTIMENT_WORDS
+        ]
+        for i in sentiment_candidates:
+            if i in chosen:
+                continue
+            replaceable = [
+                j for j in chosen
+                if _display_token(labels[j]) not in DISPLAY_SENTIMENT_WORDS
+            ]
+            if not replaceable:
+                continue
+            weakest = min(replaceable, key=lambda j: float(score[j]))
+            chosen.remove(weakest)
+            chosen.append(i)
+    else:
+        chosen = content
+
+    # Restore sentence order for readability.
+    return np.asarray(sorted(set(chosen)), dtype=np.int64)
 
 
 def _sample_id_to_python(sample_id):
@@ -993,20 +1088,23 @@ def draw_visual_header(
 
 
 def draw_word_column(ax, labels):
-    """Draw words in their own axis so method metadata never overlaps them."""
+    """Draw a compact PMR-style word column."""
     n = len(labels)
     ax.set_xlim(0, 1)
     ax.set_ylim(n - 0.5, -0.5)
     ax.axis("off")
     for row, label in enumerate(labels):
+        token = _display_token(label)
+        sentiment = token in DISPLAY_SENTIMENT_WORDS
         ax.text(
             0.96,
             row,
             str(label),
             ha="right",
             va="center",
-            fontsize=9.7,
-            color="#222222",
+            fontsize=10.1 if sentiment else 9.7,
+            color="#D62728" if sentiment else "#222222",
+            fontweight="semibold" if sentiment else "normal",
         )
 
 
@@ -1067,14 +1165,14 @@ def plot_figure(
     else:
         vmax = 1.0
 
-    # Normalize both methods with ONE shared raw scale. PowerNorm is then used
-    # only as a display transform to reveal weak-but-nonzero structure.
+    # Normalize both methods with ONE shared raw scale. A linear display norm
+    # keeps every 0.2 interval physically equal on the colorbar.
     base_disp = np.clip(base / vmax, 0.0, 1.0)
     ours_disp = np.clip(ours / vmax, 0.0, 1.0)
-    display_norm = PowerNorm(
-        gamma=float(cli.display_gamma),
+    display_norm = Normalize(
         vmin=0.0,
         vmax=1.0,
+        clip=True,
     )
 
     visual_importance = 0.5 * (
@@ -1104,13 +1202,13 @@ def plot_figure(
         "ps.fonttype": 42,
     })
 
-    fig = plt.figure(figsize=(10.8, 7.2))
+    fig = plt.figure(figsize=(10.8, 6.6))
     gs = gridspec.GridSpec(
         3,
         3,
-        width_ratios=[1.42, 1.05, 6.35],
-        height_ratios=[1.02, 2.55, 2.55],
-        hspace=0.14,
+        width_ratios=[1.42, 1.00, 6.40],
+        height_ratios=[1.02, 2.35, 2.35],
+        hspace=0.15,
         wspace=0.035,
     )
 
@@ -1128,12 +1226,6 @@ def plot_figure(
 
     ax_header_meta.axis("off")
     ax_header_words.axis("off")
-
-    ax_header_words.text(
-        0.96, 0.54, "Text",
-        ha="right", va="center",
-        fontsize=10.2, fontweight="semibold",
-    )
 
     draw_visual_header(
         ax_header,
@@ -1212,9 +1304,18 @@ def plot_figure(
     )
 
     cax = fig.add_axes([0.935, 0.190, 0.013, 0.565])
-    cb = fig.colorbar(im2, cax=cax)
+    color_ticks = np.linspace(0.0, 1.0, 6)
+    cb = fig.colorbar(
+        im2,
+        cax=cax,
+        ticks=color_ticks,
+    )
+    cb.ax.set_yticklabels(
+        ["{:.1f}".format(v) for v in color_ticks]
+    )
     cb.set_label("Relative interaction strength", fontsize=10)
-    cb.ax.tick_params(labelsize=8)
+    cb.ax.tick_params(labelsize=8, length=3)
+    cb.outline.set_linewidth(0.8)
 
     output_dir.mkdir(parents=True, exist_ok=True)
     stem = "{}_seed{}_{}_{}_idx{}".format(
@@ -1247,7 +1348,7 @@ def plot_figure(
         visual_window_labels=np.asarray(window_labels, dtype=object),
         visual_centers=centers,
         shared_display_vmax_raw=np.asarray([vmax], dtype=np.float64),
-        display_gamma=np.asarray([float(cli.display_gamma)], dtype=np.float64),
+        display_scale=np.asarray(["linear"], dtype=object),
     )
 
     return png, pdf, npz, {
@@ -1438,7 +1539,9 @@ def main():
         "vision_perturbation": "zero one contiguous visual time window",
         "visual_active_positions": [int(v) for v in active_visual.tolist()],
         "visual_active_steps": int(len(active_visual)),
-        "display_gamma": float(cli.display_gamma),
+        "display_scale": "linear",
+        "colorbar_ticks": [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+        "requested_display_gamma_legacy": float(cli.display_gamma),
         "raw_video_root": str(cli.mosi_raw_root),
         "resolved_video_path": None if video_path is None else str(video_path),
         "normalized_sample_id": str(normalized_sample_id),
@@ -1448,8 +1551,9 @@ def main():
         "note": (
             "Padding-only visual steps are excluded before binning. No model "
             "parameter is changed. Both heatmaps use one shared raw scale and "
-            "the same monotonic PowerNorm display transform. Raw interaction "
-            "values are saved in NPZ."
+            "the same linear display transform, giving equal-length 0.2 "
+            "intervals on the colorbar. Stopword removal affects visualization "
+            "only; raw interaction values for all words are saved in NPZ."
         ),
         **plot_meta,
     }
