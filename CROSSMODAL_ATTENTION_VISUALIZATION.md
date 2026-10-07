@@ -143,3 +143,53 @@ A safe description is:
 > queries and corresponding visual windows.
 
 Only use the last sentence if the generated figure actually supports it.
+
+
+## PMR-style raw MOSI frames
+
+The current interaction visualizer automatically looks for utterance-level
+MOSI clips under:
+
+```text
+/sharefile/lyx_model/MMSA_new/MOSI/Raw/Raw
+```
+
+using the sample ID stored in the processed feature file. The expected layout
+is:
+
+```text
+<raw-root>/<video_id>/<segment_id>.mp4
+```
+
+For example:
+
+```text
+/sharefile/lyx_model/MMSA_new/MOSI/Raw/Raw/1DmNV9C1hbY/7.mp4
+```
+
+Run:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python visualize_crossmodal_interaction.py \
+  --dataset mosi \
+  --seed 1114 \
+  --split valid \
+  --condition LV \
+  --baseline fixedkd \
+  --selection representative \
+  --visual-bins 8 \
+  --max-words 14 \
+  --display-gamma 0.45 \
+  --gpu-ids 0
+```
+
+No additional video argument is required when the raw root above is correct.
+Use `--mosi-raw-root /another/path` to override it, or `--video-file` to
+force one exact utterance clip. The script never guesses a neighboring segment
+number if the ID-to-file mapping fails.
+
+The figure now uses separate columns for method metadata and word labels, so
+`(a)/(b)`, prediction/AE values, and text tokens cannot overlap. Real video
+frames are shown once above the heatmaps, one frame per displayed visual
+window, following the presentation style of PMR Figure 4. Frame positions are
+mapped over the non-padding visual support rather than the padded length of 50.
