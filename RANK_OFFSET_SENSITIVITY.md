@@ -58,15 +58,16 @@ existing epsilon in the denominator maintains numerical stability.
 
 - dataset: CMU-MOSI
 - seed: 1114
-- Train + Validation only
-- no Test access
+- Train is used for optimization and Validation selects the checkpoint
+- after the validation-best checkpoint is frozen, Test is evaluated once for final reporting
 - same clean teacher, student initialization, optimizer, missing-mask RNG,
   KD objective, and validation checkpoint criterion for every alpha
 - target metrics are macro-averaged over LA/LV/L
 
 Because the mathematical definition of alpha has been updated from the old
 rank-offset form to tied-interval interpolation, rerun all five settings rather
-than reusing the previous 0.25/0.50/0.75 rows.
+than reusing the previous 0.25/0.50/0.75 rows. The five alpha values are fixed
+before Test is accessed; Test is not used to choose alpha or checkpoints.
 
 ## Run
 
@@ -98,7 +99,7 @@ python run_rank_offset_sensitivity.py \
 Results are written to:
 
 ```text
-result/analysis/quantile_interpolation_sensitivity_v2/mosi/seed1114/
+result/analysis/quantile_interpolation_sensitivity_v3/mosi/seed1114/
 ```
 
 Key files:
@@ -111,11 +112,13 @@ Key files:
 Checkpoints are written under:
 
 ```text
-pt/analysis/quantile_interpolation_sensitivity_v2/mosi/seed1114/
+pt/analysis/quantile_interpolation_sensitivity_v3/mosi/seed1114/
 ```
 
-The generated LaTeX table uses the paper terminology “quantile interpolation
-coefficient alpha” rather than the obsolete “rank offset”.
+The generated LaTeX table uses Test macro metrics over LA/LV/L for the
+paper-facing rows, while the CSV retains Validation metrics and the
+validation-selected epoch for auditability. The table uses the paper terminology
+“quantile interpolation coefficient alpha” rather than the obsolete “rank offset”.
 
 Report the observed results directly. The purpose of the sweep is to test the
 robustness of the symmetry-derived midpoint configuration, not to select alpha
