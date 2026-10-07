@@ -41,6 +41,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from matplotlib.patches import Rectangle
+from matplotlib.colors import PowerNorm
 
 from data_loader import MMDataset
 from train_cf_compat_kd import build_config
@@ -82,10 +83,22 @@ def parse_args():
         default="representative",
     )
     p.add_argument("--min-abs-label", type=float, default=1.0)
-    p.add_argument("--min-raw-words", type=int, default=8)
-    p.add_argument("--max-raw-words", type=int, default=22)
-    p.add_argument("--max-words", type=int, default=14)
+    p.add_argument("--min-raw-words", type=int, default=10)
+    p.add_argument("--max-raw-words", type=int, default=24)
+    p.add_argument(
+        "--min-visual-steps",
+        type=int,
+        default=10,
+        help="Minimum number of non-padding visual steps for automatic case selection.",
+    )
+    p.add_argument("--max-words", type=int, default=16)
     p.add_argument("--visual-bins", type=int, default=10)
+    p.add_argument(
+        "--display-gamma",
+        type=float,
+        default=0.45,
+        help="Shared PowerNorm gamma; <1 reveals weaker but non-zero interactions.",
+    )
     p.add_argument("--occlusion-batch-size", type=int, default=16)
     p.add_argument("--num-workers", type=int, default=0)
     p.add_argument("--gpu-ids", nargs="*", type=int, default=[0])
@@ -233,6 +246,9 @@ def scan_candidates(cli, cfg, dataset, baseline, cfcompat):
         indices = batch["index"].view(-1).cpu().numpy().astype(int)
         raw_texts = list(batch["raw_text"])
         ids = list(batch["id"])
+        visual_active = (
+            torch.linalg.vector_norm(vision.detach(), dim=-1) > 1e-8
+        ).sum(dim=1).cpu().numpy().astype(int)
 
         for offset, index in enumerate(indices):
             truth = float(labels_np[offset])
@@ -253,6 +269,7 @@ def scan_candidates(cli, cfg, dataset, baseline, cfcompat):
                 "error_gain": be - oe,
                 "abs_label": abs(truth),
                 "raw_word_count": len(raw.strip().split()),
+                "visual_active_steps": int(visual_active[offset]),
             })
 
     return pd.DataFrame(rows).sort_values(
@@ -278,20 +295,22 @@ def select_sample(cli, candidates):
         & (candidates.abs_label >= float(cli.min_abs_label))
         & (candidates.raw_word_count >= int(cli.min_raw_words))
         & (candidates.raw_word_count <= int(cli.max_raw_words))
+        & (candidates.visual_active_steps >= int(cli.min_visual_steps))
     ].copy()
 
     if eligible.empty:
         eligible = candidates.loc[
             (candidates.error_gain > 0)
-            & (candidates.raw_word_count >= 5)
+            & (candidates.raw_word_count >= 6)
+            & (candidates.visual_active_steps >= 6)
         ].copy()
     if eligible.empty:
         eligible = candidates.copy()
 
     if cli.selection == "largest_gain":
         row = eligible.sort_values(
-            ["error_gain", "abs_label"],
-            ascending=[False, False],
+            ["error_gain", "visual_active_steps", "raw_word_count"],
+            ascending=[False, False, False],
             kind="mergesort",
         ).iloc[0]
         return row, "largest_positive_error_gain"
@@ -300,16 +319,33 @@ def select_sample(cli, candidates):
     if positive.empty:
         positive = eligible.copy()
 
+    # Keep the gain itself representative (middle 50%), then prefer a case
+    # with richer temporal support. This avoids both cherry-picking the largest
+    # gain and selecting a visually degenerate padded utterance.
+    q1 = float(positive.error_gain.quantile(0.25))
+    q3 = float(positive.error_gain.quantile(0.75))
+    middle = positive.loc[
+        (positive.error_gain >= q1) & (positive.error_gain <= q3)
+    ].copy()
+    if middle.empty:
+        middle = positive.copy()
+
     median_gain = float(positive.error_gain.median())
-    positive["distance_to_median_gain"] = np.abs(
-        positive.error_gain - median_gain
+    middle["distance_to_median_gain"] = np.abs(
+        middle.error_gain - median_gain
     )
-    row = positive.sort_values(
-        ["distance_to_median_gain", "abs_label", "raw_word_count", "sample_index"],
-        ascending=[True, False, False, True],
+    row = middle.sort_values(
+        [
+            "visual_active_steps",
+            "raw_word_count",
+            "distance_to_median_gain",
+            "abs_label",
+            "sample_index",
+        ],
+        ascending=[False, False, True, False, True],
         kind="mergesort",
     ).iloc[0]
-    return row, "representative_median_positive_gain"
+    return row, "representative_middle_gain_with_temporal_coverage"
 
 
 def bert_word_groups(model, text_tensor):
@@ -345,19 +381,44 @@ def bert_word_groups(model, text_tensor):
     return groups, labels, int(tokenizer.mask_token_id)
 
 
-def visual_windows(length, count):
-    count = min(int(count), int(length))
-    chunks = np.array_split(np.arange(int(length)), count)
+def active_visual_positions(vision_tensor, eps=1e-8):
+    """Return non-padding visual positions from the aligned feature sequence."""
+    vision = vision_tensor.detach().cpu().numpy()
+    if vision.ndim != 2:
+        raise ValueError(
+            "Expected visual tensor [T,D], got {}".format(vision.shape)
+        )
+    norms = np.linalg.norm(vision, axis=1)
+    active = np.flatnonzero(norms > float(eps)).astype(np.int64)
+    if active.size == 0:
+        active = np.arange(vision.shape[0], dtype=np.int64)
+    return active
+
+
+def visual_windows(vision_tensor, count):
+    """Partition only the non-padding visual support into display windows."""
+    active = active_visual_positions(vision_tensor)
+    count = min(int(count), int(len(active)))
+    chunks = np.array_split(active, count)
+
     windows = []
     labels = []
     centers = []
     for chunk in chunks:
-        start = int(chunk[0])
-        stop = int(chunk[-1]) + 1
-        windows.append((start, stop))
+        chunk = np.asarray(chunk, dtype=np.int64)
+        windows.append(chunk)
         centers.append(int(round(float(chunk.mean()))))
-        labels.append("V{}–{}".format(start + 1, stop))
-    return windows, labels, np.asarray(centers, dtype=np.int64)
+
+        start = int(chunk[0]) + 1
+        stop = int(chunk[-1]) + 1
+        if len(chunk) == 1:
+            labels.append("V{}".format(start))
+        elif np.all(np.diff(chunk) == 1):
+            labels.append("V{}–{}".format(start, stop))
+        else:
+            labels.append("V{}".format(int(round(float(chunk.mean()))) + 1))
+
+    return windows, labels, np.asarray(centers, dtype=np.int64), active
 
 
 def build_variant_specs(word_count, visual_count):
@@ -406,8 +467,8 @@ def run_occlusion_variants(
                     # Keep the token visible to BERT; only replace its identity.
                     text[row, 1, int(pos)] = 1.0
             if visual_index is not None:
-                start, stop = windows[int(visual_index)]
-                vision[row, start:stop, :] = 0.0
+                positions = windows[int(visual_index)]
+                vision[row, positions, :] = 0.0
 
         pred = predict_condition(
             model,
@@ -526,7 +587,9 @@ def draw_visual_header(
     cmap = plt.get_cmap("viridis")
 
     for j, label in enumerate(window_labels):
-        edge = cmap(0.20 + 0.70 * float(importance[j]))
+        strength = float(importance[j])
+        edge = cmap(0.20 + 0.75 * strength)
+        fill = cmap(0.08 + 0.72 * strength)
         if frames is not None and frames[j] is not None:
             ax.imshow(
                 frames[j],
@@ -548,11 +611,12 @@ def draw_visual_header(
                 (j + 0.05, 0.14),
                 0.90,
                 0.76,
-                facecolor=(0.96, 0.96, 0.96),
+                facecolor=fill,
                 edgecolor=edge,
-                linewidth=1.8,
+                linewidth=1.6,
             )
             ax.add_patch(rect)
+            text_color = "white" if strength > 0.58 else "#222222"
             ax.text(
                 j + 0.5,
                 0.52,
@@ -560,6 +624,8 @@ def draw_visual_header(
                 ha="center",
                 va="center",
                 fontsize=8.5,
+                color=text_color,
+                fontweight="semibold" if strength > 0.58 else "normal",
             )
 
     ax.text(
@@ -599,14 +665,20 @@ def plot_figure(
     combined = np.concatenate([base.ravel(), ours.ravel()])
     positive = combined[combined > 0]
     if positive.size:
-        vmax = float(np.quantile(positive, 0.98))
-        vmax = max(vmax, float(positive.max()) * 0.25, 1e-8)
+        vmax = float(np.quantile(positive, 0.97))
+        vmax = max(vmax, float(positive.max()) * 0.20, 1e-8)
     else:
         vmax = 1.0
 
-    # Shared normalized display scale; raw values are retained in NPZ.
+    # Normalize both methods with ONE shared raw scale. PowerNorm is then used
+    # only as a display transform to reveal weak-but-nonzero structure.
     base_disp = np.clip(base / vmax, 0.0, 1.0)
     ours_disp = np.clip(ours / vmax, 0.0, 1.0)
+    display_norm = PowerNorm(
+        gamma=float(cli.display_gamma),
+        vmin=0.0,
+        vmax=1.0,
+    )
 
     visual_importance = 0.5 * (
         baseline_pack["visual_effect"] + cfcompat_pack["visual_effect"]
@@ -639,10 +711,10 @@ def plot_figure(
     gs = gridspec.GridSpec(
         3,
         2,
-        width_ratios=[1.20, 6.20],
-        height_ratios=[0.75, 2.55, 2.55],
+        width_ratios=[1.55, 6.00],
+        height_ratios=[0.78, 2.55, 2.55],
         hspace=0.18,
-        wspace=0.04,
+        wspace=0.06,
     )
 
     ax_header_label = fig.add_subplot(gs[0, 0])
@@ -668,16 +740,14 @@ def plot_figure(
         aspect="auto",
         interpolation="nearest",
         cmap="viridis",
-        vmin=0.0,
-        vmax=1.0,
+        norm=display_norm,
     )
     im2 = ax_map2.imshow(
         ours_disp,
         aspect="auto",
         interpolation="nearest",
         cmap="viridis",
-        vmin=0.0,
-        vmax=1.0,
+        norm=display_norm,
     )
 
     for panel, show_x in ((ax_map1, False), (ax_map2, True)):
@@ -696,18 +766,9 @@ def plot_figure(
             spine.set_linewidth(0.8)
             spine.set_color("#555555")
 
-    # Highlight only a few words with the strongest CFCompat joint interaction.
-    ours_word_strength = ours.max(axis=1)
-    top_local = set(
-        np.argsort(-ours_word_strength, kind="mergesort")[
-            : min(3, len(ours_word_strength))
-        ].tolist()
-    )
-    for local, tick in enumerate(ax_map2.get_yticklabels()):
-        if local in top_local:
-            tick.set_color("#B22222")
-            tick.set_fontweight("bold")
-
+    # Keep token labels neutral by default. PMR manually marks emotion words;
+    # we avoid automatic red highlighting because strong interaction is not
+    # equivalent to sentiment-bearing semantics.
     baseline_name = "Uniform KD" if cli.baseline == "fixedkd" else "DLF-ModDrop"
     ax_left1.text(
         0.98, 0.64,
@@ -717,7 +778,7 @@ def plot_figure(
     )
     ax_left1.text(
         0.98, 0.43,
-        "Pred = {:.2f}\nAE = {:.2f}".format(bp, be),
+        "Pred {:.2f}\nAE {:.2f}".format(bp, be),
         ha="right", va="center",
         fontsize=10.2,
     )
@@ -730,7 +791,7 @@ def plot_figure(
     )
     ax_left2.text(
         0.98, 0.43,
-        "Pred = {:.2f}\nAE = {:.2f}".format(op, oe),
+        "Pred {:.2f}\nAE {:.2f}".format(op, oe),
         ha="right", va="center",
         fontsize=10.2,
     )
@@ -740,7 +801,7 @@ def plot_figure(
         raw = raw[:122] + "..."
 
     fig.suptitle(
-        "Text--Vision Cross-modal Interaction under the {} Condition\n"
+        "Cross-modal Interaction on CMU-MOSI ({})\n"
         "Truth = {:.2f}   |   {}".format(cli.condition, truth, raw),
         fontsize=12.8,
         y=0.985,
@@ -748,7 +809,7 @@ def plot_figure(
 
     cax = fig.add_axes([0.925, 0.205, 0.014, 0.58])
     cb = fig.colorbar(im2, cax=cax)
-    cb.set_label("Normalized interaction strength", fontsize=10)
+    cb.set_label("Relative interaction strength", fontsize=10)
     cb.ax.tick_params(labelsize=8)
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -782,6 +843,7 @@ def plot_figure(
         visual_window_labels=np.asarray(window_labels, dtype=object),
         visual_centers=centers,
         shared_display_vmax_raw=np.asarray([vmax], dtype=np.float64),
+        display_gamma=np.asarray([float(cli.display_gamma)], dtype=np.float64),
     )
 
     return png, pdf, npz, {
@@ -827,8 +889,8 @@ def main():
         baseline,
         sample["text"],
     )
-    windows, window_labels, centers = visual_windows(
-        sample["vision"].shape[0],
+    windows, window_labels, centers, active_visual = visual_windows(
+        sample["vision"],
         cli.visual_bins,
     )
 
@@ -919,9 +981,14 @@ def main():
         "formula": "abs(f(x_-i,-j)-f(x_-i)-f(x_-j)+f(x))",
         "text_perturbation": "replace all WordPiece pieces of one word by [MASK]",
         "vision_perturbation": "zero one contiguous visual time window",
+        "visual_active_positions": [int(v) for v in active_visual.tolist()],
+        "visual_active_steps": int(len(active_visual)),
+        "display_gamma": float(cli.display_gamma),
         "note": (
-            "No model parameter is changed. Both heatmaps use one shared "
-            "robust display scale. Raw interaction values are saved in NPZ."
+            "Padding-only visual steps are excluded before binning. No model "
+            "parameter is changed. Both heatmaps use one shared raw scale and "
+            "the same monotonic PowerNorm display transform. Raw interaction "
+            "values are saved in NPZ."
         ),
         **plot_meta,
     }
@@ -954,6 +1021,8 @@ def main():
         float(cfcompat_pack["base_prediction"]),
         abs(float(cfcompat_pack["base_prediction"]) - float(selected["label"])),
     ))
+    print("visual active steps  : {}".format(len(active_visual)))
+    print("visual windows       : {}".format(", ".join(window_labels)))
     print("raw text             : {}".format(selected["raw_text"]))
     print("-" * 88)
     print("PNG                  : {}".format(png))
