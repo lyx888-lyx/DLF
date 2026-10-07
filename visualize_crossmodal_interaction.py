@@ -28,8 +28,10 @@ Automatic qualitative case selection is validation-only.
 
 import argparse
 import ast
+import io
 import json
 import re
+import subprocess
 import textwrap
 import warnings
 from pathlib import Path
@@ -699,7 +701,25 @@ def resolve_mosi_clip_path(sample_id, raw_root):
     return clip, str(video_id), disk_segment, offset, normalized
 
 
+def _sample_decoded_frames(all_frames, relative_positions):
+    if not all_frames:
+        return None
+    nframes = len(all_frames)
+    output = []
+    for rel in relative_positions:
+        index = int(round(float(rel) * max(nframes - 1, 0)))
+        index = min(max(index, 0), max(nframes - 1, 0))
+        output.append(all_frames[index])
+    return output
+
+
 def _read_video_frames_cv2(video_path, relative_positions):
+    """Decode the whole short MOSI utterance sequentially with OpenCV.
+
+    Sequential decoding is used instead of repeated random seeking because
+    some MOSI mp4 files have sparse keyframes: OpenCV can open the file while
+    random seek followed by read still fails.
+    """
     try:
         import cv2
     except ImportError:
@@ -709,25 +729,22 @@ def _read_video_frames_cv2(video_path, relative_positions):
     if not cap.isOpened():
         return None
 
-    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    frames = []
-    for rel in relative_positions:
-        index = int(round(float(rel) * max(frame_count - 1, 0)))
-        index = min(max(index, 0), max(frame_count - 1, 0))
-        cap.set(cv2.CAP_PROP_POS_FRAMES, index)
+    decoded = []
+    while True:
         ok, frame = cap.read()
-        if not ok or frame is None:
-            frames.append(None)
+        if not ok:
+            break
+        if frame is None:
             continue
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        frames.append(frame)
+        decoded.append(frame)
 
     cap.release()
-    return frames
+    return _sample_decoded_frames(decoded, relative_positions)
 
 
 def _read_video_frames_imageio(video_path, relative_positions):
-    """Fallback reader used only when OpenCV is unavailable."""
+    """Fallback: decode the complete short utterance with imageio."""
     try:
         import imageio.v3 as iio
     except Exception:
@@ -735,49 +752,138 @@ def _read_video_frames_imageio(video_path, relative_positions):
 
     try:
         all_frames = iio.imread(video_path)
-        nframes = len(all_frames)
-        return [
-            all_frames[
-                min(
-                    max(int(round(float(rel) * max(nframes - 1, 0))), 0),
-                    max(nframes - 1, 0),
-                )
-            ]
-            for rel in relative_positions
-        ]
+        if all_frames is None or len(all_frames) == 0:
+            return None
+        return _sample_decoded_frames(list(all_frames), relative_positions)
     except Exception:
         return None
 
 
-def load_video_frames(video_path, centers, active_positions):
-    """Extract one real frame per displayed visual window."""
-    if video_path is None:
+def _ffprobe_duration(video_path):
+    try:
+        result = subprocess.run(
+            [
+                "ffprobe",
+                "-v", "error",
+                "-show_entries", "format=duration",
+                "-of", "default=noprint_wrappers=1:nokey=1",
+                str(video_path),
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+            text=True,
+        )
+        duration = float(result.stdout.strip())
+        if duration > 0:
+            return duration
+    except Exception:
+        pass
+    return None
+
+
+def _read_video_frames_ffmpeg(video_path, relative_positions):
+    """Final fallback using the ffmpeg executable directly."""
+    try:
+        from PIL import Image
+    except Exception:
         return None
+
+    duration = _ffprobe_duration(video_path)
+    if duration is None:
+        return None
+
+    frames = []
+    for rel in relative_positions:
+        sec = min(max(float(rel), 0.0), 0.995) * duration
+        try:
+            result = subprocess.run(
+                [
+                    "ffmpeg",
+                    "-v", "error",
+                    "-ss", "{:.6f}".format(sec),
+                    "-i", str(video_path),
+                    "-frames:v", "1",
+                    "-f", "image2pipe",
+                    "-vcodec", "png",
+                    "pipe:1",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+            )
+            if not result.stdout:
+                frames.append(None)
+                continue
+            image = Image.open(io.BytesIO(result.stdout)).convert("RGB")
+            frames.append(np.asarray(image))
+        except Exception:
+            frames.append(None)
+
+    if not frames or all(frame is None for frame in frames):
+        return None
+    return frames
+
+
+def load_video_frames(video_path, centers, active_positions):
+    """Extract one real frame per displayed visual window.
+
+    Returns frames plus the decoder backend used.
+    """
+    if video_path is None:
+        return None, "placeholder"
 
     path = Path(video_path)
     if not path.is_file():
-        return None
+        return None, "placeholder"
 
     active_positions = np.asarray(active_positions, dtype=np.float64)
     centers = np.asarray(centers, dtype=np.float64)
     if active_positions.size == 0:
-        return None
+        return None, "placeholder"
 
     lo = float(active_positions.min())
     hi = float(active_positions.max())
     span = max(hi - lo, 1.0)
     relative = np.clip((centers - lo) / span, 0.0, 1.0)
 
-    frames = _read_video_frames_cv2(path, relative)
-    if frames is None:
-        frames = _read_video_frames_imageio(path, relative)
+    readers = (
+        ("opencv", _read_video_frames_cv2),
+        ("imageio", _read_video_frames_imageio),
+        ("ffmpeg", _read_video_frames_ffmpeg),
+    )
 
-    if frames is None:
-        warnings.warn(
-            "Could not decode {} with OpenCV or imageio; using visual-window "
-            "placeholders instead.".format(path)
-        )
-    return frames
+    for backend, reader in readers:
+        frames = reader(path, relative)
+        if frames is None:
+            continue
+
+        valid_count = sum(frame is not None for frame in frames)
+        if valid_count == len(relative):
+            return frames, backend
+
+        for fallback_name, fallback_reader in readers:
+            if fallback_name == backend:
+                continue
+            fallback = fallback_reader(path, relative)
+            if fallback is None:
+                continue
+            merged = [
+                frame if frame is not None else fallback[i]
+                for i, frame in enumerate(frames)
+            ]
+            if all(frame is not None for frame in merged):
+                return merged, backend + "+" + fallback_name
+
+        if valid_count > 0:
+            return frames, backend + "_partial"
+
+    warnings.warn(
+        "The raw clip exists but no decoder could extract frames from {}. "
+        "Tried OpenCV sequential decoding, imageio, and ffmpeg. "
+        "Using placeholders instead.".format(path)
+    )
+    return None, "placeholder"
 
 
 def _crop_frame_for_strip(frame):
@@ -974,7 +1080,7 @@ def plot_figure(
     visual_importance = 0.5 * (
         baseline_pack["visual_effect"] + cfcompat_pack["visual_effect"]
     )
-    frames = load_video_frames(
+    frames, video_backend = load_video_frames(
         video_path,
         centers,
         active_visual,
@@ -1153,6 +1259,10 @@ def plot_figure(
         "displayed_words": display_labels,
         "visual_window_labels": window_labels,
         "shared_display_vmax_raw": vmax,
+        "video_decode_backend": video_backend,
+        "video_frames_rendered": 0 if frames is None else int(
+            sum(frame is not None for frame in frames)
+        ),
     }
 
 
@@ -1384,6 +1494,12 @@ def main():
     print("segment offset       : {}".format(resolved_segment_offset))
     print("raw video            : {}".format(
         "<not resolved>" if video_path is None else video_path
+    ))
+    print("video decoder        : {}".format(
+        plot_meta.get("video_decode_backend", "unknown")
+    ))
+    print("frames rendered      : {}".format(
+        plot_meta.get("video_frames_rendered", 0)
     ))
     print("raw text             : {}".format(selected["raw_text"]))
     print("-" * 88)
