@@ -134,11 +134,11 @@ def parse_args():
     p.add_argument(
         "--display-gamma",
         type=float,
-        default=1.0,
+        default=0.65,
         help=(
-            "Backward-compatible argument. The publication figure now uses a "
-            "linear shared color scale so 0.0--0.2, ..., 0.8--1.0 have equal "
-            "visual length."
+            "Shared global contrast exponent applied after robust normalization. "
+            "Values below 1 reveal weaker interactions without row-wise "
+            "renormalization. Both methods use the same transform."
         ),
     )
     p.add_argument("--occlusion-batch-size", type=int, default=16)
@@ -1097,45 +1097,6 @@ def draw_word_column(ax, labels):
         )
 
 
-def rowwise_normalize(matrix, eps=1e-12):
-    """Normalize each displayed word independently over visual windows."""
-    matrix = np.asarray(matrix, dtype=np.float64)
-    row_max = np.max(matrix, axis=1, keepdims=True)
-    row_max = np.maximum(row_max, float(eps))
-    return np.clip(matrix / row_max, 0.0, 1.0)
-
-
-def draw_strength_column(ax, strengths):
-    """Draw token-level absolute interaction strength on a shared scale."""
-    strengths = np.asarray(strengths, dtype=np.float64)
-    n = len(strengths)
-    y = np.arange(n)
-
-    ax.barh(
-        y,
-        strengths,
-        height=0.56,
-        color="#A6A6A6",
-        edgecolor="none",
-        zorder=2,
-    )
-    ax.set_xlim(0.0, 1.0)
-    ax.set_ylim(n - 0.5, -0.5)
-    ax.set_xticks([])
-    ax.set_yticks([])
-
-    # A subtle endpoint guide makes the length encoding easier to read without
-    # turning the small column into a second full chart.
-    ax.axvline(
-        1.0,
-        color="#D0D0D0",
-        linewidth=0.7,
-        zorder=1,
-    )
-    for spine in ax.spines.values():
-        spine.set_visible(False)
-
-
 def draw_method_meta(ax, panel_label, method_name, prediction, error):
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
@@ -1185,36 +1146,34 @@ def plot_figure(
     base = baseline_pack["interaction"][display_rows]
     ours = cfcompat_pack["interaction"][display_rows]
 
-    # Heatmap color encodes the temporal interaction pattern *within each
-    # displayed word*. This keeps a meaningful word such as "horrible"
-    # visually readable even when another word has a much larger absolute
-    # interaction magnitude.
-    base_disp = rowwise_normalize(base)
-    ours_disp = rowwise_normalize(ours)
+    # Shared global normalization preserves comparisons across words, visual
+    # windows, and methods. A monotonic gamma transform is then applied to both
+    # models together to reveal weak-but-nonzero interactions without forcing
+    # each row to contain a saturated maximum.
+    combined = np.concatenate([base.ravel(), ours.ravel()])
+    positive = combined[combined > 0]
+    if positive.size:
+        shared_vmax = float(np.quantile(positive, 0.97))
+        shared_vmax = max(
+            shared_vmax,
+            float(positive.max()) * 0.20,
+            1e-12,
+        )
+    else:
+        shared_vmax = 1.0
 
-    # A separate mini-bar next to each word preserves the absolute magnitude.
-    # Mean interaction is used because every word has the same number of
-    # displayed visual windows. The normalization maximum is shared by both
-    # models, so bar lengths are directly comparable across panels.
-    base_strength_raw = np.mean(base, axis=1)
-    ours_strength_raw = np.mean(ours, axis=1)
-    shared_strength_max = max(
-        float(base_strength_raw.max()) if base_strength_raw.size else 0.0,
-        float(ours_strength_raw.max()) if ours_strength_raw.size else 0.0,
-        1e-12,
-    )
-    base_strength = np.clip(
-        base_strength_raw / shared_strength_max,
-        0.0,
-        1.0,
-    )
-    ours_strength = np.clip(
-        ours_strength_raw / shared_strength_max,
-        0.0,
-        1.0,
-    )
+    gamma = float(cli.display_gamma)
+    if not (0.0 < gamma <= 1.0):
+        raise ValueError("--display-gamma must lie in (0, 1].")
 
-    # Linear 0--1 color scale: all 0.2 colorbar intervals are equal in length.
+    base_linear = np.clip(base / shared_vmax, 0.0, 1.0)
+    ours_linear = np.clip(ours / shared_vmax, 0.0, 1.0)
+
+    base_disp = np.power(base_linear, gamma)
+    ours_disp = np.power(ours_linear, gamma)
+
+    # The displayed score is already transformed into [0,1], so the colorbar
+    # itself remains linear and its 0.2 intervals have equal physical length.
     display_norm = Normalize(
         vmin=0.0,
         vmax=1.0,
@@ -1248,37 +1207,31 @@ def plot_figure(
         "ps.fonttype": 42,
     })
 
-    fig = plt.figure(figsize=(11.3, 6.6))
+    fig = plt.figure(figsize=(10.9, 6.45))
     gs = gridspec.GridSpec(
         3,
-        4,
-        width_ratios=[1.38, 0.95, 0.72, 6.20],
-        height_ratios=[1.02, 2.35, 2.35],
+        3,
+        width_ratios=[1.40, 1.00, 6.45],
+        height_ratios=[1.02, 2.30, 2.30],
         hspace=0.15,
         wspace=0.035,
     )
 
     ax_header_meta = fig.add_subplot(gs[0, 0])
     ax_header_words = fig.add_subplot(gs[0, 1])
-    ax_header_strength = fig.add_subplot(gs[0, 2])
-    ax_header = fig.add_subplot(gs[0, 3])
+    ax_header = fig.add_subplot(gs[0, 2])
 
     ax_meta1 = fig.add_subplot(gs[1, 0])
     ax_words1 = fig.add_subplot(gs[1, 1])
-    ax_strength1 = fig.add_subplot(gs[1, 2])
-    ax_map1 = fig.add_subplot(gs[1, 3])
+    ax_map1 = fig.add_subplot(gs[1, 2])
 
     ax_meta2 = fig.add_subplot(gs[2, 0])
     ax_words2 = fig.add_subplot(gs[2, 1])
-    ax_strength2 = fig.add_subplot(gs[2, 2])
-    ax_map2 = fig.add_subplot(gs[2, 3])
+    ax_map2 = fig.add_subplot(gs[2, 2])
 
     ax_header_meta.axis("off")
     ax_header_words.axis("off")
-    ax_header_strength.axis("off")
 
-    # Keep the PMR-like visual hierarchy: frames sit directly above the visual
-    # time columns, while the auxiliary token-strength cue stays compact.
     ax_header_words.text(
         0.96,
         0.57,
@@ -1287,16 +1240,6 @@ def plot_figure(
         va="center",
         fontsize=10,
         fontweight="semibold",
-    )
-    ax_header_strength.text(
-        0.50,
-        0.12,
-        "Token\nstrength",
-        ha="center",
-        va="bottom",
-        fontsize=8.3,
-        color="#555555",
-        linespacing=1.0,
     )
 
     draw_visual_header(
@@ -1308,8 +1251,6 @@ def plot_figure(
 
     draw_word_column(ax_words1, display_labels)
     draw_word_column(ax_words2, display_labels)
-    draw_strength_column(ax_strength1, base_strength)
-    draw_strength_column(ax_strength2, ours_strength)
 
     im1 = ax_map1.imshow(
         base_disp,
@@ -1387,7 +1328,7 @@ def plot_figure(
     cb.ax.set_yticklabels(
         ["{:.1f}".format(v) for v in color_ticks]
     )
-    cb.set_label("Within-word relative interaction", fontsize=10)
+    cb.set_label("Relative interaction score", fontsize=10)
     cb.ax.tick_params(labelsize=8, length=3)
     cb.outline.set_linewidth(0.8)
 
@@ -1421,18 +1362,17 @@ def plot_figure(
         word_labels=np.asarray(labels, dtype=object),
         visual_window_labels=np.asarray(window_labels, dtype=object),
         visual_centers=centers,
-        baseline_interaction_rowwise=base_disp,
-        cfcompat_interaction_rowwise=ours_disp,
-        baseline_token_strength_raw=base_strength_raw,
-        cfcompat_token_strength_raw=ours_strength_raw,
-        baseline_token_strength_display=base_strength,
-        cfcompat_token_strength_display=ours_strength,
-        shared_token_strength_max_raw=np.asarray(
-            [shared_strength_max],
+        baseline_interaction_linear=base_linear,
+        cfcompat_interaction_linear=ours_linear,
+        baseline_interaction_display=base_disp,
+        cfcompat_interaction_display=ours_disp,
+        shared_display_vmax_raw=np.asarray(
+            [shared_vmax],
             dtype=np.float64,
         ),
+        display_gamma=np.asarray([gamma], dtype=np.float64),
         display_scale=np.asarray(
-            ["rowwise_linear_plus_shared_token_strength"],
+            ["shared_global_gamma_then_linear_colorbar"],
             dtype=object,
         ),
     )
@@ -1445,14 +1385,9 @@ def plot_figure(
         "cfcompat_abs_error": oe,
         "displayed_words": display_labels,
         "visual_window_labels": window_labels,
-        "display_scale": "rowwise_linear_plus_shared_token_strength",
-        "shared_token_strength_max_raw": shared_strength_max,
-        "baseline_token_strength_raw": [
-            float(v) for v in base_strength_raw.tolist()
-        ],
-        "cfcompat_token_strength_raw": [
-            float(v) for v in ours_strength_raw.tolist()
-        ],
+        "display_scale": "shared_global_gamma_then_linear_colorbar",
+        "shared_display_vmax_raw": shared_vmax,
+        "display_gamma": gamma,
         "video_decode_backend": video_backend,
         "video_frames_rendered": 0 if frames is None else int(
             sum(frame is not None for frame in frames)
@@ -1632,14 +1567,14 @@ def main():
         "vision_perturbation": "zero one contiguous visual time window",
         "visual_active_positions": [int(v) for v in active_visual.tolist()],
         "visual_active_steps": int(len(active_visual)),
-        "display_scale": "rowwise_linear_plus_shared_token_strength",
+        "display_scale": "shared_global_gamma_then_linear_colorbar",
         "heatmap_semantics": (
-            "each displayed word is normalized by its own maximum interaction "
-            "over visual windows; compare temporal patterns within a row"
+            "all displayed cells share one robust raw normalization across "
+            "Uniform KD and CFCompat, followed by the same monotonic gamma "
+            "contrast transform; cross-row and cross-model ordering is preserved"
         ),
-        "token_strength_semantics": (
-            "mean raw interaction over visual windows, normalized by one "
-            "shared maximum across Uniform KD and CFCompat"
+        "colorbar_semantics": (
+            "linear 0--1 scale over the contrast-enhanced interaction score"
         ),
         "colorbar_ticks": [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
         "requested_display_gamma_legacy": float(cli.display_gamma),
@@ -1651,12 +1586,13 @@ def main():
         "resolved_segment_offset": resolved_segment_offset,
         "note": (
             "Padding-only visual steps are excluded before binning. No model "
-            "parameter is changed. Heatmap rows are normalized independently "
-            "to reveal each word's temporal interaction pattern; adjacent token-"
-            "strength bars retain absolute magnitude using one shared scale "
-            "across both models. The heatmap colorbar is linear, so every 0.2 "
-            "interval has equal physical length. Stopword removal affects "
-            "visualization only; raw interactions for all words are saved in NPZ."
+            "parameter is changed. All displayed cells use one shared raw "
+            "normalization across both models, followed by the same monotonic "
+            "gamma contrast transform. This reveals weaker interactions without "
+            "forcing a maximum in every row. The final colorbar is linear in "
+            "the displayed interaction score, so every 0.2 interval has equal "
+            "physical length. Stopword removal affects visualization only; raw "
+            "interactions for all words are saved in NPZ."
         ),
         **plot_meta,
     }
