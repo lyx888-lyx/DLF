@@ -1097,6 +1097,52 @@ def draw_word_column(ax, labels):
         )
 
 
+def draw_text_position_column(ax, positions, labels):
+    """Show where each displayed word occurs in textual order.
+
+    The horizontal coordinate is normalized utterance word order (early->late),
+    not acoustic time and not visual alignment. This cue is deliberately kept
+    separate from the interaction heatmap to avoid implying that a word lasts
+    across all visual context windows.
+    """
+    positions = np.asarray(positions, dtype=np.float64)
+    n = len(positions)
+    y = np.arange(n)
+
+    ax.set_xlim(0.0, 1.0)
+    ax.set_ylim(n - 0.5, -0.5)
+
+    for row in range(n):
+        ax.hlines(
+            y=row,
+            xmin=0.0,
+            xmax=1.0,
+            color="#E0E0E0",
+            linewidth=0.65,
+            zorder=1,
+        )
+
+    for row, (pos, label) in enumerate(zip(positions, labels)):
+        sentiment = _display_token(label) in DISPLAY_SENTIMENT_WORDS
+        ax.scatter(
+            [float(pos)],
+            [row],
+            s=28 if sentiment else 22,
+            color="#D62728" if sentiment else "#666666",
+            edgecolors="white",
+            linewidths=0.45,
+            zorder=3,
+        )
+
+    ax.set_xticks([0.0, 1.0])
+    ax.set_xticklabels(["Early", "Late"], fontsize=7.6, color="#666666")
+    ax.tick_params(axis="x", length=0, pad=1.5)
+    ax.set_yticks([])
+
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+
+
 def draw_method_meta(ax, panel_label, method_name, prediction, error):
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
@@ -1142,6 +1188,13 @@ def plot_figure(
         cli.max_words,
     )
     display_labels = [labels[i] for i in display_rows]
+
+    # Normalized word order is shown in a separate mini-axis. It is a textual
+    # sequence cue only, not a timestamp or a word-duration annotation.
+    text_position_den = max(len(labels) - 1, 1)
+    display_text_positions = (
+        display_rows.astype(np.float64) / float(text_position_den)
+    )
 
     base = baseline_pack["interaction"][display_rows]
     ours = cfcompat_pack["interaction"][display_rows]
@@ -1207,39 +1260,53 @@ def plot_figure(
         "ps.fonttype": 42,
     })
 
-    fig = plt.figure(figsize=(10.9, 6.45))
+    fig = plt.figure(figsize=(11.35, 6.55))
     gs = gridspec.GridSpec(
         3,
-        3,
-        width_ratios=[1.40, 1.00, 6.45],
-        height_ratios=[1.02, 2.30, 2.30],
+        4,
+        width_ratios=[1.38, 0.95, 1.05, 6.35],
+        height_ratios=[1.04, 2.30, 2.30],
         hspace=0.15,
         wspace=0.035,
     )
 
     ax_header_meta = fig.add_subplot(gs[0, 0])
     ax_header_words = fig.add_subplot(gs[0, 1])
-    ax_header = fig.add_subplot(gs[0, 2])
+    ax_header_pos = fig.add_subplot(gs[0, 2])
+    ax_header = fig.add_subplot(gs[0, 3])
 
     ax_meta1 = fig.add_subplot(gs[1, 0])
     ax_words1 = fig.add_subplot(gs[1, 1])
-    ax_map1 = fig.add_subplot(gs[1, 2])
+    ax_pos1 = fig.add_subplot(gs[1, 2])
+    ax_map1 = fig.add_subplot(gs[1, 3])
 
     ax_meta2 = fig.add_subplot(gs[2, 0])
     ax_words2 = fig.add_subplot(gs[2, 1])
-    ax_map2 = fig.add_subplot(gs[2, 2])
+    ax_pos2 = fig.add_subplot(gs[2, 2])
+    ax_map2 = fig.add_subplot(gs[2, 3])
 
     ax_header_meta.axis("off")
     ax_header_words.axis("off")
+    ax_header_pos.axis("off")
 
     ax_header_words.text(
         0.96,
         0.57,
-        "Visual\nframes",
+        "Text\ncue",
         ha="right",
         va="center",
-        fontsize=10,
+        fontsize=9.6,
         fontweight="semibold",
+    )
+    ax_header_pos.text(
+        0.50,
+        0.57,
+        "Text position\n(order only)",
+        ha="center",
+        va="center",
+        fontsize=8.5,
+        color="#555555",
+        linespacing=1.05,
     )
 
     draw_visual_header(
@@ -1251,6 +1318,17 @@ def plot_figure(
 
     draw_word_column(ax_words1, display_labels)
     draw_word_column(ax_words2, display_labels)
+
+    draw_text_position_column(
+        ax_pos1,
+        display_text_positions,
+        display_labels,
+    )
+    draw_text_position_column(
+        ax_pos2,
+        display_text_positions,
+        display_labels,
+    )
 
     im1 = ax_map1.imshow(
         base_disp,
@@ -1278,7 +1356,7 @@ def plot_figure(
         )
         panel.tick_params(axis="x", length=0 if not show_x else 3)
         if show_x:
-            panel.set_xlabel("Visual time window")
+            panel.set_xlabel("Visual context window")
         for spine in panel.spines.values():
             spine.set_linewidth(0.8)
             spine.set_color("#555555")
@@ -1332,6 +1410,17 @@ def plot_figure(
     cb.ax.tick_params(labelsize=8, length=3)
     cb.outline.set_linewidth(0.8)
 
+    fig.text(
+        0.63,
+        0.025,
+        "Text-position dots indicate word order only; heatmap columns are visual "
+        "context windows and do not represent word duration.",
+        ha="center",
+        va="bottom",
+        fontsize=8.2,
+        color="#555555",
+    )
+
     output_dir.mkdir(parents=True, exist_ok=True)
     stem = "{}_seed{}_{}_{}_idx{}".format(
         cli.dataset,
@@ -1359,6 +1448,7 @@ def plot_figure(
         baseline_visual_effect=baseline_pack["visual_effect"],
         cfcompat_visual_effect=cfcompat_pack["visual_effect"],
         displayed_word_indices=display_rows,
+        displayed_text_positions=display_text_positions,
         word_labels=np.asarray(labels, dtype=object),
         visual_window_labels=np.asarray(window_labels, dtype=object),
         visual_centers=centers,
@@ -1384,6 +1474,13 @@ def plot_figure(
         "baseline_abs_error": be,
         "cfcompat_abs_error": oe,
         "displayed_words": display_labels,
+        "displayed_text_positions": [
+            float(v) for v in display_text_positions.tolist()
+        ],
+        "text_position_semantics": (
+            "normalized textual word order among all non-special BERT word "
+            "groups; this is not acoustic time or word duration"
+        ),
         "visual_window_labels": window_labels,
         "display_scale": "shared_global_gamma_then_linear_colorbar",
         "shared_display_vmax_raw": shared_vmax,
@@ -1564,7 +1661,7 @@ def main():
         "diagnostic": "pairwise_text_visual_occlusion_interaction",
         "formula": "abs(f(x_-i,-j)-f(x_-i)-f(x_-j)+f(x))",
         "text_perturbation": "replace all WordPiece pieces of one word by [MASK]",
-        "vision_perturbation": "zero one contiguous visual time window",
+        "vision_perturbation": "zero one contiguous visual context window",
         "visual_active_positions": [int(v) for v in active_visual.tolist()],
         "visual_active_steps": int(len(active_visual)),
         "display_scale": "shared_global_gamma_then_linear_colorbar",
@@ -1575,6 +1672,15 @@ def main():
         ),
         "colorbar_semantics": (
             "linear 0--1 scale over the contrast-enhanced interaction score"
+        ),
+        "visual_context_semantics": (
+            "heatmap columns are visual context windows perturbed independently "
+            "when measuring word--visual-context interaction; they do not encode "
+            "the duration of the word"
+        ),
+        "text_position_semantics": (
+            "a separate dot cue shows normalized textual word order only; it "
+            "is not treated as an acoustic timestamp"
         ),
         "colorbar_ticks": [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
         "requested_display_gamma_legacy": float(cli.display_gamma),
@@ -1589,10 +1695,13 @@ def main():
             "parameter is changed. All displayed cells use one shared raw "
             "normalization across both models, followed by the same monotonic "
             "gamma contrast transform. This reveals weaker interactions without "
-            "forcing a maximum in every row. The final colorbar is linear in "
-            "the displayed interaction score, so every 0.2 interval has equal "
-            "physical length. Stopword removal affects visualization only; raw "
-            "interactions for all words are saved in NPZ."
+            "forcing a maximum in every row. A separate text-position cue "
+            "shows normalized word order, while heatmap columns are explicitly "
+            "treated as visual context windows rather than word-duration bins. "
+            "The final colorbar is linear in the displayed interaction score, "
+            "so every 0.2 interval has equal physical length. Stopword removal "
+            "affects visualization only; raw interactions for all words are "
+            "saved in NPZ."
         ),
         **plot_meta,
     }
