@@ -27,6 +27,7 @@ Automatic qualitative case selection is validation-only.
 """
 
 import argparse
+import ast
 import json
 import re
 import textwrap
@@ -555,58 +556,117 @@ def choose_display_words(
 
 
 def _sample_id_to_python(sample_id):
-    """Convert tensor/ndarray wrappers while preserving structured IDs."""
+    """Convert bytes/tensor/ndarray wrappers while preserving structured IDs."""
+    if isinstance(sample_id, bytes):
+        return sample_id.decode("utf-8", errors="replace")
+
     if torch.is_tensor(sample_id):
         value = sample_id.detach().cpu().numpy()
         if value.ndim == 0:
-            return value.item()
-        return value.tolist()
+            return _sample_id_to_python(value.item())
+        return [_sample_id_to_python(v) for v in value.tolist()]
+
     if isinstance(sample_id, np.ndarray):
         if sample_id.ndim == 0:
-            return sample_id.item()
-        return sample_id.tolist()
+            return _sample_id_to_python(sample_id.item())
+        return [_sample_id_to_python(v) for v in sample_id.tolist()]
+
+    if isinstance(sample_id, (list, tuple)):
+        return [_sample_id_to_python(v) for v in sample_id]
+
     return sample_id
 
 
+def _try_literal_structured_id(value):
+    """Parse stringified list/tuple IDs such as "['video', '7']"."""
+    if not isinstance(value, str):
+        return value
+    stripped = value.strip()
+    if not stripped or stripped[0] not in "[(":
+        return value
+    try:
+        parsed = ast.literal_eval(stripped)
+    except Exception:
+        return value
+    return _sample_id_to_python(parsed)
+
+
+def _find_segment_file(raw_root, video_id, segment_id):
+    """Return an exact clip, then a safe MOSI 0-based->1-based fallback.
+
+    Many processed MOSI feature files encode segment indices from 0, while
+    utterance clips on disk are named 1.mp4, 2.mp4, ... . We only apply +1
+    when the exact file is absent and the directory itself has no 0.mp4,
+    which makes the convention mismatch explicit rather than arbitrary.
+    """
+    folder = Path(raw_root) / str(video_id)
+    if not folder.is_dir():
+        return None, None, None
+
+    try:
+        segment_int = int(float(str(segment_id).strip()))
+    except Exception:
+        return None, None, None
+
+    exact = folder / (str(segment_int) + ".mp4")
+    if exact.is_file():
+        return exact, str(segment_int), 0
+
+    plus_one = folder / (str(segment_int + 1) + ".mp4")
+    zero_file = folder / "0.mp4"
+    one_file = folder / "1.mp4"
+
+    if (not zero_file.exists()) and one_file.is_file() and plus_one.is_file():
+        return plus_one, str(segment_int + 1), 1
+
+    return None, None, None
+
+
 def resolve_mosi_clip_path(sample_id, raw_root):
-    """Resolve a MOSI utterance ID to raw_root/video_id/segment.mp4."""
+    """Resolve a MOSI utterance ID to raw_root/video_id/segment.mp4.
+
+    Returns
+    -------
+    clip_path, video_id, disk_segment_id, segment_offset, normalized_id
+    """
     raw_root = Path(raw_root)
-    sample_id = _sample_id_to_python(sample_id)
+    normalized = _sample_id_to_python(sample_id)
+    normalized = _try_literal_structured_id(normalized)
 
     video_id = None
     segment_id = None
 
-    if isinstance(sample_id, dict):
+    if isinstance(normalized, dict):
         for key in ("video_id", "video", "vid"):
-            if key in sample_id:
-                video_id = str(sample_id[key])
+            if key in normalized:
+                video_id = str(normalized[key])
                 break
         for key in ("segment_id", "segment", "clip_id", "clip", "sid"):
-            if key in sample_id:
-                segment_id = str(sample_id[key])
+            if key in normalized:
+                segment_id = str(normalized[key])
                 break
 
-    elif isinstance(sample_id, (list, tuple)) and len(sample_id) >= 2:
-        video_id = str(sample_id[0])
-        segment_id = str(sample_id[1])
+    elif isinstance(normalized, (list, tuple)) and len(normalized) >= 2:
+        video_id = str(normalized[0]).strip()
+        segment_id = str(normalized[1]).strip()
 
     else:
-        sid = str(sample_id).strip()
+        sid = str(normalized).strip()
 
-        # Match real video-directory names first. This avoids splitting
-        # YouTube IDs that themselves contain '-' or '_'.
+        # Match actual MOSI video-directory names anywhere inside the serialized
+        # ID. This also handles strings such as "['1DmNV9C1hbY', '7']".
+        matched_dir = None
         if raw_root.is_dir():
             dirs = [p.name for p in raw_root.iterdir() if p.is_dir()]
             dirs.sort(key=len, reverse=True)
             for candidate in dirs:
-                if sid == candidate:
-                    continue
-                if sid.startswith(candidate):
-                    remainder = sid[len(candidate):]
+                if candidate in sid:
+                    matched_dir = candidate
+                    remainder = sid.split(candidate, 1)[1]
                     numbers = re.findall(r"\d+", remainder)
                     if numbers:
                         video_id = candidate
-                        segment_id = numbers[-1]
+                        segment_id = numbers[0]
                         break
 
         if video_id is None:
@@ -615,6 +675,7 @@ def resolve_mosi_clip_path(sample_id, raw_root):
                 r"^(.+?)\[(\d+)\]$",
                 r"^(.+?)[/#,:](\d+)$",
                 r"^(.+?)::(\d+)$",
+                r"^(.+?)\s+(\d+)$",
             )
             for pattern in patterns:
                 match = re.match(pattern, sid)
@@ -625,30 +686,17 @@ def resolve_mosi_clip_path(sample_id, raw_root):
         if video_id is None:
             match = re.match(r"^(.+)_(\d+)$", sid)
             if match:
-                candidate_video = match.group(1)
-                candidate_segment = match.group(2)
-                candidate_path = raw_root / candidate_video / (
-                    str(candidate_segment) + ".mp4"
-                )
-                if candidate_path.is_file():
-                    video_id, segment_id = candidate_video, candidate_segment
+                video_id, segment_id = match.group(1), match.group(2)
 
     if video_id is None or segment_id is None:
-        return None, None, None
+        return None, video_id, segment_id, None, normalized
 
-    segment_id = str(segment_id).strip()
-    try:
-        segment_id = str(int(float(segment_id)))
-    except Exception:
-        pass
-
-    clip = raw_root / str(video_id) / (segment_id + ".mp4")
-    if clip.is_file():
-        return clip, str(video_id), segment_id
-
-    # Do not silently guess +/-1 segment numbering. A wrong clip would make
-    # the qualitative visualization invalid.
-    return None, str(video_id), segment_id
+    clip, disk_segment, offset = _find_segment_file(
+        raw_root,
+        video_id,
+        segment_id,
+    )
+    return clip, str(video_id), disk_segment, offset, normalized
 
 
 def _read_video_frames_cv2(video_path, relative_positions):
@@ -1138,6 +1186,8 @@ def main():
     video_path = None
     resolved_video_id = None
     resolved_segment_id = None
+    resolved_segment_offset = None
+    normalized_sample_id = _sample_id_to_python(sample["id"])
 
     if not cli.no_video_frames:
         if cli.video_file:
@@ -1148,16 +1198,33 @@ def main():
                 )
             video_path = explicit
         else:
-            video_path, resolved_video_id, resolved_segment_id = resolve_mosi_clip_path(
+            (
+                video_path,
+                resolved_video_id,
+                resolved_segment_id,
+                resolved_segment_offset,
+                normalized_sample_id,
+            ) = resolve_mosi_clip_path(
                 sample["id"],
                 cli.mosi_raw_root,
             )
             if video_path is None:
                 warnings.warn(
-                    "Could not resolve raw MOSI clip for sample id {!r} under {}. "
-                    "The figure will use visual-window placeholders. "
-                    "Use --video-file to provide the exact utterance clip.".format(
-                        sample["id"], cli.mosi_raw_root
+                    "Could not resolve raw MOSI clip for sample id {!r} "
+                    "(normalized={!r}) under {}. The figure will use "
+                    "visual-window placeholders. Use --video-file to provide "
+                    "the exact utterance clip.".format(
+                        sample["id"],
+                        normalized_sample_id,
+                        cli.mosi_raw_root,
+                    )
+                )
+            elif resolved_segment_offset == 1:
+                warnings.warn(
+                    "Mapped processed MOSI segment index to one-based raw clip "
+                    "filename: sample id {!r} -> {}.".format(
+                        normalized_sample_id,
+                        video_path,
                     )
                 )
 
@@ -1264,8 +1331,10 @@ def main():
         "display_gamma": float(cli.display_gamma),
         "raw_video_root": str(cli.mosi_raw_root),
         "resolved_video_path": None if video_path is None else str(video_path),
+        "normalized_sample_id": str(normalized_sample_id),
         "resolved_video_id": resolved_video_id,
         "resolved_segment_id": resolved_segment_id,
+        "resolved_segment_offset": resolved_segment_offset,
         "note": (
             "Padding-only visual steps are excluded before binning. No model "
             "parameter is changed. Both heatmaps use one shared raw scale and "
@@ -1305,6 +1374,14 @@ def main():
     ))
     print("visual active steps  : {}".format(len(active_visual)))
     print("visual windows       : {}".format(", ".join(window_labels)))
+    print("sample id (raw)      : {!r}".format(sample["id"]))
+    print("sample id (norm)     : {!r}".format(normalized_sample_id))
+    print("raw root exists      : {}".format(Path(cli.mosi_raw_root).is_dir()))
+    print("video id / segment   : {} / {}".format(
+        resolved_video_id,
+        resolved_segment_id,
+    ))
+    print("segment offset       : {}".format(resolved_segment_offset))
     print("raw video            : {}".format(
         "<not resolved>" if video_path is None else video_path
     ))
