@@ -28,6 +28,9 @@ Automatic qualitative case selection is validation-only.
 
 import argparse
 import json
+import re
+import textwrap
+import warnings
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -106,7 +109,23 @@ def parse_args():
     p.add_argument("--config-file", default="config/config.json")
     p.add_argument("--baseline-checkpoint")
     p.add_argument("--cfcompat-checkpoint")
-    p.add_argument("--video-file")
+    p.add_argument(
+        "--mosi-raw-root",
+        default="/sharefile/lyx_model/MMSA_new/MOSI/Raw/Raw",
+        help=(
+            "Root containing MOSI utterance clips as <video_id>/<segment_id>.mp4. "
+            "Used automatically unless --video-file is supplied."
+        ),
+    )
+    p.add_argument(
+        "--video-file",
+        help="Optional explicit utterance-level mp4; overrides --mosi-raw-root lookup.",
+    )
+    p.add_argument(
+        "--no-video-frames",
+        action="store_true",
+        help="Disable raw-video frame extraction and keep visual-window placeholders.",
+    )
     p.add_argument("--output-dir")
     return p.parse_args()
 
@@ -535,31 +554,121 @@ def choose_display_words(
     return np.sort(chosen.astype(np.int64))
 
 
-def load_video_frames(video_path, centers, input_length):
-    if video_path is None:
-        return None
-    path = Path(video_path)
-    if not path.is_file():
-        raise FileNotFoundError(path)
+def _sample_id_to_python(sample_id):
+    """Convert tensor/ndarray wrappers while preserving structured IDs."""
+    if torch.is_tensor(sample_id):
+        value = sample_id.detach().cpu().numpy()
+        if value.ndim == 0:
+            return value.item()
+        return value.tolist()
+    if isinstance(sample_id, np.ndarray):
+        if sample_id.ndim == 0:
+            return sample_id.item()
+        return sample_id.tolist()
+    return sample_id
+
+
+def resolve_mosi_clip_path(sample_id, raw_root):
+    """Resolve a MOSI utterance ID to raw_root/video_id/segment.mp4."""
+    raw_root = Path(raw_root)
+    sample_id = _sample_id_to_python(sample_id)
+
+    video_id = None
+    segment_id = None
+
+    if isinstance(sample_id, dict):
+        for key in ("video_id", "video", "vid"):
+            if key in sample_id:
+                video_id = str(sample_id[key])
+                break
+        for key in ("segment_id", "segment", "clip_id", "clip", "sid"):
+            if key in sample_id:
+                segment_id = str(sample_id[key])
+                break
+
+    elif isinstance(sample_id, (list, tuple)) and len(sample_id) >= 2:
+        video_id = str(sample_id[0])
+        segment_id = str(sample_id[1])
+
+    else:
+        sid = str(sample_id).strip()
+
+        # Match real video-directory names first. This avoids splitting
+        # YouTube IDs that themselves contain '-' or '_'.
+        if raw_root.is_dir():
+            dirs = [p.name for p in raw_root.iterdir() if p.is_dir()]
+            dirs.sort(key=len, reverse=True)
+            for candidate in dirs:
+                if sid == candidate:
+                    continue
+                if sid.startswith(candidate):
+                    remainder = sid[len(candidate):]
+                    numbers = re.findall(r"\d+", remainder)
+                    if numbers:
+                        video_id = candidate
+                        segment_id = numbers[-1]
+                        break
+
+        if video_id is None:
+            patterns = (
+                r"^(.+?)\$_\$(\d+)$",
+                r"^(.+?)\[(\d+)\]$",
+                r"^(.+?)[/#,:](\d+)$",
+                r"^(.+?)::(\d+)$",
+            )
+            for pattern in patterns:
+                match = re.match(pattern, sid)
+                if match:
+                    video_id, segment_id = match.group(1), match.group(2)
+                    break
+
+        if video_id is None:
+            match = re.match(r"^(.+)_(\d+)$", sid)
+            if match:
+                candidate_video = match.group(1)
+                candidate_segment = match.group(2)
+                candidate_path = raw_root / candidate_video / (
+                    str(candidate_segment) + ".mp4"
+                )
+                if candidate_path.is_file():
+                    video_id, segment_id = candidate_video, candidate_segment
+
+    if video_id is None or segment_id is None:
+        return None, None, None
+
+    segment_id = str(segment_id).strip()
+    try:
+        segment_id = str(int(float(segment_id)))
+    except Exception:
+        pass
+
+    clip = raw_root / str(video_id) / (segment_id + ".mp4")
+    if clip.is_file():
+        return clip, str(video_id), segment_id
+
+    # Do not silently guess +/-1 segment numbering. A wrong clip would make
+    # the qualitative visualization invalid.
+    return None, str(video_id), segment_id
+
+
+def _read_video_frames_cv2(video_path, relative_positions):
     try:
         import cv2
-    except ImportError as exc:
-        raise RuntimeError(
-            "--video-file requires opencv-python."
-        ) from exc
+    except ImportError:
+        return None
 
-    cap = cv2.VideoCapture(str(path))
+    cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
-        raise RuntimeError("Could not open video: {}".format(path))
+        return None
 
-    count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     frames = []
-    for center in centers:
-        frac = (float(center) + 0.5) / float(input_length)
-        index = int(round(frac * max(count - 1, 0)))
+    for rel in relative_positions:
+        index = int(round(float(rel) * max(frame_count - 1, 0)))
+        index = min(max(index, 0), max(frame_count - 1, 0))
         cap.set(cv2.CAP_PROP_POS_FRAMES, index)
         ok, frame = cap.read()
-        if not ok:
+        if not ok or frame is None:
             frames.append(None)
             continue
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -569,12 +678,90 @@ def load_video_frames(video_path, centers, input_length):
     return frames
 
 
+def _read_video_frames_imageio(video_path, relative_positions):
+    """Fallback reader used only when OpenCV is unavailable."""
+    try:
+        import imageio.v3 as iio
+    except Exception:
+        return None
+
+    try:
+        all_frames = iio.imread(video_path)
+        nframes = len(all_frames)
+        return [
+            all_frames[
+                min(
+                    max(int(round(float(rel) * max(nframes - 1, 0))), 0),
+                    max(nframes - 1, 0),
+                )
+            ]
+            for rel in relative_positions
+        ]
+    except Exception:
+        return None
+
+
+def load_video_frames(video_path, centers, active_positions):
+    """Extract one real frame per displayed visual window."""
+    if video_path is None:
+        return None
+
+    path = Path(video_path)
+    if not path.is_file():
+        return None
+
+    active_positions = np.asarray(active_positions, dtype=np.float64)
+    centers = np.asarray(centers, dtype=np.float64)
+    if active_positions.size == 0:
+        return None
+
+    lo = float(active_positions.min())
+    hi = float(active_positions.max())
+    span = max(hi - lo, 1.0)
+    relative = np.clip((centers - lo) / span, 0.0, 1.0)
+
+    frames = _read_video_frames_cv2(path, relative)
+    if frames is None:
+        frames = _read_video_frames_imageio(path, relative)
+
+    if frames is None:
+        warnings.warn(
+            "Could not decode {} with OpenCV or imageio; using visual-window "
+            "placeholders instead.".format(path)
+        )
+    return frames
+
+
+def _crop_frame_for_strip(frame):
+    """Center-crop a frame to a compact 4:3 thumbnail."""
+    if frame is None:
+        return None
+    frame = np.asarray(frame)
+    if frame.ndim != 3 or frame.shape[0] == 0 or frame.shape[1] == 0:
+        return frame
+
+    h, w = frame.shape[:2]
+    target_ratio = 4.0 / 3.0
+    current_ratio = float(w) / float(h)
+
+    if current_ratio > target_ratio:
+        new_w = max(1, int(round(h * target_ratio)))
+        x0 = max(0, (w - new_w) // 2)
+        frame = frame[:, x0:x0 + new_w]
+    else:
+        new_h = max(1, int(round(w / target_ratio)))
+        y0 = max(0, (h - new_h) // 2)
+        frame = frame[y0:y0 + new_h, :]
+    return frame
+
+
 def draw_visual_header(
     ax,
     window_labels,
     importance,
     frames=None,
 ):
+    """PMR-style strip of real frames or explicit placeholders."""
     n = len(window_labels)
     ax.set_xlim(0, n)
     ax.set_ylim(0, 1)
@@ -588,54 +775,108 @@ def draw_visual_header(
 
     for j, label in enumerate(window_labels):
         strength = float(importance[j])
-        edge = cmap(0.20 + 0.75 * strength)
-        fill = cmap(0.08 + 0.72 * strength)
-        if frames is not None and frames[j] is not None:
+        edge = cmap(0.18 + 0.78 * strength)
+
+        x0, x1 = j + 0.06, j + 0.94
+        y0, y1 = 0.20, 0.93
+
+        frame = None if frames is None else _crop_frame_for_strip(frames[j])
+        if frame is not None:
             ax.imshow(
-                frames[j],
-                extent=(j + 0.05, j + 0.95, 0.14, 0.90),
+                frame,
+                extent=(x0, x1, y0, y1),
                 aspect="auto",
                 interpolation="bilinear",
             )
-            rect = Rectangle(
-                (j + 0.05, 0.14),
-                0.90,
-                0.76,
-                facecolor="none",
-                edgecolor=edge,
-                linewidth=1.8,
-            )
-            ax.add_patch(rect)
         else:
             rect = Rectangle(
-                (j + 0.05, 0.14),
-                0.90,
-                0.76,
-                facecolor=fill,
-                edgecolor=edge,
-                linewidth=1.6,
+                (x0, y0),
+                x1 - x0,
+                y1 - y0,
+                facecolor=(0.95, 0.95, 0.95),
+                edgecolor="none",
             )
             ax.add_patch(rect)
-            text_color = "white" if strength > 0.58 else "#222222"
             ax.text(
-                j + 0.5,
-                0.52,
+                (x0 + x1) / 2.0,
+                (y0 + y1) / 2.0,
                 label,
                 ha="center",
                 va="center",
-                fontsize=8.5,
-                color=text_color,
-                fontweight="semibold" if strength > 0.58 else "normal",
+                fontsize=8.1,
+                color="#333333",
             )
+
+        border = Rectangle(
+            (x0, y0),
+            x1 - x0,
+            y1 - y0,
+            facecolor="none",
+            edgecolor=edge,
+            linewidth=2.0 if strength > 0.55 else 1.35,
+        )
+        ax.add_patch(border)
+
+        ax.text(
+            (x0 + x1) / 2.0,
+            0.055,
+            label,
+            ha="center",
+            va="bottom",
+            fontsize=7.6,
+            color="#333333",
+        )
 
     ax.text(
         -0.12,
-        0.52,
-        "Visual\nwindows",
+        0.57,
+        "Visual\nframes",
         ha="right",
         va="center",
         fontsize=10,
         fontweight="semibold",
+    )
+
+
+def draw_word_column(ax, labels):
+    """Draw words in their own axis so method metadata never overlaps them."""
+    n = len(labels)
+    ax.set_xlim(0, 1)
+    ax.set_ylim(n - 0.5, -0.5)
+    ax.axis("off")
+    for row, label in enumerate(labels):
+        ax.text(
+            0.96,
+            row,
+            str(label),
+            ha="right",
+            va="center",
+            fontsize=9.7,
+            color="#222222",
+        )
+
+
+def draw_method_meta(ax, panel_label, method_name, prediction, error):
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.axis("off")
+    ax.text(
+        0.96,
+        0.63,
+        "{} {}".format(panel_label, method_name),
+        ha="right",
+        va="center",
+        fontsize=11.9,
+        fontweight="bold",
+    )
+    ax.text(
+        0.96,
+        0.42,
+        "Pred  {:.2f}\nAE    {:.2f}".format(prediction, error),
+        ha="right",
+        va="center",
+        fontsize=9.9,
+        linespacing=1.20,
     )
 
 
@@ -647,6 +888,8 @@ def plot_figure(
     windows,
     window_labels,
     centers,
+    active_visual,
+    video_path,
     baseline_pack,
     cfcompat_pack,
     output_dir,
@@ -684,9 +927,9 @@ def plot_figure(
         baseline_pack["visual_effect"] + cfcompat_pack["visual_effect"]
     )
     frames = load_video_frames(
-        cli.video_file,
+        video_path,
         centers,
-        sample["vision"].shape[0],
+        active_visual,
     )
 
     truth = float(selected["label"])
@@ -707,26 +950,36 @@ def plot_figure(
         "ps.fonttype": 42,
     })
 
-    fig = plt.figure(figsize=(10.4, 6.8))
+    fig = plt.figure(figsize=(10.8, 7.2))
     gs = gridspec.GridSpec(
         3,
-        2,
-        width_ratios=[1.55, 6.00],
-        height_ratios=[0.78, 2.55, 2.55],
-        hspace=0.18,
-        wspace=0.06,
+        3,
+        width_ratios=[1.42, 1.05, 6.35],
+        height_ratios=[1.02, 2.55, 2.55],
+        hspace=0.14,
+        wspace=0.035,
     )
 
-    ax_header_label = fig.add_subplot(gs[0, 0])
-    ax_header = fig.add_subplot(gs[0, 1])
-    ax_left1 = fig.add_subplot(gs[1, 0])
-    ax_map1 = fig.add_subplot(gs[1, 1])
-    ax_left2 = fig.add_subplot(gs[2, 0])
-    ax_map2 = fig.add_subplot(gs[2, 1])
+    ax_header_meta = fig.add_subplot(gs[0, 0])
+    ax_header_words = fig.add_subplot(gs[0, 1])
+    ax_header = fig.add_subplot(gs[0, 2])
 
-    ax_header_label.axis("off")
-    ax_left1.axis("off")
-    ax_left2.axis("off")
+    ax_meta1 = fig.add_subplot(gs[1, 0])
+    ax_words1 = fig.add_subplot(gs[1, 1])
+    ax_map1 = fig.add_subplot(gs[1, 2])
+
+    ax_meta2 = fig.add_subplot(gs[2, 0])
+    ax_words2 = fig.add_subplot(gs[2, 1])
+    ax_map2 = fig.add_subplot(gs[2, 2])
+
+    ax_header_meta.axis("off")
+    ax_header_words.axis("off")
+
+    ax_header_words.text(
+        0.96, 0.54, "Text",
+        ha="right", va="center",
+        fontsize=10.2, fontweight="semibold",
+    )
 
     draw_visual_header(
         ax_header,
@@ -734,6 +987,9 @@ def plot_figure(
         visual_importance,
         frames,
     )
+
+    draw_word_column(ax_words1, display_labels)
+    draw_word_column(ax_words2, display_labels)
 
     im1 = ax_map1.imshow(
         base_disp,
@@ -752,8 +1008,8 @@ def plot_figure(
 
     for panel, show_x in ((ax_map1, False), (ax_map2, True)):
         panel.set_yticks(np.arange(len(display_labels)))
-        panel.set_yticklabels(display_labels)
-        panel.tick_params(axis="y", length=0, pad=5)
+        panel.set_yticklabels([""] * len(display_labels))
+        panel.tick_params(axis="y", length=0)
         panel.set_xticks(np.arange(len(window_labels)))
         panel.set_xticklabels(
             window_labels if show_x else [""] * len(window_labels),
@@ -766,48 +1022,42 @@ def plot_figure(
             spine.set_linewidth(0.8)
             spine.set_color("#555555")
 
-    # Keep token labels neutral by default. PMR manually marks emotion words;
-    # we avoid automatic red highlighting because strong interaction is not
-    # equivalent to sentiment-bearing semantics.
     baseline_name = "Uniform KD" if cli.baseline == "fixedkd" else "DLF-ModDrop"
-    ax_left1.text(
-        0.98, 0.64,
-        "(a) {}".format(baseline_name),
-        ha="right", va="center",
-        fontsize=12.2, fontweight="bold",
+    draw_method_meta(
+        ax_meta1,
+        "(a)",
+        baseline_name,
+        bp,
+        be,
     )
-    ax_left1.text(
-        0.98, 0.43,
-        "Pred {:.2f}\nAE {:.2f}".format(bp, be),
-        ha="right", va="center",
-        fontsize=10.2,
-    )
-
-    ax_left2.text(
-        0.98, 0.64,
-        "(b) CFCompat",
-        ha="right", va="center",
-        fontsize=12.2, fontweight="bold",
-    )
-    ax_left2.text(
-        0.98, 0.43,
-        "Pred {:.2f}\nAE {:.2f}".format(op, oe),
-        ha="right", va="center",
-        fontsize=10.2,
+    draw_method_meta(
+        ax_meta2,
+        "(b)",
+        "CFCompat",
+        op,
+        oe,
     )
 
     raw = str(selected["raw_text"]).strip()
-    if len(raw) > 125:
-        raw = raw[:122] + "..."
+    wrapped = textwrap.fill(raw, width=92)
 
     fig.suptitle(
-        "Cross-modal Interaction on CMU-MOSI ({})\n"
-        "Truth = {:.2f}   |   {}".format(cli.condition, truth, raw),
-        fontsize=12.8,
-        y=0.985,
+        "Cross-modal Interaction on CMU-MOSI ({})".format(cli.condition),
+        fontsize=13.3,
+        y=0.992,
+        fontweight="semibold",
+    )
+    fig.text(
+        0.52,
+        0.943,
+        "Truth = {:.2f}   |   {}".format(truth, wrapped),
+        ha="center",
+        va="top",
+        fontsize=10.6,
+        linespacing=1.15,
     )
 
-    cax = fig.add_axes([0.925, 0.205, 0.014, 0.58])
+    cax = fig.add_axes([0.935, 0.190, 0.013, 0.565])
     cb = fig.colorbar(im2, cax=cax)
     cb.set_label("Relative interaction strength", fontsize=10)
     cb.ax.tick_params(labelsize=8)
@@ -885,6 +1135,32 @@ def main():
     sample_index = int(selected["sample_index"])
     sample = dataset[sample_index]
 
+    video_path = None
+    resolved_video_id = None
+    resolved_segment_id = None
+
+    if not cli.no_video_frames:
+        if cli.video_file:
+            explicit = Path(cli.video_file)
+            if not explicit.is_file():
+                raise FileNotFoundError(
+                    "--video-file does not exist: {}".format(explicit)
+                )
+            video_path = explicit
+        else:
+            video_path, resolved_video_id, resolved_segment_id = resolve_mosi_clip_path(
+                sample["id"],
+                cli.mosi_raw_root,
+            )
+            if video_path is None:
+                warnings.warn(
+                    "Could not resolve raw MOSI clip for sample id {!r} under {}. "
+                    "The figure will use visual-window placeholders. "
+                    "Use --video-file to provide the exact utterance clip.".format(
+                        sample["id"], cli.mosi_raw_root
+                    )
+                )
+
     word_groups, word_labels, mask_token_id = bert_word_groups(
         baseline,
         sample["text"],
@@ -959,6 +1235,8 @@ def main():
         windows,
         window_labels,
         centers,
+        active_visual,
+        video_path,
         baseline_pack,
         cfcompat_pack,
         output_dir,
@@ -984,6 +1262,10 @@ def main():
         "visual_active_positions": [int(v) for v in active_visual.tolist()],
         "visual_active_steps": int(len(active_visual)),
         "display_gamma": float(cli.display_gamma),
+        "raw_video_root": str(cli.mosi_raw_root),
+        "resolved_video_path": None if video_path is None else str(video_path),
+        "resolved_video_id": resolved_video_id,
+        "resolved_segment_id": resolved_segment_id,
         "note": (
             "Padding-only visual steps are excluded before binning. No model "
             "parameter is changed. Both heatmaps use one shared raw scale and "
@@ -1023,6 +1305,9 @@ def main():
     ))
     print("visual active steps  : {}".format(len(active_visual)))
     print("visual windows       : {}".format(", ".join(window_labels)))
+    print("raw video            : {}".format(
+        "<not resolved>" if video_path is None else video_path
+    ))
     print("raw text             : {}".format(selected["raw_text"]))
     print("-" * 88)
     print("PNG                  : {}".format(png))
