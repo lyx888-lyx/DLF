@@ -11,7 +11,10 @@ The paper uses alpha=0.5, the midpoint of each tied empirical interval. This
 runner tests the symmetric set {0.00, 0.25, 0.50, 0.75, 1.00} while keeping
 all other training settings fixed.
 
-IMPORTANT: TRAIN and VALID only. The MOSI test split is never constructed.
+Training and checkpoint selection use TRAIN and VALID only. After the
+validation-best checkpoint is frozen for each pre-declared alpha, that fixed
+checkpoint is evaluated once on the MOSI TEST split for final reporting.
+TEST is never used for optimization, early stopping, or alpha selection.
 """
 
 import argparse
@@ -45,6 +48,7 @@ from trains.singleTask.fixed_kd_utils import (
 )
 from trains.singleTask.missing_utils import (
     MISSING_MODES,
+    build_single_split_loader,
     compute_full_dlf_loss,
     compute_task_loss,
     evaluate_all_modes,
@@ -113,7 +117,7 @@ def output_root(args):
     return (
         Path(args.result_root)
         / "analysis"
-        / "quantile_interpolation_sensitivity_v2"
+        / "quantile_interpolation_sensitivity_v3"
         / args.dataset
         / f"seed{args.seed}"
     )
@@ -241,7 +245,7 @@ def train_one(args, alpha, cache_frame, logger):
     checkpoint_dir = (
         Path(args.model_save_dir)
         / "analysis"
-        / "quantile_interpolation_sensitivity_v2"
+        / "quantile_interpolation_sensitivity_v3"
         / args.dataset
         / f"seed{args.seed}"
     )
@@ -268,7 +272,8 @@ def train_one(args, alpha, cache_frame, logger):
     epoch_rows = []
 
     logger.info(
-        "start alpha=%.2f seed=%s teacher=%s teacher_sha=%s compat_mean=%s range=[%.8f,%.8f] split=train+valid-only",
+        "start alpha=%.2f seed=%s teacher=%s teacher_sha=%s compat_mean=%s "
+        "range=[%.8f,%.8f] selection_split=valid final_report_split=test",
         alpha, args.seed, teacher_checkpoint, teacher_sha,
         compatibility_means, compatibility_min, compatibility_max
     )
@@ -354,11 +359,32 @@ def train_one(args, alpha, cache_frame, logger):
     if not checkpoint.is_file():
         raise RuntimeError(f"No validation-best checkpoint saved for alpha={alpha}.")
 
-    student.load_state_dict(torch.load(checkpoint, map_location=cfg.device), strict=True)
+    student.load_state_dict(
+        torch.load(checkpoint, map_location=cfg.device),
+        strict=True
+    )
+
+    # Re-evaluate the frozen validation-best checkpoint on VALID.
     final_valid = evaluate_all_modes(
         student, loaders["valid"], cfg.device, "moddrop", criterion
     )
-    final_macro = macro_metrics(final_valid)
+    valid_macro = macro_metrics(final_valid)
+
+    # Only after checkpoint selection is frozen do we construct TEST.
+    logger.info(
+        "alpha=%.2f validation selection frozen at epoch=%s J_valid=%.6f; "
+        "evaluating fixed checkpoint once on test",
+        alpha, best_epoch, float(validation_objective(final_valid))
+    )
+    test_loader = build_single_split_loader(
+        cfg,
+        split="test",
+        num_workers=args.num_workers
+    )
+    final_test = evaluate_all_modes(
+        student, test_loader, cfg.device, "moddrop", criterion
+    )
+    test_macro = macro_metrics(final_test)
 
     midpoint_frame, _ = cache_with_alpha(cache_frame, 0.5)
     midpoint_mean = float(np.mean([
@@ -373,12 +399,23 @@ def train_one(args, alpha, cache_frame, logger):
         "Seed": args.seed,
         "BestValidEpoch": best_epoch,
         "J_valid": float(validation_objective(final_valid)),
-        "TargetMacro_Acc7": final_macro["acc_7"],
-        "TargetMacro_Acc5": final_macro["acc_5"],
-        "TargetMacro_Acc2": final_macro["acc_2"],
-        "TargetMacro_F1": final_macro["F1_score"],
-        "TargetMacro_Corr": final_macro["Corr"],
-        "TargetMacro_MAE": final_macro["MAE"],
+
+        # Validation diagnostics retained for auditability.
+        "ValidMacro_Acc7": valid_macro["acc_7"],
+        "ValidMacro_Acc5": valid_macro["acc_5"],
+        "ValidMacro_Acc2": valid_macro["acc_2"],
+        "ValidMacro_F1": valid_macro["F1_score"],
+        "ValidMacro_Corr": valid_macro["Corr"],
+        "ValidMacro_MAE": valid_macro["MAE"],
+
+        # Paper-facing final metrics.
+        "TestMacro_Acc7": test_macro["acc_7"],
+        "TestMacro_Acc5": test_macro["acc_5"],
+        "TestMacro_Acc2": test_macro["acc_2"],
+        "TestMacro_F1": test_macro["F1_score"],
+        "TestMacro_Corr": test_macro["Corr"],
+        "TestMacro_MAE": test_macro["MAE"],
+
         "MeanCompatibility": mean_compatibility,
         "MinCompatibility": compatibility_min,
         "MaxCompatibility": compatibility_max,
@@ -387,18 +424,20 @@ def train_one(args, alpha, cache_frame, logger):
     }
 
     condition_rows = []
-    for mode in MISSING_MODES:
-        m = final_valid[mode]
-        condition_rows.append({
-            "Alpha": float(alpha),
-            "Condition": mode,
-            "Acc7": float(m["acc_7"]),
-            "Acc5": float(m["acc_5"]),
-            "Acc2": float(m["acc_2"]),
-            "F1": float(m["F1_score"]),
-            "Corr": float(m["Corr"]),
-            "MAE": float(m["MAE"]),
-        })
+    for split_name, metrics in (("valid", final_valid), ("test", final_test)):
+        for mode in MISSING_MODES:
+            m = metrics[mode]
+            condition_rows.append({
+                "Alpha": float(alpha),
+                "Split": split_name,
+                "Condition": mode,
+                "Acc7": float(m["acc_7"]),
+                "Acc5": float(m["acc_5"]),
+                "Acc2": float(m["acc_2"]),
+                "F1": float(m["F1_score"]),
+                "Corr": float(m["Corr"]),
+                "MAE": float(m["MAE"]),
+            })
 
     return result, condition_rows, epoch_rows
 
@@ -408,31 +447,38 @@ def latex_table(results):
     lines = [
         r"\begin{table}[t]",
         r"\centering",
-        r"\caption{Sensitivity to the quantile interpolation coefficient $\alpha$ on the CMU-MOSI validation set.}",
+        r"\caption{Sensitivity to the quantile interpolation coefficient $\alpha$ on CMU-MOSI. Results are macro-averaged over the LA, LV, and L target conditions on the test set.}",
         r"\label{tab:quantile_interpolation_sensitivity}",
         r"\begin{tabular}{lcccccc}",
         r"\toprule",
         r"$\alpha$ & Acc-7 $\uparrow$ & Acc-5 $\uparrow$ & Acc-2 $\uparrow$ & F1 $\uparrow$ & Corr $\uparrow$ & MAE $\downarrow$ \\",
         r"\midrule",
     ]
+
     for _, row in frame.iterrows():
         label = f"{row['Alpha']:.2f}"
         if abs(float(row["Alpha"]) - 0.5) < 1e-12:
             label = r"\textbf{0.50}"
+
         lines.append(
-            "{} & {:.2f} & {:.2f} & {:.2f} & {:.2f} & {:.3f} & {:.4f} \\".format(
+            "{} & {:.2f} & {:.2f} & {:.2f} & {:.2f} & {:.4f} & {:.4f} \\\\".format(
                 label,
-                row["TargetMacro_Acc7"],
-                row["TargetMacro_Acc5"],
-                row["TargetMacro_Acc2"],
-                row["TargetMacro_F1"],
-                row["TargetMacro_Corr"],
-                row["TargetMacro_MAE"],
+                100.0 * row["TestMacro_Acc7"],
+                100.0 * row["TestMacro_Acc5"],
+                100.0 * row["TestMacro_Acc2"],
+                100.0 * row["TestMacro_F1"],
+                row["TestMacro_Corr"],
+                row["TestMacro_MAE"],
             )
         )
-    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
-    return "\n".join(lines)
 
+    lines.extend([
+        r"\bottomrule",
+        r"\end{tabular}",
+        r"\end{table}",
+        "",
+    ])
+    return "\n".join(lines)
 
 def main():
     args = parse_args()
@@ -468,7 +514,9 @@ def main():
         epochs.extend(local_epochs)
 
     result_frame = pd.DataFrame(results).sort_values("Alpha").reset_index(drop=True)
-    condition_frame = pd.DataFrame(conditions).sort_values(["Alpha", "Condition"]).reset_index(drop=True)
+    condition_frame = pd.DataFrame(conditions).sort_values(
+        ["Alpha", "Split", "Condition"]
+    ).reset_index(drop=True)
     epoch_frame = pd.DataFrame(epochs).sort_values(["Alpha", "Epoch"]).reset_index(drop=True)
 
     result_path = output / f"{args.dataset}_seed{args.seed}_quantile_interpolation_sensitivity.csv"
@@ -483,19 +531,19 @@ def main():
 
     display_cols = [
         "Alpha", "BestValidEpoch", "J_valid",
-        "TargetMacro_Acc7", "TargetMacro_Acc5", "TargetMacro_Acc2",
-        "TargetMacro_F1", "TargetMacro_Corr", "TargetMacro_MAE",
+        "TestMacro_Acc7", "TestMacro_Acc5", "TestMacro_Acc2",
+        "TestMacro_F1", "TestMacro_Corr", "TestMacro_MAE",
         "MeanCompatibility", "MeanCompatShiftVsAlpha0p5"
     ]
 
-    print("Validation-only quantile-interpolation sensitivity complete.")
+    print("Quantile-interpolation sensitivity complete.")
     print(f"results={result_path}")
     print(f"conditions={condition_path}")
     print(f"latex={latex_path}")
     print()
     print(result_frame[display_cols].to_string(index=False))
     print()
-    print("Condition-wise validation metrics:")
+    print("Condition-wise validation/test metrics:")
     print(condition_frame.to_string(index=False))
 
 
