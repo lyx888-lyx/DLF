@@ -112,8 +112,30 @@ def parse_args():
     p.add_argument("--sample-index", type=int, default=None)
     p.add_argument(
         "--selection",
-        choices=("representative", "largest_gain"),
+        choices=("representative", "largest_gain", "interaction_contrast"),
         default="representative",
+        help=(
+            "interaction_contrast ranks a validation-only pool using prediction "
+            "improvement, sentiment-cue concentration gain, and map contrast."
+        ),
+    )
+    p.add_argument(
+        "--contrast-pool-size",
+        type=int,
+        default=24,
+        help="Maximum first-stage validation candidates for occlusion analysis.",
+    )
+    p.add_argument(
+        "--contrast-topk",
+        type=int,
+        default=10,
+        help="Number of contrast-ranked candidates exported to the shortlist CSV.",
+    )
+    p.add_argument(
+        "--contrast-render-top",
+        type=int,
+        default=3,
+        help="Number of top-ranked contrast cases automatically rendered (0 disables).",
     )
     p.add_argument("--min-abs-label", type=float, default=1.0)
     p.add_argument("--min-raw-words", type=int, default=10)
@@ -1504,6 +1526,16 @@ def main():
         raise ValueError(
             "Text--vision interaction visualization requires vision to be present."
         )
+    if cli.selection == "interaction_contrast":
+        if cli.split != "valid":
+            raise ValueError(
+                "interaction_contrast is strictly validation-only; it does not "
+                "search or rank Test samples."
+            )
+        if cli.sample_index is not None:
+            raise ValueError(
+                "Do not combine --sample-index with --selection interaction_contrast."
+            )
 
     cfg, baseline, cfcompat, baseline_ckpt, cfcompat_ckpt = build_models(cli)
     dataset = MMDataset(cfg, mode=cli.split)
@@ -1515,6 +1547,21 @@ def main():
         baseline,
         cfcompat,
     )
+    if cli.selection == "interaction_contrast":
+        from rank_crossmodal_interaction_cases import run_interaction_contrast
+
+        run_interaction_contrast(
+            cli=cli,
+            cfg=cfg,
+            dataset=dataset,
+            baseline=baseline,
+            cfcompat=cfcompat,
+            candidates=candidates,
+            baseline_ckpt=baseline_ckpt,
+            cfcompat_ckpt=cfcompat_ckpt,
+        )
+        return
+
     selected, selection_reason = select_sample(cli, candidates)
     sample_index = int(selected["sample_index"])
     sample = dataset[sample_index]
