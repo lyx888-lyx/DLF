@@ -1095,12 +1095,14 @@ def draw_visual_header(
         )
         ax.add_patch(border)
 
+        # Anchor the label below the frame: with va="top" the glyphs
+        # extend downward rather than touching the image border at y=0.20.
         ax.text(
             (x0 + x1) / 2.0,
-            0.055,
+            0.115,
             label,
             ha="center",
-            va="bottom",
+            va="top",
             fontsize=7.6,
             color="#333333",
         )
