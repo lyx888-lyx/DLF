@@ -48,6 +48,7 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from matplotlib.patches import Rectangle
 from matplotlib.colors import Normalize
+from matplotlib import font_manager
 
 from data_loader import MMDataset
 from train_cf_compat_kd import build_config
@@ -153,6 +154,12 @@ def parse_args():
         help="Maximum number of content words displayed after stopword filtering.",
     )
     p.add_argument("--visual-bins", type=int, default=10)
+    p.add_argument(
+        "--figure-height",
+        type=float,
+        default=5.05,
+        help="Height of the compact publication figure in inches (default: 5.05).",
+    )
     p.add_argument(
         "--display-gamma",
         type=float,
@@ -1175,7 +1182,7 @@ def draw_method_meta(ax, panel_label, method_name, prediction, error):
         "{} {}".format(panel_label, method_name),
         ha="right",
         va="center",
-        fontsize=11.9,
+        fontsize=10.8,
         fontweight="bold",
     )
     ax.text(
@@ -1184,8 +1191,8 @@ def draw_method_meta(ax, panel_label, method_name, prediction, error):
         "Pred  {:.2f}\nAE    {:.2f}".format(prediction, error),
         ha="right",
         va="center",
-        fontsize=9.9,
-        linespacing=1.20,
+        fontsize=9.1,
+        linespacing=1.04,
     )
 
 
@@ -1270,27 +1277,50 @@ def plot_figure(
     be = abs(bp - truth)
     oe = abs(op - truth)
 
+    # An explicit check prevents Matplotlib from silently substituting a
+    # different serif family when Times New Roman is unavailable on the server.
+    try:
+        font_manager.findfont("Times New Roman", fallback_to_default=False)
+    except ValueError as exc:
+        raise RuntimeError(
+            "Times New Roman is not installed or not visible to Matplotlib. "
+            "Install the font on this machine, refresh the font cache "
+            "(fc-cache -fv), and rerun. Check with: "
+            "fc-match 'Times New Roman'."
+        ) from exc
+
     plt.rcParams.update({
-        "font.family": "Times New Roman",
-        "mathtext.fontset": "stix",
-        "font.size": 10.5,
-        "axes.titlesize": 11.5,
-        "axes.labelsize": 10.5,
-        "xtick.labelsize": 8.7,
-        "ytick.labelsize": 10.0,
+        "font.family": "serif",
+        "font.serif": ["Times New Roman"],
+        "font.size": 10.0,
+        "font.style": "normal",
+        "mathtext.fontset": "custom",
+        "mathtext.rm": "Times New Roman",
+        "mathtext.it": "Times New Roman:italic",
+        "mathtext.bf": "Times New Roman:bold",
+        "axes.titlesize": 11.0,
+        "axes.labelsize": 10.0,
+        "xtick.labelsize": 8.5,
+        "ytick.labelsize": 9.2,
         "pdf.fonttype": 42,
         "ps.fonttype": 42,
     })
 
-    fig = plt.figure(figsize=(11.35, 6.55))
+    if cli.figure_height <= 3.5:
+        raise ValueError("--figure-height must be greater than 3.5 inches.")
+    fig = plt.figure(figsize=(11.35, cli.figure_height))
+    # Compact top strip and reduced inter-panel whitespace. Heatmap aspect
+    # stays automatic, with the original data, words and visual bins unchanged.
     gs = gridspec.GridSpec(
         3,
         4,
+        figure=fig,
         width_ratios=[1.38, 0.95, 1.05, 6.35],
-        height_ratios=[1.04, 2.30, 2.30],
-        hspace=0.15,
+        height_ratios=[0.78, 2.10, 2.10],
+        hspace=0.105,
         wspace=0.035,
     )
+    fig.subplots_adjust(left=0.065, right=0.913, top=0.865, bottom=0.105)
 
     ax_header_meta = fig.add_subplot(gs[0, 0])
     ax_header_words = fig.add_subplot(gs[0, 1])
@@ -1314,7 +1344,7 @@ def plot_figure(
     ax_header_words.text(
         0.96,
         0.57,
-        "Text\ncue",
+        "Text cue",
         ha="right",
         va="center",
         fontsize=9.6,
@@ -1323,12 +1353,11 @@ def plot_figure(
     ax_header_pos.text(
         0.50,
         0.57,
-        "Text position\n(order only)",
+        "Text order",
         ha="center",
         va="center",
-        fontsize=8.5,
+        fontsize=8.3,
         color="#555555",
-        linespacing=1.05,
     )
 
     draw_visual_header(
@@ -1399,26 +1428,40 @@ def plot_figure(
         oe,
     )
 
-    raw = str(selected["raw_text"]).strip()
-    wrapped = textwrap.fill(raw, width=92)
+    raw = " ".join(str(selected["raw_text"]).split()).lower()
 
     fig.suptitle(
         "Cross-modal Interaction on CMU-MOSI ({})".format(cli.condition),
-        fontsize=13.3,
-        y=0.992,
+        fontsize=12.5,
+        y=0.984,
         fontweight="semibold",
     )
+    # Separate artists keep the metadata upright while showing the spoken
+    # sentence in lowercase Times New Roman italic on the SAME compact line.
     fig.text(
-        0.52,
-        0.943,
-        "Truth = {:.2f}   |   {}".format(truth, wrapped),
-        ha="center",
-        va="top",
-        fontsize=10.6,
-        linespacing=1.15,
+        0.065,
+        0.927,
+        "Truth = {:.2f}   |".format(truth),
+        ha="left",
+        va="center",
+        fontsize=9.7,
+        fontstyle="normal",
+    )
+    fig.text(
+        0.205,
+        0.927,
+        raw,
+        ha="left",
+        va="center",
+        fontsize=9.6,
+        fontstyle="italic",
     )
 
-    cax = fig.add_axes([0.935, 0.190, 0.013, 0.565])
+    # Derive the colorbar extent from the heatmaps so it stays aligned when
+    # --figure-height changes; equal numerical ticks remain equally spaced.
+    upper = ax_map1.get_position()
+    lower = ax_map2.get_position()
+    cax = fig.add_axes([upper.x1 + 0.028, lower.y0, 0.012, upper.y1 - lower.y0])
     color_ticks = np.linspace(0.0, 1.0, 6)
     cb = fig.colorbar(
         im2,
@@ -1434,9 +1477,8 @@ def plot_figure(
 
     fig.text(
         0.63,
-        0.025,
-        "Text-position dots indicate word order only; heatmap columns are visual "
-        "context windows and do not represent word duration.",
+        0.016,
+        "Dots mark relative word order; visual context windows are not word durations.",
         ha="center",
         va="bottom",
         fontsize=8.2,
